@@ -85,9 +85,9 @@ export const agents = [
   },
   {
     name: "Especialista em Taxa de Aderência com a Vaga",
-    slug: "taxa-aderencia-vaga",
+    slug: "taxa-de-aderencia-com-a-vaga",
     category: "Recrutamento & Seleção",
-    shortDescription: "Calcula aderência entre perfil e vaga.",
+    shortDescription: "Calcula aderência entre perfil, vaga e contexto cultural.",
     active: true,
   },
   {

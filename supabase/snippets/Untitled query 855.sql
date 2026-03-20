@@ -1,4 +1,8 @@
-select table_name
-from information_schema.tables
+select
+  column_name,
+  data_type,
+  is_nullable
+from information_schema.columns
 where table_schema = 'public'
-  and table_name = 'agent_evaluations';
+  and table_name = 'profile_assessments'
+order by ordinal_position;
