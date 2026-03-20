@@ -6,16 +6,15 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.2.105:3000
 - Environments: .env.local
-✓ Ready in 504ms
+✓ Ready in 431ms
 
- GET /app/agentes/taxa-aderencia-vaga 200 in 2.2s (next.js: 1916ms, application-code: 248ms)
- GET /app/agentes 200 in 2.2s (next.js: 1832ms, application-code: 342ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 397ms (next.js: 385ms, application-code: 11ms)
- GET /app/agentes/taxa-aderencia-vaga 200 in 61ms (next.js: 4ms, application-code: 56ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 7ms (next.js: 3ms, application-code: 4ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 18ms (next.js: 5ms, application-code: 13ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 20ms (next.js: 12ms, application-code: 8ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 11ms (next.js: 3ms, application-code: 8ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 14ms (next.js: 7ms, application-code: 8ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 11ms (next.js: 4ms, application-code: 7ms)
- GET /app/recrutador/assessments 200 in 508ms (next.js: 366ms, application-code: 142ms)
+ GET /app/agentes 200 in 2.4s (next.js: 1916ms, application-code: 449ms)
+ GET /app/agentes 200 in 160ms (next.js: 9ms, application-code: 151ms)
+ GET /app/agentes 200 in 82ms (next.js: 4ms, application-code: 78ms)
+ GET /app/agentes/taxa-aderencia-vaga 200 in 337ms (next.js: 318ms, application-code: 19ms)
+ POST /api/agents/taxa-aderencia-vaga 200 in 325ms (next.js: 308ms, application-code: 17ms)
+ POST /api/agents/taxa-aderencia-vaga 200 in 328ms (next.js: 324ms, application-code: 4ms)
+ GET /app/agentes 200 in 47ms (next.js: 7ms, application-code: 39ms)
+ GET /app/agentes/taxa-aderencia-vaga 200 in 33ms (next.js: 6ms, application-code: 26ms)
+ POST /api/agents/taxa-aderencia-vaga 200 in 17ms (next.js: 10ms, application-code: 7ms)
+ POST /api/agents/taxa-aderencia-vaga 200 in 24ms (next.js: 18ms, application-code: 6ms)

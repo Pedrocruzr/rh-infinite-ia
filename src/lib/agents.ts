@@ -97,6 +97,15 @@ export const agents = [
     shortDescription: "Gera parecer técnico com base nas evidências da entrevista.",
     active: true,
   },
+
+  {
+    name: "Especialista em Taxa de Aderência com a Vaga",
+    slug: "taxa-aderencia-vaga",
+    category: "Recrutamento & Seleção",
+    shortDescription: "Calcula aderência entre perfil, vaga e contexto cultural.",
+    active: true,
+  },
+
   {
     name: "Onboarding Estratégico",
     slug: "onboarding-estrategico",
