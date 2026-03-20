@@ -4,28 +4,30 @@ import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 
 type TaxaAderenciaField =
-  | "candidateName"
-  | "targetRole"
-  | "recruiterName"
-  | "validatorName"
-  | "approverName"
   | "culturalMission"
   | "culturalVision"
   | "culturalValues"
   | "culturalContext"
+  | "targetRole"
+  | "recruiterName"
+  | "validatorName"
+  | "approverName"
+  | "candidateName"
+  | "candidateExperience"
   | "behavioralTestInput";
 
 type TaxaAderenciaSession = {
   assessmentId?: string;
-  candidateName?: string;
-  targetRole?: string;
-  recruiterName?: string;
-  validatorName?: string;
-  approverName?: string;
   culturalMission?: string;
   culturalVision?: string;
   culturalValues?: string;
   culturalContext?: string;
+  targetRole?: string;
+  recruiterName?: string;
+  validatorName?: string;
+  approverName?: string;
+  candidateName?: string;
+  candidateExperience?: string;
   behavioralTestInput?: string;
   status?: "in_progress" | "completed";
   reportStatus?: "pending" | "generated";
@@ -51,6 +53,7 @@ export default function TaxaAderenciaVagaPage() {
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     void startConversation();
@@ -58,7 +61,10 @@ export default function TaxaAderenciaVagaPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    if (!loading && !finished) {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [messages, loading, finished]);
 
   async function startConversation() {
     try {
@@ -266,6 +272,7 @@ export default function TaxaAderenciaVagaPage() {
             <div className="mt-4 border-t border-neutral-200 pt-4">
               <form onSubmit={handleSubmit} className="flex items-end gap-4">
                 <textarea
+                  ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}

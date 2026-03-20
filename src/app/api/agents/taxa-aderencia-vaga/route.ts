@@ -1,30 +1,23 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  steps,
+  type TaxaAderenciaField,
+} from "@/lib/agents/taxa-de-aderencia-com-a-vaga/flow";
 import { generateTaxaAderenciaReport } from "@/lib/agents/taxa-de-aderencia-com-a-vaga/runner";
-
-type TaxaAderenciaField =
-  | "candidateName"
-  | "targetRole"
-  | "recruiterName"
-  | "validatorName"
-  | "approverName"
-  | "culturalMission"
-  | "culturalVision"
-  | "culturalValues"
-  | "culturalContext"
-  | "behavioralTestInput";
 
 type TaxaAderenciaSession = {
   assessmentId?: string;
-  candidateName?: string;
-  targetRole?: string;
-  recruiterName?: string;
-  validatorName?: string;
-  approverName?: string;
   culturalMission?: string;
   culturalVision?: string;
   culturalValues?: string;
   culturalContext?: string;
+  targetRole?: string;
+  recruiterName?: string;
+  validatorName?: string;
+  approverName?: string;
+  candidateName?: string;
+  candidateExperience?: string;
   behavioralTestInput?: string;
   status?: "in_progress" | "completed";
   reportStatus?: "pending" | "generated";
@@ -35,51 +28,6 @@ type RequestBody = {
   currentField?: TaxaAderenciaField;
   answer?: string;
 };
-
-const steps: Array<{ field: TaxaAderenciaField; question: string }> = [
-  {
-    field: "candidateName",
-    question: "Para começarmos, qual é o nome completo do candidato?",
-  },
-  {
-    field: "targetRole",
-    question: "Qual é a vaga analisada?",
-  },
-  {
-    field: "recruiterName",
-    question: "Informe o nome do recrutador responsável pela avaliação.",
-  },
-  {
-    field: "validatorName",
-    question: "Informe o nome do responsável pela validação (gestor direto/liderança).",
-  },
-  {
-    field: "approverName",
-    question: "Informe o nome do responsável pela aprovação final (diretoria/RH).",
-  },
-  {
-    field: "culturalMission",
-    question: "Qual é a missão da empresa?",
-  },
-  {
-    field: "culturalVision",
-    question: "Qual é a visão da empresa?",
-  },
-  {
-    field: "culturalValues",
-    question: "Quais são os valores da empresa? Separe por vírgula ou por linha.",
-  },
-  {
-    field: "culturalContext",
-    question:
-      "Descreva o contexto cultural da empresa: estilo de trabalho, ambiente da equipe, rituais, comportamentos valorizados e comportamentos não tolerados.",
-  },
-  {
-    field: "behavioralTestInput",
-    question:
-      "Cole aqui o teste de perfil comportamental (DISC, Eneagrama e Perfil de Competências).",
-  },
-];
 
 function addDays(date: Date, days: number) {
   const next = new Date(date);
@@ -105,12 +53,96 @@ function findNextField(session: TaxaAderenciaSession): TaxaAderenciaField | null
 }
 
 function getQuestion(field: TaxaAderenciaField | null): string {
-  if (!field) {
-    return "Avaliação concluída com sucesso.";
-  }
-
+  if (!field) return "Avaliação concluída com sucesso.";
   const step = steps.find((item) => item.field === field);
   return step?.question ?? "Pergunta não encontrada.";
+}
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function detectRole(value: string): string | null {
+  const role = normalizeText(value);
+
+  if (
+    role.includes("recepcao") ||
+    role.includes("recepcionista") ||
+    role.includes("recepc")
+  ) {
+    return "Recepcionista";
+  }
+
+  if (
+    role.includes("auxiliar administrativo") ||
+    role.includes("assistente administrativo") ||
+    role.includes("administrativo") ||
+    role.includes("assist adm") ||
+    role.includes("aux adm") ||
+    role === "adm"
+  ) {
+    return "Auxiliar Administrativo / Assistente Administrativo";
+  }
+
+  if (
+    role.includes("vendedor") ||
+    role.includes("vendas") ||
+    role.includes("comercial") ||
+    role.includes("atendente comercial") ||
+    role.includes("consultor comercial")
+  ) {
+    return "Vendedor / Atendente Comercial";
+  }
+
+  return null;
+}
+
+function validateAnswer(field: TaxaAderenciaField, answer: string): string | null {
+  const normalized = answer.trim();
+
+  if (normalized.length < 2) {
+    return "Não consegui entender sua resposta. Pode escrever novamente com mais clareza?";
+  }
+
+  if (field === "candidateName" && normalized.split(" ").length < 2) {
+    return "Preciso do nome completo do candidato. Pode informar novamente?";
+  }
+
+  if (
+    field === "culturalMission" ||
+    field === "culturalVision" ||
+    field === "culturalContext" ||
+    field === "candidateExperience" ||
+    field === "behavioralTestInput"
+  ) {
+    if (normalized.length < 12) {
+      return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+    }
+  }
+
+  if (field === "targetRole") {
+    const detected = detectRole(normalized);
+    if (!detected && normalized.length < 4) {
+      return "Não consegui identificar o cargo. Pode escrever o nome da vaga de forma mais completa?";
+    }
+  }
+
+  return null;
+}
+
+function buildRoleAck(answer: string): { normalizedRole: string; reply: string } | null {
+  const detected = detectRole(answer);
+
+  if (!detected) return null;
+
+  return {
+    normalizedRole: detected,
+    reply: `Perfeito, identifiquei similaridade com o perfil de ${detected}. Já carreguei os requisitos e competências para a análise. Agora informe o nome do recrutador responsável pela avaliação.`,
+  };
 }
 
 export async function POST(request: Request) {
@@ -150,6 +182,34 @@ export async function POST(request: Request) {
         { ok: false, error: "Resposta vazia." },
         { status: 400 },
       );
+    }
+
+    const validationError = validateAnswer(currentField, answer);
+
+    if (validationError) {
+      return NextResponse.json({
+        ok: true,
+        session,
+        nextField: currentField,
+        reply: validationError,
+        done: false,
+      });
+    }
+
+    if (currentField === "targetRole") {
+      const roleAck = buildRoleAck(answer);
+
+      if (roleAck) {
+        session.targetRole = roleAck.normalizedRole;
+
+        return NextResponse.json({
+          ok: true,
+          session,
+          nextField: "recruiterName",
+          reply: roleAck.reply,
+          done: false,
+        });
+      }
     }
 
     session[currentField] = answer;
