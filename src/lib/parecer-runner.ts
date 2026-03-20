@@ -77,6 +77,8 @@ function recommendationLabel(value?: string | null): string {
 function buildGerencialParecer(session: ParecerSession): string {
   const recomendacao = recommendationLabel(session.recomendacaoFinal);
   const responsavel = safe(session.entrevistadores, "Não informado na coleta");
+  const validacaoGestor = safe(session.validacaoGestor, "Não informado na coleta");
+  const aprovacaoFinalRh = safe(session.aprovacaoFinalRh, "Não informado na coleta");
 
   return `
 <section>
@@ -308,8 +310,8 @@ function buildGerencialParecer(session: ParecerSession): string {
 
   <h2>15. ASSINATURA E VALIDAÇÃO</h2>
   <p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${escapeHtml(responsavel)}</p>
-  <p><strong>Validação (Gestor Direto/Liderança):</strong> Não informado na coleta</p>
-  <p><strong>Aprovação Final (Diretoria/RH):</strong> Não informado na coleta</p>
+  <p><strong>Validação (Gestor Direto/Liderança):</strong> ${escapeHtml(validacaoGestor)}</p>
+  <p><strong>Aprovação Final (Diretoria/RH):</strong> ${escapeHtml(aprovacaoFinalRh)}</p>
 </section>
 `.trim();
 }
@@ -317,6 +319,8 @@ function buildGerencialParecer(session: ParecerSession): string {
 function buildFallbackParecer(session: ParecerSession): string {
   const recomendacao = recommendationLabel(session.recomendacaoFinal);
   const responsavel = safe(session.entrevistadores, "Não informado na coleta");
+  const validacaoGestor = safe(session.validacaoGestor, "Não informado na coleta");
+  const aprovacaoFinalRh = safe(session.aprovacaoFinalRh, "Não informado na coleta");
 
   return `
 <section>
@@ -344,6 +348,8 @@ function buildFallbackParecer(session: ParecerSession): string {
 
   <h2>Assinatura e validação</h2>
   <p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${escapeHtml(responsavel)}</p>
+  <p><strong>Validação (Gestor Direto/Liderança):</strong> ${escapeHtml(validacaoGestor)}</p>
+  <p><strong>Aprovação Final (Diretoria/RH):</strong> ${escapeHtml(aprovacaoFinalRh)}</p>
 </section>
 `.trim();
 }

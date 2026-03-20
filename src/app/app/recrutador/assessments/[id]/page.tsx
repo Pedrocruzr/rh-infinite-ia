@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import RegenerateParecerButton from "@/components/recruiter/regenerate-parecer-button";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -63,12 +62,6 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
             </div>
           </div>
         </div>
-
-        {assessment.agent_slug === "parecer-tecnico-entrevista" ? (
-          <div className="mb-6">
-            <RegenerateParecerButton assessmentId={assessment.id} />
-          </div>
-        ) : null}
 
         <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white p-10">
           {assessment.report_markdown ? (

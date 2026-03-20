@@ -7,6 +7,8 @@ export type ParecerField =
   | "candidato"
   | "dataEntrevista"
   | "entrevistadores"
+  | "validacaoGestor"
+  | "aprovacaoFinalRh"
   | "experienciaTotalENivel"
   | "residenciaDisponibilidade"
   | "mobilidadeGeografica"
@@ -44,6 +46,8 @@ export type ParecerSession = {
   candidato?: string;
   dataEntrevista?: string;
   entrevistadores?: string;
+  validacaoGestor?: string;
+  aprovacaoFinalRh?: string;
   experienciaTotalENivel?: string;
   residenciaDisponibilidade?: string;
   mobilidadeGeografica?: string;
@@ -107,6 +111,14 @@ const COMMON_PREFIX: FlowQuestion[] = [
   {
     field: "entrevistadores",
     question: "Quem conduziu a entrevista?",
+  },
+  {
+    field: "validacaoGestor",
+    question: "Qual é o nome do responsável pela Validação (Gestor Direto/Liderança)?",
+  },
+  {
+    field: "aprovacaoFinalRh",
+    question: "Qual é o nome do responsável pela Aprovação Final (Diretoria/RH)?",
   },
 ];
 
