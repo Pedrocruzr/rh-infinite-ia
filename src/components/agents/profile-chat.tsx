@@ -189,15 +189,15 @@ export default function ProfileChat() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-black">
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-6 flex items-start justify-between gap-4">
+    <main className="h-[100dvh] overflow-hidden bg-white text-black">
+      <div className="mx-auto max-w-6xl px-6 py-5">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="text-sm text-neutral-500">Comportamento</p>
             <h1 className="text-5xl font-semibold tracking-tight">
               Teste de Perfil Comportamental
             </h1>
-            <p className="mt-4 text-lg text-neutral-600">
+            <p className="mt-3 text-lg text-neutral-600">
               Responda uma pergunta por vez. Ao final, suas respostas ficarão disponíveis para análise do recrutador.
             </p>
           </div>
@@ -210,8 +210,14 @@ export default function ProfileChat() {
           </Link>
         </div>
 
-        <div className="rounded-[36px] border border-neutral-200 bg-neutral-50/40 p-6">
-          <div className="mx-auto flex h-[72vh] max-w-5xl flex-col">
+
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm leading-6 text-amber-900">
+          <strong>Aviso:</strong> esta avaliação ficará disponível por <strong>3 dias</strong> para consulta do recrutador.
+          Recomendamos salvar ou copiar o relatório depois que ele for gerado.
+        </div>
+
+        <div className="rounded-[36px] border border-neutral-200 bg-neutral-50/40 p-5">
+          <div className="mx-auto flex h-[calc(100dvh-300px)] min-h-[480px] max-h-[620px] max-w-5xl flex-col">
             <div className="flex-1 space-y-6 overflow-y-auto pr-2">
               {messages.map((message) => (
                 <div
@@ -251,7 +257,7 @@ export default function ProfileChat() {
               <div ref={bottomRef} />
             </div>
 
-            <div className="mt-6 border-t border-neutral-200 pt-6">
+            <div className="mt-4 border-t border-neutral-200 pt-4">
               {currentQuestion?.kind === "single_choice" && !finished ? (
                 <div className="space-y-4">
                   <p className="text-sm text-neutral-500">
@@ -295,7 +301,7 @@ export default function ProfileChat() {
                         : "Digite sua resposta aqui..."
                     }
                     disabled={loading || finished}
-                    rows={4}
+                    rows={3}
                     className="w-full rounded-[28px] border border-neutral-300 bg-white px-5 py-4 text-lg outline-none focus:border-neutral-900 disabled:bg-neutral-100"
                   />
 
