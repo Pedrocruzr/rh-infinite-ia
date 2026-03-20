@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   initializeParecerSession,
   runParecerStep,
@@ -11,11 +12,88 @@ type RequestBody = {
   currentField?: ParecerField;
 };
 
+function mapSessionToRow(session: ParecerSession) {
+  return {
+    candidate_name: session.candidato ?? "",
+    target_role: session.vaga ?? "",
+    competencies: [],
+    disc_answer: null,
+    motivation_answer: session.motivacao ?? null,
+    example_1: session.gestaoProcessos ?? session.competenciasTecnicas ?? null,
+    example_2: session.analiseKpis ?? session.competenciasComportamentais ?? null,
+    example_3: session.evidenciasLideranca ?? session.pontosDesenvolvimento ?? null,
+    example_4: session.recomendacaoFinal ?? null,
+    status: session.status ?? "in_progress",
+    report_status: session.reportStatus ?? "pending",
+    report_markdown: session.reportMarkdown ?? null,
+    agent_name: "Parecer Técnico de Entrevista",
+    agent_slug: "parecer-tecnico-entrevista",
+    raw_answers: session,
+    updated_at: new Date().toISOString(),
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as RequestBody;
+    let session = body.session ?? initializeParecerSession();
 
-    const session = body.session ?? initializeParecerSession();
+    const hasIncomingAnswer =
+      typeof body.answer === "string" &&
+      body.answer.trim().length > 0 &&
+      typeof body.currentField === "string";
+
+    if (!hasIncomingAnswer) {
+      const result = await runParecerStep({ session });
+
+      return NextResponse.json({
+        session,
+        done: false,
+        reply: result.reply,
+        nextField: result.nextField ?? null,
+        reportMarkdown: null,
+      });
+    }
+
+    const supabase = createAdminClient();
+
+    if (!session.assessmentId) {
+      const now = new Date();
+      const expiresAt = new Date(
+        now.getTime() + 3 * 24 * 60 * 60 * 1000
+      ).toISOString();
+
+      const { data: created, error: createError } = await supabase
+        .from("profile_assessments")
+        .insert({
+          candidate_name: "",
+          target_role: "Pendente",
+          competencies: [],
+          status: "in_progress",
+          report_status: "pending",
+          report_markdown: null,
+          agent_name: "Parecer Técnico de Entrevista",
+          agent_slug: "parecer-tecnico-entrevista",
+          raw_answers: {},
+          expires_at: expiresAt,
+        })
+        .select("id")
+        .single();
+
+      if (createError) {
+        return NextResponse.json(
+          {
+            error: `Erro ao criar avaliação do parecer técnico: ${createError.message}`,
+          },
+          { status: 500 }
+        );
+      }
+
+      session = {
+        ...session,
+        assessmentId: created.id,
+      };
+    }
 
     const result = await runParecerStep({
       session,
@@ -23,7 +101,32 @@ export async function POST(req: NextRequest) {
       currentField: body.currentField,
     });
 
-    return NextResponse.json(result);
+    const finalSession: ParecerSession = {
+      ...result.session,
+      assessmentId: session.assessmentId,
+    };
+
+    const { error: updateError } = await supabase
+      .from("profile_assessments")
+      .update(mapSessionToRow(finalSession))
+      .eq("id", finalSession.assessmentId!);
+
+    if (updateError) {
+      return NextResponse.json(
+        {
+          error: `Erro ao salvar respostas do parecer técnico: ${updateError.message}`,
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      session: finalSession,
+      done: result.done,
+      reply: result.reply,
+      nextField: result.nextField ?? null,
+      reportMarkdown: result.reportMarkdown ?? null,
+    });
   } catch (error) {
     console.error("Erro na rota parecer-tecnico-entrevista:", error);
 
