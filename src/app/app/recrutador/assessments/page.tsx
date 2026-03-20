@@ -12,6 +12,7 @@ export default async function RecruiterAssessmentsPage() {
   const { data: assessments } = await supabase
     .from("profile_assessments")
     .select("*")
+    .eq("report_status", "generated")
     .order("created_at", { ascending: false });
 
   return (
