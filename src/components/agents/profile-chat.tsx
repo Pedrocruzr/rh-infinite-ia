@@ -330,12 +330,6 @@ export default function ProfileChat() {
                   </div>
                 </form>
               )}
-
-              {session?.assessmentId && (
-                <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                  Avaliação salva com sucesso e disponível em Avaliações recebidas.
-                </div>
-              )}
             </div>
           </div>
         </div>
