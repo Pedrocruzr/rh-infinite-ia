@@ -6,25 +6,261 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.102:3000
 - Environments: .env.local
-✓ Ready in 298ms
+✓ Ready in 352ms
 
- GET /app/agentes/teste-perfil-comportamental 200 in 1731ms (next.js: 1539ms, application-code: 192ms)
- GET /app/agentes/parecer-tecnico-entrevista 200 in 1742ms (next.js: 1587ms, application-code: 155ms)
- GET /app/agentes/taxa-aderencia-vaga 200 in 1756ms (next.js: 1620ms, application-code: 136ms)
- GET /app/agentes/teste-perfil-disc 200 in 1799ms (next.js: 1680ms, application-code: 119ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 385ms (next.js: 377ms, application-code: 8ms)
- POST /api/agents/parecer-tecnico-entrevista 200 in 406ms (next.js: 404ms, application-code: 3ms)
- POST /api/agents/teste-perfil-disc 200 in 443ms (next.js: 440ms, application-code: 3ms)
- POST /api/agents/teste-perfil-comportamental 200 in 95ms (next.js: 62ms, application-code: 33ms)
- GET /app/recrutador/assessments 200 in 307ms (next.js: 220ms, application-code: 87ms)
- POST /api/agents/parecer-tecnico-entrevista 200 in 14ms (next.js: 2ms, application-code: 12ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 5ms (next.js: 2ms, application-code: 2ms)
- POST /api/agents/teste-perfil-disc 200 in 18ms (next.js: 1612µs, application-code: 17ms)
- GET /app/recrutador/assessments 200 in 37ms (next.js: 2ms, application-code: 35ms)
- POST /api/agents/parecer-tecnico-entrevista 200 in 12ms (next.js: 2ms, application-code: 10ms)
- POST /api/agents/parecer-tecnico-entrevista 200 in 31ms (next.js: 3ms, application-code: 28ms)
- POST /api/agents/teste-perfil-disc 200 in 10ms (next.js: 4ms, application-code: 6ms)
- POST /api/agents/teste-perfil-disc 200 in 16ms (next.js: 11ms, application-code: 5ms)
- POST /api/agents/teste-perfil-disc 200 in 27ms (next.js: 1424µs, application-code: 26ms)
- POST /api/agents/teste-perfil-disc 200 in 16ms (next.js: 1962µs, application-code: 14ms)
- POST /api/agents/teste-perfil-disc 200 in 11ms (next.js: 1513µs, application-code: 10ms)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+[browser] ./src/app/api/agents/teste-perfil-comportamental/route.ts:3:1
+Export generateProfileReport doesn't exist in target module
+   1 | import { NextRequest, NextResponse } from "next/server";
+   2 | import { createAdminClient } from "@/lib/supabase/admin";
+>  3 | import {
+     | ^^^^^^^
+>  4 |   generateProfileReport,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+>  5 |   initializeProfileSession,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  6 |   runProfileStep,
+     | ^^^^^^^^^^^^^^^^^
+>  7 | } from "@/lib/agents/profile/profile-runner";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   8 | import type {
+   9 |   ProfileField,
+  10 |   ProfileSession,
+
+The export generateProfileReport was not found in module [project]/src/lib/agents/profile/profile-runner.ts [app-route] (ecmascript).
+Did you mean to import runProfileStep?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist. 
+    at handleErrors (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+    at processMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13891:21)
+    at WebSocket.handleMessage (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13335:52) (file:///Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/dev/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:13828:21)
+ GET /app/agentes/taxa-aderencia-vaga 200 in 1979ms (next.js: 1641ms, application-code: 338ms)
+ GET /app/agentes/teste-perfil-comportamental 200 in 2.0s (next.js: 1754ms, application-code: 253ms)
+ GET /app/agentes/teste-perfil-disc 200 in 1995ms (next.js: 1695ms, application-code: 300ms)
+ GET /app/agentes/parecer-tecnico-entrevista 200 in 2.0s (next.js: 1723ms, application-code: 280ms)
+ GET /app/recrutador/assessments 200 in 2.1s (next.js: 1822ms, application-code: 269ms)
+ POST /api/agents/parecer-tecnico-entrevista 200 in 445ms (next.js: 438ms, application-code: 7ms)
+ POST /api/agents/taxa-aderencia-vaga 200 in 414ms (next.js: 411ms, application-code: 3ms)
+ POST /api/agents/teste-perfil-disc 200 in 478ms (next.js: 475ms, application-code: 3ms)
+ POST /api/agents/teste-perfil-comportamental 200 in 123ms (next.js: 94ms, application-code: 29ms)
+ POST /api/agents/teste-perfil-comportamental 200 in 31ms (next.js: 6ms, application-code: 25ms)
+ POST /api/agents/teste-perfil-comportamental 200 in 26ms (next.js: 6ms, application-code: 21ms)
+ POST /api/agents/teste-perfil-comportamental 200 in 31ms (next.js: 8ms, application-code: 23ms)
+ POST /api/agents/teste-perfil-comportamental 200 in 23ms (next.js: 4ms, application-code: 20ms)
+ POST /api/agents/teste-perfil-comportamental 200 in 24ms (next.js: 4ms, application-code: 20ms)
+ POST /api/agents/teste-perfil-comportamental 200 in 21ms (next.js: 3ms, application-code: 18ms)
+ GET /app/recrutador/assessments 200 in 94ms (next.js: 6ms, application-code: 88ms)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  generateDiscReport,
   initializeDiscSession,
   runDiscStep,
 } from "@/lib/disc-runner";
@@ -25,7 +26,7 @@ function mapSessionToRow(session: DiscSession) {
     example_4: session.resposta4 ?? null,
     status: session.status ?? "in_progress",
     report_status: session.reportStatus ?? "pending",
-    report_markdown: null,
+    report_markdown: (session as DiscSession & { reportMarkdown?: string | null }).reportMarkdown ?? null,
     agent_name: "Teste de Perfil DISC",
     agent_slug: "teste-perfil-disc",
     raw_answers: session,
@@ -105,10 +106,22 @@ export async function POST(req: NextRequest) {
       currentField: body.currentField,
     });
 
-    const finalSession: DiscSession = {
+    let finalSession: DiscSession & { reportMarkdown?: string | null } = {
       ...result.session,
       assessmentId: session.assessmentId,
+      reportMarkdown: null,
     };
+
+    if (result.done) {
+      const reportMarkdown = await generateDiscReport(finalSession);
+
+      finalSession = {
+        ...finalSession,
+        status: "completed",
+        reportStatus: "generated",
+        reportMarkdown,
+      };
+    }
 
     const { error: updateError } = await supabase
       .from("profile_assessments")
@@ -127,8 +140,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       session: finalSession,
       done: result.done,
-      reply: result.reply,
+      reply: result.done
+        ? "Relatório DISC gerado com sucesso."
+        : result.reply,
       nextField: result.nextField ?? null,
+      reportMarkdown: finalSession.reportMarkdown ?? null,
     });
   } catch (error) {
     console.error("Erro na rota teste-perfil-disc:", error);

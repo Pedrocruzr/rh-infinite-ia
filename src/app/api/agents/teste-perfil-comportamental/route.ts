@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  generateProfileReport,
   initializeProfileSession,
   runProfileStep,
 } from "@/lib/agents/profile/profile-runner";
@@ -15,7 +16,7 @@ type RequestBody = {
   answer?: string;
 };
 
-function mapSessionToRow(session: ProfileSession) {
+function mapSessionToRow(session: ProfileSession & { reportMarkdown?: string | null }) {
   return {
     candidate_name: session.nome ?? "",
     target_role: session.vaga ?? "",
@@ -27,7 +28,10 @@ function mapSessionToRow(session: ProfileSession) {
     example_3: session.competenciaExemplo3 ?? null,
     status: session.status ?? "in_progress",
     report_status: session.reportStatus ?? "pending",
+    report_markdown: session.reportMarkdown ?? null,
     agent_name: "Teste de Perfil Comportamental",
+    agent_slug: "teste-perfil-comportamental",
+    raw_answers: session,
     updated_at: new Date().toISOString(),
   };
 }
@@ -51,7 +55,10 @@ export async function POST(req: NextRequest) {
           competencies: [],
           status: "in_progress",
           report_status: "pending",
+          report_markdown: null,
           agent_name: "Teste de Perfil Comportamental",
+          agent_slug: "teste-perfil-comportamental",
+          raw_answers: {},
           expires_at: expiresAt,
         })
         .select("id")
@@ -78,10 +85,22 @@ export async function POST(req: NextRequest) {
       answer: body.answer,
     });
 
-    const finalSession: ProfileSession = {
+    let finalSession: ProfileSession & { reportMarkdown?: string | null } = {
       ...result.session,
       assessmentId: session.assessmentId,
+      reportMarkdown: null,
     };
+
+    if (result.done) {
+      const reportMarkdown = generateProfileReport(finalSession);
+
+      finalSession = {
+        ...finalSession,
+        status: "completed",
+        reportStatus: "generated",
+        reportMarkdown,
+      };
+    }
 
     const { error: updateError } = await supabase
       .from("profile_assessments")
@@ -100,8 +119,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       session: finalSession,
       done: result.done,
-      reply: result.reply,
+      reply: result.done
+        ? "Relatório de perfil comportamental gerado com sucesso."
+        : result.reply,
       nextQuestion: result.nextQuestion,
+      reportMarkdown: finalSession.reportMarkdown ?? null,
     });
   } catch (error) {
     return NextResponse.json(
