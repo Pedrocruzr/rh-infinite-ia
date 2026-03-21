@@ -6,22 +6,17 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.102:3000
 - Environments: .env.local
-✓ Ready in 507ms
+✓ Ready in 504ms
 
 ○ Compiling /app/agentes/teste-perfil-comportamental ...
- GET /app/agentes/taxa-aderencia-vaga 200 in 4.2s (next.js: 3.4s, application-code: 797ms)
- GET /app/agentes/teste-perfil-disc 200 in 4.3s (next.js: 3.6s, application-code: 681ms)
- GET /app/agentes/parecer-tecnico-entrevista 200 in 4.4s (next.js: 3.5s, application-code: 836ms)
- GET /app/agentes/teste-perfil-comportamental 200 in 4.4s (next.js: 3.6s, application-code: 760ms)
- GET /app/recrutador/assessments 200 in 4.6s (next.js: 3.8s, application-code: 747ms)
- POST /api/agents/parecer-tecnico-entrevista 200 in 1084ms (next.js: 1060ms, application-code: 25ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 1130ms (next.js: 1123ms, application-code: 7ms)
- POST /api/agents/teste-perfil-disc 200 in 1211ms (next.js: 1205ms, application-code: 5ms)
- GET /app/recrutador/assessments 200 in 149ms (next.js: 13ms, application-code: 136ms)
- GET /app/agentes/teste-perfil-disc 200 in 63ms (next.js: 10ms, application-code: 54ms)
- POST /api/agents/teste-perfil-disc 200 in 15ms (next.js: 6ms, application-code: 9ms)
- GET /app/agentes/taxa-aderencia-vaga 200 in 57ms (next.js: 8ms, application-code: 49ms)
- POST /api/agents/taxa-aderencia-vaga 200 in 10ms (next.js: 4ms, application-code: 6ms)
- GET /app/agentes/parecer-tecnico-entrevista 200 in 67ms (next.js: 8ms, application-code: 60ms)
- POST /api/agents/parecer-tecnico-entrevista 200 in 7ms (next.js: 2ms, application-code: 5ms)
- GET /app/agentes/teste-perfil-comportamental 200 in 59ms (next.js: 6ms, application-code: 53ms)
+ GET /app/agentes/teste-perfil-disc 200 in 6.9s (next.js: 5.6s, application-code: 1281ms)
+ GET /app/agentes/parecer-tecnico-entrevista 200 in 6.4s (next.js: 5.0s, application-code: 1375ms)
+ GET /app/agentes/teste-perfil-comportamental 200 in 7.0s (next.js: 5.9s, application-code: 1098ms)
+ GET /app/agentes/taxa-aderencia-vaga 200 in 7.0s (next.js: 5.7s, application-code: 1260ms)
+ GET /app/recrutador/assessments 200 in 7.0s (next.js: 5.8s, application-code: 1280ms)
+○ Compiling /api/agents/parecer-tecnico-entrevista ...
+ POST /api/agents/taxa-aderencia-vaga 200 in 2.2s (next.js: 2.2s, application-code: 40ms)
+ POST /api/agents/parecer-tecnico-entrevista 200 in 3.5s (next.js: 3.5s, application-code: 11ms)
+ POST /api/agents/teste-perfil-disc 200 in 1724ms (next.js: 1713ms, application-code: 11ms)
+ GET /app/agentes/parecer-tecnico-entrevista 200 in 82ms (next.js: 16ms, application-code: 66ms)
+ POST /api/agents/parecer-tecnico-entrevista 200 in 12ms (next.js: 6ms, application-code: 6ms)

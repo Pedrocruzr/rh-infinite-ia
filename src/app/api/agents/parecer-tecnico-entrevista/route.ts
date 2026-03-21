@@ -142,6 +142,28 @@ function validateAnswer(field: ParecerField, answer: string): string | null {
     return null;
   }
 
+  if (field === "contextoContratacao") {
+    const acceptedShortAnswers = [
+      "substituicao",
+      "substituição",
+      "expansao",
+      "expansão",
+      "nova estrutura",
+      "promocao interna",
+      "promoção interna",
+      "reposicao",
+      "reposição",
+      "aumento de quadro",
+      "troca de colaborador",
+    ];
+
+    const normalizedFieldAnswer = normalizeText(normalized);
+
+    if (acceptedShortAnswers.includes(normalizedFieldAnswer)) {
+      return null;
+    }
+  }
+
   if (normalized.length < 12) {
     return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
   }
