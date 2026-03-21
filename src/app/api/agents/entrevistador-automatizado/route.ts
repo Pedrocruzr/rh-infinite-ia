@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabaseAdmin();
 
     const payload = {
-      candidate_name: finalSession.candidatoNome ?? null,
+      candidate_name: `Roteiro de entrevista - ${finalSession.vagaAlvo ?? "vaga"}`,
       target_role: finalSession.vagaAlvo ?? null,
       agent_name: ENTREVISTADOR_AUTOMATIZADO_AGENT.name,
       agent_slug: ENTREVISTADOR_AUTOMATIZADO_AGENT.slug,
@@ -127,19 +127,21 @@ export async function POST(req: NextRequest) {
       session: finalSession,
       agent: ENTREVISTADOR_AUTOMATIZADO_AGENT,
       reply:
-        "Relatório gerado com sucesso. Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+        "Roteiro e relatório gerados com sucesso. Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       reportHtml,
       retentionNotice:
         "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
     });
   } catch (error) {
     console.error("Erro na rota do Entrevistador Automatizado:", error);
+    const message =
+      error instanceof Error ? error.message : "Erro interno desconhecido";
 
     return NextResponse.json(
       {
         ok: false,
         completed: false,
-        reply: "Falha interna ao processar o agente Entrevistador Automatizado.",
+        reply: `Falha interna ao processar o agente Entrevistador Automatizado. ${message}`,
       },
       { status: 500 }
     );

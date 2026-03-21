@@ -1,7 +1,15 @@
 import type { EntrevistadorAutomatizadoSession } from "./flow";
 
+type CompetencyPack = {
+  canonical: string;
+  idealLevel: number;
+  description: string;
+  questions: string[];
+  whatToLookFor: string;
+};
+
 function escapeHtml(value: string): string {
-  return value
+  return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -13,39 +21,223 @@ function safe(value: string | undefined, fallback = "Não informado"): string {
   return escapeHtml(text && text.length > 0 ? text : fallback);
 }
 
-function negativeOrValue(value: string | undefined): string {
-  const text = value?.trim();
-  if (!text) return "Não informado";
-  const normalized = text
+function normalize(value: string): string {
+  return String(value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
 
-  if (["nao", "não", "nenhum", "nenhuma", "sem mais informacoes", "sem mais informações"].includes(normalized)) {
-    return "Não foram sinalizadas observações adicionais.";
+function titleCase(value: string): string {
+  return value
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function splitCompetencies(raw: string): string[] {
+  return String(raw ?? "")
+    .split(/[,\n;|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+const COMPETENCY_LIBRARY: CompetencyPack[] = [
+  {
+    canonical: "Comunicação",
+    idealLevel: 4,
+    description: "Clareza verbal, objetividade, escuta e capacidade de adaptação da mensagem ao público.",
+    questions: [
+      "Me conte sobre uma situação em que você precisou explicar algo complexo para um cliente de forma simples.",
+      "Relate um momento em que sua comunicação evitou um problema maior no atendimento.",
+      "Descreva um feedback que recebeu sobre sua comunicação com clientes.",
+    ],
+    whatToLookFor:
+      "Clareza, adaptação da linguagem, precisão, postura e evidências concretas de entendimento gerado.",
+  },
+  {
+    canonical: "Proatividade",
+    idealLevel: 4,
+    description: "Capacidade de antecipar problemas, agir sem depender de cobrança e propor melhorias.",
+    questions: [
+      "Conte sobre uma situação em que você antecipou um problema na recepção e evitou impacto.",
+      "Dê um exemplo de algo que você melhorou por iniciativa própria.",
+      "Relate uma situação em que você fez além do esperado no atendimento.",
+    ],
+    whatToLookFor:
+      "Antecipação, senso de dono, iniciativa prática e resultado gerado sem depender de ordem direta.",
+  },
+  {
+    canonical: "Flexibilidade",
+    idealLevel: 4,
+    description: "Adaptação a mudanças, múltiplas demandas e contextos variados sem perda de qualidade.",
+    questions: [
+      "Descreva uma mudança inesperada na rotina e como você reagiu.",
+      "Conte sobre um dia em que teve que lidar com múltiplas demandas ao mesmo tempo.",
+      "Relate uma situação em que teve que se adaptar a diferentes perfis de clientes.",
+    ],
+    whatToLookFor:
+      "Adaptação rápida, priorização, estabilidade emocional e manutenção da qualidade sob mudança.",
+  },
+  {
+    canonical: "Inteligência Emocional",
+    idealLevel: 4,
+    description: "Autocontrole, maturidade relacional e manejo de tensão em situações difíceis.",
+    questions: [
+      "Conte sobre um atendimento difícil com cliente estressado e como você lidou.",
+      "Relate uma situação em que precisou controlar suas emoções no trabalho.",
+      "Dê um exemplo de como você ajudou a acalmar um cliente ou colega.",
+    ],
+    whatToLookFor:
+      "Autocontrole, empatia, regulação emocional, postura profissional e capacidade de desescalar conflitos.",
+  },
+  {
+    canonical: "Cultura Orientada a Resultados",
+    idealLevel: 4,
+    description: "Foco em meta, produtividade, padrão de entrega e percepção de impacto do trabalho.",
+    questions: [
+      "Como você mede se fez um bom atendimento?",
+      "Conte sobre um resultado positivo que você gerou no atendimento ao cliente.",
+      "Relate uma situação em que você melhorou indicadores de tempo, satisfação ou organização.",
+    ],
+    whatToLookFor:
+      "Mentalidade de resultado, uso de indicadores, responsabilidade por performance e melhoria contínua.",
+  },
+  {
+    canonical: "Empatia",
+    idealLevel: 4,
+    description: "Capacidade de compreender o outro e ajustar a atuação com sensibilidade e firmeza.",
+    questions: [
+      "Conte uma situação em que sua compreensão do cliente foi decisiva para resolver um problema.",
+      "Descreva a reação de uma pessoa que foi atendida por você em um momento difícil.",
+      "Relate um caso em que um cliente muito estressado conseguiu se acalmar com seu atendimento.",
+    ],
+    whatToLookFor:
+      "Leitura emocional, escuta ativa, acolhimento com objetividade e impacto positivo na relação.",
+  },
+  {
+    canonical: "Organização",
+    idealLevel: 4,
+    description: "Capacidade de estruturar prioridades, controlar fluxo e manter ordem operacional.",
+    questions: [
+      "Relate um dia de intensa sobrecarga e como você fez para realizar todas as suas atividades.",
+      "Descreva uma situação em que a organização evitou retrabalho ou atraso no atendimento.",
+      "Conte como você mantém controle sobre demandas simultâneas no dia a dia.",
+    ],
+    whatToLookFor:
+      "Método, disciplina, priorização, controle de fluxo e consistência operacional.",
+  },
+];
+
+function competencyAliases(value: string): string {
+  const item = normalize(value);
+
+  if (item.includes("comunic")) return "Comunicação";
+  if (item.includes("proativ") || item.includes("iniciativa")) return "Proatividade";
+  if (item.includes("flexib") || item.includes("adapt")) return "Flexibilidade";
+  if (item.includes("inteligencia emocional") || item.includes("emocional")) return "Inteligência Emocional";
+  if (item.includes("resultado") || item.includes("cultura orientada a resultados")) return "Cultura Orientada a Resultados";
+  if (item.includes("empatia")) return "Empatia";
+  if (item.includes("organiz")) return "Organização";
+
+  return titleCase(String(value || "").trim());
+}
+
+function resolvePack(name: string): CompetencyPack {
+  const canonical = competencyAliases(name);
+  const found = COMPETENCY_LIBRARY.find((item) => item.canonical === canonical);
+
+  if (found) return found;
+
+  return {
+    canonical,
+    idealLevel: 4,
+    description:
+      "Competência informada pelo recrutador e tratada como requisito relevante para a entrevista.",
+    questions: [
+      `Me conte uma situação real em que você precisou demonstrar ${canonical.toLowerCase()} no trabalho.`,
+      `Descreva um caso em que ${canonical.toLowerCase()} foi decisiva para entregar um resultado melhor.`,
+      `Que evidências concretas mostram que você tem ${canonical.toLowerCase()} em nível consistente?`,
+    ],
+    whatToLookFor:
+      "Exemplos reais, ações específicas, resultados observáveis, aprendizados e repetibilidade do comportamento.",
+  };
+}
+
+function buildRoleNotes(role: string): string[] {
+  const normalizedRole = normalize(role);
+
+  if (normalizedRole.includes("recep")) {
+    return [
+      "Ser o rosto e a voz da empresa no primeiro contato com clientes, visitantes e fornecedores.",
+      "Recepcionar, direcionar, registrar recados e controlar o fluxo de pessoas com cordialidade e agilidade.",
+      "Manter recepção, comunicação e agenda organizadas, preservando boa impressão e fluidez operacional.",
+    ];
   }
 
-  return text;
+  return [
+    "Executar a função com consistência, alinhamento ao contexto da vaga e boa resposta às exigências da operação.",
+    "Demonstrar competências comportamentais e organizacionais compatíveis com o ambiente e as entregas esperadas.",
+    "Gerar evidências objetivas que apoiem a comparação entre candidatos de forma técnica e padronizada.",
+  ];
 }
 
 export function buildEntrevistadorAutomatizadoReport(
   session: EntrevistadorAutomatizadoSession
 ): string {
-  const recrutadorNome = safe(session.recrutadorNome);
-  const candidatoNome = safe(session.candidatoNome);
-  const vagaAlvo = safe(session.vagaAlvo);
-  const contextoContratacao = safe(session.contextoContratacao);
-  const objetivoPrincipalVaga = safe(session.objetivoPrincipalVaga);
-  const responsabilidadesCriticas = safe(session.responsabilidadesCriticas);
-  const competenciasTecnicas = safe(session.competenciasTecnicas);
-  const competenciasComportamentais = safe(session.competenciasComportamentais);
-  const desafiosFuncao = safe(session.desafiosFuncao);
-  const criteriosEliminatorios = safe(session.criteriosEliminatorios);
-  const nivelExperiencia = safe(session.nivelExperiencia);
-  const observacoesFitCultural = safe(negativeOrValue(session.observacoesFitCultural));
-  const nomeGestorDireto = safe(session.nomeGestorDireto);
-  const aprovacaoFinalRh = safe(session.aprovacaoFinalRh);
+  const vagaAlvoRaw = session.vagaAlvo?.trim() || "Não informado";
+  const competenciasRaw = session.competenciasDesejadas?.trim() || "Não informado";
+
+  const uniqueCompetencies = Array.from(
+    new Map(
+      splitCompetencies(competenciasRaw)
+        .map(resolvePack)
+        .map((item) => [item.canonical, item] as const)
+    ).values()
+  );
+
+  const roleNotes = buildRoleNotes(vagaAlvoRaw);
+
+  const competencyRows = uniqueCompetencies
+    .map((competency) => {
+      const questionsHtml = competency.questions
+        .map((question, index) => `${index + 1}. ${escapeHtml(question)}`)
+        .join("<br />");
+
+      return `
+<tr>
+  <td><strong>${escapeHtml(competency.canonical)}</strong></td>
+  <td>${escapeHtml(competency.description)}</td>
+  <td>${questionsHtml}</td>
+  <td>${escapeHtml(competency.whatToLookFor)}</td>
+  <td style="text-align:center;">${competency.idealLevel}</td>
+</tr>`;
+    })
+    .join("");
+
+  const gapsRows = uniqueCompetencies
+    .map(
+      (competency) => `
+<tr>
+  <td><strong>${escapeHtml(competency.canonical)}</strong></td>
+  <td style="text-align:center;">${competency.idealLevel}</td>
+  <td style="text-align:center;">Preencher após entrevista</td>
+  <td style="text-align:center;">Nota obtida – ${competency.idealLevel}</td>
+  <td>Até -1: aceitável | Menor que -1: atenção | Positivo: potencial acima do esperado</td>
+</tr>`
+    )
+    .join("");
+
+  const strengthsList = uniqueCompetencies.length
+    ? uniqueCompetencies
+        .slice(0, 3)
+        .map((item) => `<li>${escapeHtml(item.canonical)}</li>`)
+        .join("")
+    : "<li>Preencher após entrevista</li>";
+
+  const roleNotesHtml = roleNotes.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
 
   return `
 <h1>Relatório Técnico - Entrevistador Automatizado</h1>
@@ -54,187 +246,80 @@ export function buildEntrevistadorAutomatizadoReport(
 
 <h2>Identificação da solicitação</h2>
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr>
-    <td><strong>Agente</strong></td>
-    <td>Entrevistador Automatizado</td>
-  </tr>
-  <tr>
-    <td><strong>Candidato</strong></td>
-    <td>${candidatoNome}</td>
-  </tr>
-  <tr>
-    <td><strong>Vaga</strong></td>
-    <td>${vagaAlvo}</td>
-  </tr>
-  <tr>
-    <td><strong>Recrutador responsável</strong></td>
-    <td>${recrutadorNome}</td>
-  </tr>
-  <tr>
-    <td><strong>Gestor direto</strong></td>
-    <td>${nomeGestorDireto}</td>
-  </tr>
-  <tr>
-    <td><strong>Aprovação final</strong></td>
-    <td>${aprovacaoFinalRh}</td>
-  </tr>
+  <tr><td><strong>Agente</strong></td><td>Entrevistador Automatizado</td></tr>
+  <tr><td><strong>Vaga solicitada</strong></td><td>${safe(vagaAlvoRaw)}</td></tr>
+  <tr><td><strong>Competências informadas</strong></td><td>${safe(competenciasRaw)}</td></tr>
+  <tr><td><strong>Status do relatório</strong></td><td>Gerado e pronto para uso em entrevista</td></tr>
 </table>
 
-<h2>Leitura técnica do contexto</h2>
+<h2>Leitura técnica da vaga</h2>
+<ul>${roleNotesHtml}</ul>
+
+<h2>Roteiro estruturado para vaga: ${safe(vagaAlvoRaw)}</h2>
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
   <tr>
-    <td><strong>Contexto da contratação</strong></td>
-    <td>${contextoContratacao}</td>
+    <td><strong>Competência</strong></td>
+    <td><strong>Objetivo de avaliação</strong></td>
+    <td><strong>Perguntas por competência</strong></td>
+    <td><strong>Sinais de boa resposta</strong></td>
+    <td><strong>Nível ideal</strong></td>
   </tr>
-  <tr>
-    <td><strong>Objetivo principal da vaga</strong></td>
-    <td>${objetivoPrincipalVaga}</td>
-  </tr>
-  <tr>
-    <td><strong>Nível de experiência esperado</strong></td>
-    <td>${nivelExperiencia}</td>
-  </tr>
-  <tr>
-    <td><strong>Desafios da função</strong></td>
-    <td>${desafiosFuncao}</td>
-  </tr>
+  ${competencyRows}
 </table>
 
-<h2>Critérios de avaliação da entrevista</h2>
+<h2>Scorecard (0-2)</h2>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+  <tr><td><strong>Nota</strong></td><td><strong>Interpretação</strong></td></tr>
+  <tr><td style="text-align:center;"><strong>0</strong></td><td>Resposta vaga.</td></tr>
+  <tr><td style="text-align:center;"><strong>1</strong></td><td>Resposta genérica.</td></tr>
+  <tr><td style="text-align:center;"><strong>2</strong></td><td>Resposta com evidência concreta, ações claras e resultado observável.</td></tr>
+</table>
+
+<h2>Avaliação por Competências (1-5)</h2>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+  <tr><td><strong>Grau</strong></td><td><strong>Significado</strong></td></tr>
+  <tr><td style="text-align:center;"><strong>1</strong></td><td>Mínimo</td></tr>
+  <tr><td style="text-align:center;"><strong>3</strong></td><td>Médio</td></tr>
+  <tr><td style="text-align:center;"><strong>5</strong></td><td>Excelente</td></tr>
+</table>
+
+<h2>Análise de Gaps</h2>
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
   <tr>
-    <td><strong>Responsabilidades críticas</strong></td>
-    <td>${responsabilidadesCriticas}</td>
+    <td><strong>Competência</strong></td>
+    <td><strong>Nível ideal</strong></td>
+    <td><strong>Nível obtido</strong></td>
+    <td><strong>Gap</strong></td>
+    <td><strong>Leitura</strong></td>
   </tr>
-  <tr>
-    <td><strong>Competências técnicas exigidas</strong></td>
-    <td>${competenciasTecnicas}</td>
-  </tr>
-  <tr>
-    <td><strong>Competências comportamentais exigidas</strong></td>
-    <td>${competenciasComportamentais}</td>
-  </tr>
-  <tr>
-    <td><strong>Critérios eliminatórios</strong></td>
-    <td>${criteriosEliminatorios}</td>
-  </tr>
-  <tr>
-    <td><strong>Observações de fit cultural</strong></td>
-    <td>${observacoesFitCultural}</td>
-  </tr>
+  ${gapsRows}
 </table>
 
-<h2>Roteiro estruturado de entrevista</h2>
+<h2>Resumo Executivo</h2>
+<p>Candidato com nível geral [X], com destaque em [competências fortes].</p>
+
+<h2>Pontos Fortes</h2>
+<ul>${strengthsList}</ul>
+
+<h2>Gaps Identificados</h2>
+<p>Exemplo: Proatividade abaixo do esperado.</p>
+
+<h2>Recomendação</h2>
+<p>Aprovar / Aprovar com ressalvas / Não aprovar</p>
+
+<h2>Dicas para o entrevistador</h2>
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr>
-    <td><strong>Etapa</strong></td>
-    <td><strong>Objetivo</strong></td>
-    <td><strong>Pergunta orientadora</strong></td>
-    <td><strong>Evidência esperada</strong></td>
-  </tr>
-  <tr>
-    <td>Abertura</td>
-    <td>Validar contexto profissional e aderência inicial</td>
-    <td>Quero começar entendendo seu momento profissional. O que te motivou a participar desta seleção para a vaga de ${vagaAlvo}?</td>
-    <td>Clareza de motivação, coerência com a vaga e maturidade na comunicação.</td>
-  </tr>
-  <tr>
-    <td>Abertura</td>
-    <td>Validar entendimento da posição</td>
-    <td>Na sua visão, qual é o principal objetivo de um profissional dessa função dentro da empresa?</td>
-    <td>Leitura de negócio, entendimento do impacto do cargo e noção de prioridade.</td>
-  </tr>
-  <tr>
-    <td>Técnica</td>
-    <td>Explorar domínio operacional</td>
-    <td>Me conte uma situação em que você executou atividades semelhantes a estas responsabilidades: ${responsabilidadesCriticas}.</td>
-    <td>Experiência concreta, repertório prático e domínio das entregas centrais.</td>
-  </tr>
-  <tr>
-    <td>Técnica</td>
-    <td>Validar competência técnica crítica</td>
-    <td>Quais resultados você já gerou utilizando estas competências técnicas: ${competenciasTecnicas}?</td>
-    <td>Exemplos objetivos, indicadores, autonomia e aplicação real do conhecimento.</td>
-  </tr>
-  <tr>
-    <td>Técnica</td>
-    <td>Medir profundidade e consistência</td>
-    <td>Descreva uma decisão difícil que você precisou tomar em uma rotina parecida com esta vaga. Como analisou o cenário e qual foi sua decisão final?</td>
-    <td>Capacidade analítica, julgamento, priorização e responsabilidade sobre impacto.</td>
-  </tr>
-  <tr>
-    <td>Comportamental</td>
-    <td>Validar repertório comportamental</td>
-    <td>Me dê um exemplo real em que você precisou demonstrar ${competenciasComportamentais} em um contexto de pressão ou mudança.</td>
-    <td>Autopercepção, maturidade emocional, clareza na ação e aprendizado aplicado.</td>
-  </tr>
-  <tr>
-    <td>Comportamental</td>
-    <td>Entender resposta a desafios</td>
-    <td>Considerando que essa função enfrenta estes desafios: ${desafiosFuncao}, como você costuma se organizar para manter performance e qualidade?</td>
-    <td>Organização, resiliência, disciplina, senso de prioridade e estabilidade de execução.</td>
-  </tr>
-  <tr>
-    <td>Comportamental</td>
-    <td>Investigar colaboração e relacionamento</td>
-    <td>Conte uma situação em que você precisou alinhar expectativas com liderança, pares ou clientes internos para entregar resultado.</td>
-    <td>Comunicação, negociação, escuta ativa e capacidade de alinhamento.</td>
-  </tr>
-  <tr>
-    <td>Fit Cultural</td>
-    <td>Checar aderência ao ambiente</td>
-    <td>Que tipo de ambiente de trabalho favorece sua melhor performance e quais comportamentos você acredita que fortalecem uma equipe?</td>
-    <td>Compatibilidade com cultura, responsabilidade coletiva e consciência de contexto.</td>
-  </tr>
-  <tr>
-    <td>Fit Cultural</td>
-    <td>Testar aderência aos pontos sensíveis da vaga</td>
-    <td>Existe algum tipo de rotina, modelo de gestão ou cenário operacional em que você entende que performa menos? Como lida com isso?</td>
-    <td>Transparência, autoconhecimento e maturidade para reconhecer limites sem fuga de responsabilidade.</td>
-  </tr>
-  <tr>
-    <td>Risco</td>
-    <td>Confrontar critérios eliminatórios</td>
-    <td>Há algum ponto do seu histórico ou forma de trabalho que possa gerar preocupação em relação a estes critérios de atenção: ${criteriosEliminatorios}?</td>
-    <td>Consistência, honestidade, segurança na narrativa e ausência de incompatibilidades críticas.</td>
-  </tr>
-  <tr>
-    <td>Fechamento</td>
-    <td>Fechar com visão de compromisso e aderência</td>
-    <td>Se for contratado para esta posição, quais seriam suas prioridades nos primeiros 30 dias para gerar resultado com segurança?</td>
-    <td>Capacidade de rampa, visão prática de integração e orientação a resultado.</td>
-  </tr>
+  <tr><td>Sempre peça exemplos reais: “me conte uma situação”.</td></tr>
+  <tr><td>Busque evidências concretas: números, ações e resultados.</td></tr>
+  <tr><td>Aprofunde com: “o que você fez?”, “qual foi o resultado?”.</td></tr>
 </table>
-
-<h2>Gaps e pontos de atenção para o entrevistador</h2>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr>
-    <td><strong>Ponto de atenção 1</strong></td>
-    <td>Buscar exemplos concretos e mensuráveis. Evitar aceitar respostas excessivamente genéricas ou teóricas.</td>
-  </tr>
-  <tr>
-    <td><strong>Ponto de atenção 2</strong></td>
-    <td>Confrontar discurso com histórico real de execução, principalmente nos temas técnicos e nos desafios críticos da função.</td>
-  </tr>
-  <tr>
-    <td><strong>Ponto de atenção 3</strong></td>
-    <td>Checar coerência entre motivação do candidato, contexto da contratação e maturidade para operar no ritmo exigido pela vaga.</td>
-  </tr>
-  <tr>
-    <td><strong>Ponto de atenção 4</strong></td>
-    <td>Investigar sinais compatíveis com os critérios eliminatórios antes de avançar para etapa final.</td>
-  </tr>
-</table>
-
-<h2>Plano técnico de condução</h2>
-<p>Conduzir a entrevista em blocos, iniciando por contexto e motivação, avançando para repertório técnico, aprofundando evidências comportamentais e encerrando com aderência cultural e plano de entrada. Em cada resposta, o entrevistador deve solicitar situação, ação, resultado e aprendizado para elevar a precisão da análise.</p>
 
 <h2>Encerramento técnico</h2>
-<p>O roteiro foi estruturado para aumentar a consistência da entrevista, reduzir subjetividade excessiva e ampliar a capacidade de comparar candidatos com base em critérios observáveis, alinhados à vaga e ao contexto informado pelo recrutador.</p>
+<p>Este material foi estruturado para apoiar a condução da entrevista e o registro final da avaliação em Avaliações recebidas.</p>
 
 <h2>Assinatura e validação</h2>
-<p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${recrutadorNome}</p>
-<p><strong>Validação (Gestor Direto/Liderança):</strong> ${nomeGestorDireto}</p>
-<p><strong>Aprovação Final (Diretoria/RH):</strong> ${aprovacaoFinalRh}</p>
+<p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> A definir na aplicação prática</p>
+<p><strong>Validação (Gestor Direto/Liderança):</strong> A definir na aplicação prática</p>
+<p><strong>Aprovação Final (Diretoria/RH):</strong> A definir na aplicação prática</p>
 `.trim();
 }
