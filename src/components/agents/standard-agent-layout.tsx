@@ -16,6 +16,7 @@ type StandardAgentLayoutProps = {
   title: string;
   subtitle: string;
   retentionNotice?: string;
+  panelTopSpacingClass?: string;
   messages: Message[];
   loading?: boolean;
   finished?: boolean;
@@ -37,6 +38,7 @@ export default function StandardAgentLayout({
   title,
   subtitle,
   retentionNotice = "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+  panelTopSpacingClass = "mt-5",
   messages,
   loading = false,
   finished = false,
@@ -73,7 +75,7 @@ export default function StandardAgentLayout({
           {retentionNotice}
         </div>
 
-        <div className="rounded-[36px] border border-neutral-200 bg-neutral-50/40 p-5">
+        <div className={`${panelTopSpacingClass} rounded-[36px] border border-neutral-200 bg-neutral-50/40 p-5`}>
           <div className="mx-auto flex h-[calc(100dvh-300px)] min-h-[480px] max-h-[620px] max-w-5xl flex-col">
             <div className="flex-1 space-y-6 overflow-y-auto pr-2">
               {messages.map((message) => (
