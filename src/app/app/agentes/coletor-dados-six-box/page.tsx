@@ -4,11 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
 
-type GenericSession = Record<string, string | undefined> & {
-  status?: string;
-  reportStatus?: string;
-  reportMarkdown?: string | null;
-};
+type GenericSession = Record<string, string | undefined>;
 
 type Message = {
   id: string;
@@ -21,9 +17,8 @@ function cloneSession<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-export default function TestePerfilComportamentalPage() {
+export default function ColetorDadosSixBoxPage() {
   const [session, setSession] = useState<GenericSession | null>(null);
-  const [currentField, setCurrentField] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,7 +41,7 @@ export default function TestePerfilComportamentalPage() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/agents/teste-perfil-comportamental", {
+      const response = await fetch("/api/agents/coletor-dados-six-box", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,11 +52,10 @@ export default function TestePerfilComportamentalPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.reply || data.error || "Erro ao iniciar o agente.");
+        throw new Error(data.reply || "Erro ao iniciar o agente.");
       }
 
       setSession(data.session ?? {});
-      setCurrentField(data.nextField ?? data.currentField ?? null);
       setMessages([
         {
           id: crypto.randomUUID(),
@@ -124,7 +118,7 @@ export default function TestePerfilComportamentalPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/agents/teste-perfil-comportamental", {
+      const response = await fetch("/api/agents/coletor-dados-six-box", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,31 +126,28 @@ export default function TestePerfilComportamentalPage() {
         body: JSON.stringify({
           session,
           message: answer,
-          answer,
-          currentField,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.reply || data.error || "Erro ao processar resposta.");
+        throw new Error(data.reply || "Erro ao processar resposta.");
       }
 
       setSession(data.session ?? {});
-      setCurrentField(data.nextField ?? data.currentField ?? null);
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data.done || data.completed
+          content: data.completed
             ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
             : data.reply,
         },
       ]);
 
-      setFinished(Boolean(data.done || data.completed));
+      setFinished(Boolean(data.completed));
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -183,9 +174,9 @@ export default function TestePerfilComportamentalPage() {
 
   return (
     <StandardAgentLayout
-      stackerName="Recrutamento & Seleção"
-      title="Teste de Perfil Comportamental"
-      subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
+      stackerName="Diagnóstico"
+      title="Coletor de Dados Six Box"
+      subtitle="Responda uma pergunta por vez. Ao final, os dados ficarão disponíveis em Avaliações recebidas."
       messages={messages.map((message) => ({
         id: message.id,
         role: message.role,
