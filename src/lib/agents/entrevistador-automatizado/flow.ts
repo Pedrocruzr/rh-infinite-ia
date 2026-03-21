@@ -100,32 +100,39 @@ function validateSemanticText(
   return { valid: true };
 }
 
+
+function validateSimpleName(value: string): FlowValidationResult {
+  const cleaned = value.trim();
+  if (!cleaned) return { valid: false, message: "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?" };
+  return { valid: true };
+}
+
 export const ENTREVISTADOR_AUTOMATIZADO_FLOW: FlowStep[] = [
   {
     key: "vagaAlvo",
     question: "Para qual vaga você precisa de um roteiro de entrevista?",
-    validate: (value) => validateSemanticText(value, { minWords: 1 }),
+    validate: validateSimpleName,
   },
   {
     key: "competenciasDesejadas",
     question:
       "Quais competências comportamentais e organizacionais você deseja avaliar nesta entrevista?",
-    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+    validate: validateSimpleName,
   },
   {
     key: "responsavelAvaliacao",
     question: "Quem será o responsável pela avaliação? (RH/Recrutador)",
-    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+    validate: validateSimpleName,
   },
   {
     key: "validacaoGestor",
     question: "Quem fará a validação do candidato? (Gestor/Liderança)",
-    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+    validate: validateSimpleName,
   },
   {
     key: "aprovacaoFinalRh",
     question: "Quem dará a aprovação final? (Diretoria/RH)",
-    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+    validate: validateSimpleName,
   },
 ];
 
