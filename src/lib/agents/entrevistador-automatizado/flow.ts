@@ -1,9 +1,7 @@
 export type EntrevistadorAutomatizadoSession = {
+  candidatoNome?: string;
   vagaAlvo?: string;
   competenciasDesejadas?: string;
-  responsavelAvaliacao?: string;
-  validacaoGestor?: string;
-  aprovacaoFinalRh?: string;
 };
 
 export type FlowValidationResult = {
@@ -66,7 +64,7 @@ function looksLikeGibberish(value: string): boolean {
   if (blocked.has(text)) return true;
 
   const compact = text.replace(/\s+/g, "");
-  if (compact.length <= 2) return true;
+  if (compact.length <= 1) return true;
   if (/^[bcdfghjklmnpqrstvwxyz]{4,}$/i.test(compact)) return true;
 
   return false;
@@ -93,46 +91,43 @@ function validateSemanticText(
   }
 
   const words = wordCount(cleaned);
-  if (words < (options?.minWords ?? 2)) {
+  if (words < (options?.minWords ?? 1)) {
     return { valid: false, message: SHORT_BLOCK_MESSAGE };
   }
 
   return { valid: true };
 }
 
-
 function validateSimpleName(value: string): FlowValidationResult {
   const cleaned = value.trim();
-  if (!cleaned) return { valid: false, message: "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?" };
+
+  if (!cleaned) {
+    return { valid: false, message: SHORT_BLOCK_MESSAGE };
+  }
+
+  if (!hasLetters(cleaned) || looksLikeGibberish(cleaned)) {
+    return { valid: false, message: UNCLEAR_BLOCK_MESSAGE };
+  }
+
   return { valid: true };
 }
 
 export const ENTREVISTADOR_AUTOMATIZADO_FLOW: FlowStep[] = [
   {
+    key: "candidatoNome",
+    question: "Qual é o nome do candidato?",
+    validate: validateSimpleName,
+  },
+  {
     key: "vagaAlvo",
     question: "Para qual vaga você precisa de um roteiro de entrevista?",
-    validate: validateSimpleName,
+    validate: (value) => validateSemanticText(value, { minWords: 1 }),
   },
   {
     key: "competenciasDesejadas",
     question:
       "Quais competências comportamentais e organizacionais você deseja avaliar nesta entrevista?",
-    validate: validateSimpleName,
-  },
-  {
-    key: "responsavelAvaliacao",
-    question: "Quem será o responsável pela avaliação? (RH/Recrutador)",
-    validate: validateSimpleName,
-  },
-  {
-    key: "validacaoGestor",
-    question: "Quem fará a validação do candidato? (Gestor/Liderança)",
-    validate: validateSimpleName,
-  },
-  {
-    key: "aprovacaoFinalRh",
-    question: "Quem dará a aprovação final? (Diretoria/RH)",
-    validate: validateSimpleName,
+    validate: (value) => validateSemanticText(value, { minWords: 2 }),
   },
 ];
 

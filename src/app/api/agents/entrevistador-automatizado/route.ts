@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = {
-      candidate_name: `Roteiro de entrevista - ${finalSession.vagaAlvo ?? "vaga"}`,
+      candidate_name: finalSession.candidatoNome ?? `Roteiro de entrevista - ${finalSession.vagaAlvo ?? "vaga"}`,
       target_role: finalSession.vagaAlvo ?? null,
       agent_name: ENTREVISTADOR_AUTOMATIZADO_AGENT.name,
       agent_slug: ENTREVISTADOR_AUTOMATIZADO_AGENT.slug,

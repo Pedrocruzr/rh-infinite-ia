@@ -187,6 +187,7 @@ function buildRoleNotes(role: string): string[] {
 export function buildEntrevistadorAutomatizadoReport(
   session: EntrevistadorAutomatizadoSession
 ): string {
+  const candidatoNomeRaw = session.candidatoNome?.trim() || "Não informado";
   const vagaAlvoRaw = session.vagaAlvo?.trim() || "Não informado";
   const competenciasRaw = session.competenciasDesejadas?.trim() || "Não informado";
 
@@ -247,6 +248,7 @@ export function buildEntrevistadorAutomatizadoReport(
 <h2>Identificação da solicitação</h2>
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
   <tr><td><strong>Agente</strong></td><td>Entrevistador Automatizado</td></tr>
+  <tr><td><strong>Candidato</strong></td><td>${safe(candidatoNomeRaw)}</td></tr>
   <tr><td><strong>Vaga solicitada</strong></td><td>${safe(vagaAlvoRaw)}</td></tr>
   <tr><td><strong>Competências informadas</strong></td><td>${safe(competenciasRaw)}</td></tr>
   <tr><td><strong>Status do relatório</strong></td><td>Gerado e pronto para uso em entrevista</td></tr>
@@ -316,10 +318,5 @@ export function buildEntrevistadorAutomatizadoReport(
 
 <h2>Encerramento técnico</h2>
 <p>Este material foi estruturado para apoiar a condução da entrevista e o registro final da avaliação em Avaliações recebidas.</p>
-
-<h2>Assinatura e validação</h2>
-<p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${safe(session.responsavelAvaliacao, "Não definido")}</p>
-<p><strong>Validação (Gestor Direto/Liderança):</strong> ${safe(session.validacaoGestor, "Não definido")}</p>
-<p><strong>Aprovação Final (Diretoria/RH):</strong> ${safe(session.aprovacaoFinalRh, "Não definido")}</p>
 `.trim();
 }

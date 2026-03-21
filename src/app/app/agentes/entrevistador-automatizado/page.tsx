@@ -4,20 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 
 type EntrevistadorSession = {
-  recrutadorNome?: string;
   candidatoNome?: string;
   vagaAlvo?: string;
-  contextoContratacao?: string;
-  objetivoPrincipalVaga?: string;
-  responsabilidadesCriticas?: string;
-  competenciasTecnicas?: string;
-  competenciasComportamentais?: string;
-  desafiosFuncao?: string;
-  criteriosEliminatorios?: string;
-  nivelExperiencia?: string;
-  observacoesFitCultural?: string;
-  nomeGestorDireto?: string;
-  aprovacaoFinalRh?: string;
+  competenciasDesejadas?: string;
 };
 
 type Message = {
@@ -37,7 +26,6 @@ export default function EntrevistadorAutomatizadoPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [reportHtml, setReportHtml] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -111,7 +99,6 @@ export default function EntrevistadorAutomatizadoPage() {
       setSession(target.sessionSnapshot ?? null);
       setInput(target.content);
       setFinished(false);
-      setReportHtml("");
 
       return prev.slice(0, index);
     });
@@ -157,13 +144,11 @@ export default function EntrevistadorAutomatizadoPage() {
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data.reply,
+          content: data.completed
+            ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
+            : data.reply,
         },
       ]);
-
-      if (data.reportHtml) {
-        setReportHtml(data.reportHtml);
-      }
 
       setFinished(Boolean(data.completed));
     } catch (error) {
@@ -199,15 +184,13 @@ export default function EntrevistadorAutomatizadoPage() {
             Entrevistador Automatizado
           </h1>
           <p className="mt-3 text-lg text-neutral-600">
-            Responda uma pergunta por vez. Ao final, suas respostas ficarão
-            disponíveis para análise do recrutador.
+            Responda uma pergunta por vez. Ao final, suas respostas ficarão disponíveis para análise do recrutador.
           </p>
         </div>
 
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm leading-6 text-amber-900">
-          <strong>Aviso:</strong> esta avaliação ficará disponível por{" "}
-          <strong>3 dias</strong> para consulta do recrutador. Recomendamos
-          salvar ou copiar o relatório depois que ele for gerado.
+          <strong>Aviso:</strong> esta avaliação ficará disponível por <strong>3 dias</strong> para consulta do recrutador.
+          Recomendamos salvar ou copiar o relatório depois que ele for gerado.
         </div>
 
         <div className="mt-4 rounded-[36px] border border-neutral-200 bg-neutral-50/40 p-5">
@@ -217,9 +200,7 @@ export default function EntrevistadorAutomatizadoPage() {
                 <div
                   key={message.id}
                   className={`flex ${
-                    message.role === "assistant"
-                      ? "justify-start"
-                      : "justify-end"
+                    message.role === "assistant" ? "justify-start" : "justify-end"
                   }`}
                 >
                   <div className="max-w-[78%]">
@@ -252,15 +233,6 @@ export default function EntrevistadorAutomatizadoPage() {
                 </div>
               )}
 
-              {finished && reportHtml && (
-                <div className="rounded-[32px] border border-neutral-200 bg-white px-8 py-6 shadow-sm">
-                  <div
-                    className="prose prose-neutral max-w-none"
-                    dangerouslySetInnerHTML={{ __html: reportHtml }}
-                  />
-                </div>
-              )}
-
               <div ref={bottomRef} />
             </div>
 
@@ -274,7 +246,9 @@ export default function EntrevistadorAutomatizadoPage() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder={
-                      finished ? "Relatório finalizado." : "Digite sua resposta aqui..."
+                      finished
+                        ? "Relatório finalizado."
+                        : "Digite sua resposta aqui..."
                     }
                     rows={3}
                     className="min-h-[72px] flex-1 resize-none rounded-[20px] border-0 bg-white px-4 py-3 text-[15px] text-neutral-900 outline-none placeholder:text-neutral-400 focus:outline-none"
