@@ -21,7 +21,7 @@ function cloneSession<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-export default function EntrevistadorAutomatizadoPage() {
+export default function AnalistaDiagnosticoSixBoxPage() {
   const [session, setSession] = useState<GenericSession | null>(null);
   const [currentField, setCurrentField] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -46,7 +46,7 @@ export default function EntrevistadorAutomatizadoPage() {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/agents/entrevistador-automatizado", {
+      const response = await fetch("/api/agents/analista-diagnostico-six-box", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,7 +124,7 @@ export default function EntrevistadorAutomatizadoPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/agents/entrevistador-automatizado", {
+      const response = await fetch("/api/agents/analista-diagnostico-six-box", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -183,9 +183,9 @@ export default function EntrevistadorAutomatizadoPage() {
 
   return (
     <StandardAgentLayout
-      stackerName="Recrutamento & Seleção"
-      title="Entrevistador Automatizado"
-      subtitle="Responda uma pergunta por vez. Ao final, o roteiro ficará disponível em Avaliações recebidas."
+      stackerName="Diagnóstico"
+      title="Analista Diagnóstico Six Box"
+      subtitle="Responda uma pergunta por vez. Ao final, o diagnóstico ficará disponível em Avaliações recebidas."
       messages={messages.map((message) => ({
         id: message.id,
         role: message.role,

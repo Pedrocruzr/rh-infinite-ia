@@ -183,7 +183,7 @@ export default function TestePerfilDiscPage() {
 
   return (
     <StandardAgentLayout
-      stackerName="Recrutamento & Seleção"
+      stackerName="Comportamento"
       title="Teste de Perfil DISC"
       subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
       messages={messages.map((message) => ({
