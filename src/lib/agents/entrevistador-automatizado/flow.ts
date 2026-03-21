@@ -1,6 +1,9 @@
 export type EntrevistadorAutomatizadoSession = {
   vagaAlvo?: string;
   competenciasDesejadas?: string;
+  responsavelAvaliacao?: string;
+  validacaoGestor?: string;
+  aprovacaoFinalRh?: string;
 };
 
 export type FlowValidationResult = {
@@ -107,6 +110,21 @@ export const ENTREVISTADOR_AUTOMATIZADO_FLOW: FlowStep[] = [
     key: "competenciasDesejadas",
     question:
       "Quais competências comportamentais e organizacionais você deseja avaliar nesta entrevista?",
+    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+  },
+  {
+    key: "responsavelAvaliacao",
+    question: "Quem será o responsável pela avaliação? (RH/Recrutador)",
+    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+  },
+  {
+    key: "validacaoGestor",
+    question: "Quem fará a validação do candidato? (Gestor/Liderança)",
+    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+  },
+  {
+    key: "aprovacaoFinalRh",
+    question: "Quem dará a aprovação final? (Diretoria/RH)",
     validate: (value) => validateSemanticText(value, { minWords: 2 }),
   },
 ];

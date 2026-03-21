@@ -318,8 +318,8 @@ export function buildEntrevistadorAutomatizadoReport(
 <p>Este material foi estruturado para apoiar a condução da entrevista e o registro final da avaliação em Avaliações recebidas.</p>
 
 <h2>Assinatura e validação</h2>
-<p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> A definir na aplicação prática</p>
-<p><strong>Validação (Gestor Direto/Liderança):</strong> A definir na aplicação prática</p>
-<p><strong>Aprovação Final (Diretoria/RH):</strong> A definir na aplicação prática</p>
+<p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${safe(session.responsavelAvaliacao, "Não definido")}</p>
+<p><strong>Validação (Gestor Direto/Liderança):</strong> ${safe(session.validacaoGestor, "Não definido")}</p>
+<p><strong>Aprovação Final (Diretoria/RH):</strong> ${safe(session.aprovacaoFinalRh, "Não definido")}</p>
 `.trim();
 }

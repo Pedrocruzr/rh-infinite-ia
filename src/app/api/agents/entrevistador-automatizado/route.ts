@@ -16,10 +16,10 @@ type RouteBody = {
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key) {
-    throw new Error("Supabase environment variables are not configured.");
+    return null;
   }
 
   return createClient(url, key);
@@ -83,6 +83,21 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
+    if (!supabase) {
+      return NextResponse.json({
+        ok: true,
+        completed: true,
+        saved: false,
+        session: finalSession,
+        agent: ENTREVISTADOR_AUTOMATIZADO_AGENT,
+        reply:
+          "Roteiro e relatório gerados com sucesso. O salvamento em Avaliações recebidas não foi realizado porque as variáveis do Supabase não estão configuradas.",
+        reportHtml,
+        retentionNotice:
+          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+      });
+    }
+
     const payload = {
       candidate_name: `Roteiro de entrevista - ${finalSession.vagaAlvo ?? "vaga"}`,
       target_role: finalSession.vagaAlvo ?? null,
@@ -111,8 +126,7 @@ export async function POST(req: NextRequest) {
           completed: true,
           session: finalSession,
           agent: ENTREVISTADOR_AUTOMATIZADO_AGENT,
-          reply: "O relatório foi gerado, mas ocorreu um erro ao salvar a avaliação final.",
-          technicalError: error.message,
+          reply: `O relatório foi gerado, mas ocorreu um erro ao salvar a avaliação final. ${error.message}`,
           reportHtml,
         },
         { status: 500 }
