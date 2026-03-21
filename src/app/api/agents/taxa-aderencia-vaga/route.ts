@@ -101,17 +101,13 @@ function detectRole(value: string): string | null {
   return null;
 }
 
-function isWeakAnswer(value: string): boolean {
+function isBlockedAnswer(value: string): boolean {
   const normalized = normalizeText(value);
-
   const blocked = new Set([
     "oi",
     "ola",
-    "olá",
     "ok",
     "sim",
-    "nao",
-    "não",
     "teste",
     "aaa",
     "bbb",
@@ -119,18 +115,65 @@ function isWeakAnswer(value: string): boolean {
     "asd",
     "qwe",
   ]);
+  return blocked.has(normalized);
+}
 
-  if (blocked.has(normalized)) return true;
-  if (normalized.length < 3) return true;
+function looksLikeGibberish(value: string): boolean {
+  const normalized = normalizeText(value)
+    .replace(/[^a-z0-9\s/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  return false;
+  if (!normalized) return true;
+
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 0) return true;
+
+  const weirdTokens = tokens.filter((token) => {
+    if (/^\d+$/.test(token)) return false;
+    if (token.length <= 2) return false;
+    const vowels = (token.match(/[aeiou]/g) ?? []).length;
+    if (token.length >= 4 && vowels === 0) return true;
+    if (token.length >= 5 && vowels <= 1) return true;
+    if (/^[bcdfghjklmnpqrstvwxyz]{4,}$/i.test(token)) return true;
+    return false;
+  });
+
+  if (tokens.length === 1) {
+    const token = tokens[0];
+    if (token.length >= 5 && !/[aeiou]/.test(token)) return true;
+  }
+
+  return weirdTokens.length === tokens.length;
+}
+
+function isNegativeButValidContextAnswer(value: string): boolean {
+  const normalized = normalizeText(value);
+  return [
+    "nao",
+    "não",
+    "nao tem",
+    "não tem",
+    "nao tenho",
+    "não tenho",
+    "nenhum",
+    "nenhuma",
+    "sem mais informacoes",
+    "sem mais informações",
+    "nao, somente isso",
+    "não, somente isso",
+  ].includes(normalized);
 }
 
 function validateAnswer(field: TaxaAderenciaField, answer: string): string | null {
   const normalized = answer.trim();
 
-  if (isWeakAnswer(normalized)) {
-    return "Não consegui validar sua resposta. Responda exatamente o que foi pedido, com mais clareza.";
+  if (field === "culturalContext" && isNegativeButValidContextAnswer(normalized)) {
+    return null;
+  }
+
+  if (isBlockedAnswer(normalized) || looksLikeGibberish(normalized)) {
+    return "Não consegui interpretar sua resposta com segurança. Pode escrever de forma mais clara?";
   }
 
   if (field === "candidateName") {
@@ -141,6 +184,7 @@ function validateAnswer(field: TaxaAderenciaField, answer: string): string | nul
     if (parts.some((part) => part.length < 2)) {
       return "O nome informado parece incompleto. Pode escrever o nome completo do candidato?";
     }
+    return null;
   }
 
   if (field === "recruiterName" || field === "validatorName" || field === "approverName") {
@@ -148,18 +192,7 @@ function validateAnswer(field: TaxaAderenciaField, answer: string): string | nul
     if (parts.length < 2) {
       return "Preciso do nome completo. Informe nome e sobrenome.";
     }
-  }
-
-  if (
-    field === "culturalMission" ||
-    field === "culturalVision" ||
-    field === "culturalContext" ||
-    field === "candidateExperience" ||
-    field === "behavioralTestInput"
-  ) {
-    if (normalized.length < 15) {
-      return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
-    }
+    return null;
   }
 
   if (field === "culturalValues") {
@@ -171,12 +204,23 @@ function validateAnswer(field: TaxaAderenciaField, answer: string): string | nul
     if (items.length < 3) {
       return "Preciso de pelo menos 3 valores da empresa para seguir com a análise.";
     }
+    return null;
   }
 
   if (field === "targetRole") {
     if (normalized.length < 4) {
       return "Não consegui identificar o cargo. Escreva o nome da vaga de forma mais completa.";
     }
+    return null;
+  }
+
+  if (normalized.length < 12) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length < 3) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
   }
 
   return null;
@@ -325,7 +369,7 @@ export async function POST(request: Request) {
       ok: true,
       session: finalSession,
       nextField: null,
-      reply: "Relatório gerado com sucesso. A avaliação já está disponível em Avaliações recebidas.",
+      reply: "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       done: true,
     });
   } catch (error) {

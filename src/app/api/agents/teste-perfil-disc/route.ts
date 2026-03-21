@@ -13,7 +13,7 @@ type RequestBody = {
   currentField?: DiscField;
 };
 
-function mapSessionToRow(session: DiscSession) {
+function mapSessionToRow(session: DiscSession & { reportMarkdown?: string | null }) {
   return {
     candidate_name: session.nome ?? "",
     target_role: session.vaga ?? "",
@@ -26,12 +26,102 @@ function mapSessionToRow(session: DiscSession) {
     example_4: session.resposta4 ?? null,
     status: session.status ?? "in_progress",
     report_status: session.reportStatus ?? "pending",
-    report_markdown: (session as DiscSession & { reportMarkdown?: string | null }).reportMarkdown ?? null,
+    report_markdown: session.reportMarkdown ?? null,
     agent_name: "Teste de Perfil DISC",
     agent_slug: "teste-perfil-disc",
     raw_answers: session,
     updated_at: new Date().toISOString(),
   };
+}
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function isBlockedAnswer(value: string): boolean {
+  const normalized = normalizeText(value);
+  const blocked = new Set([
+    "oi",
+    "ola",
+    "ok",
+    "sim",
+    "teste",
+    "aaa",
+    "bbb",
+    "123",
+    "asd",
+    "qwe",
+  ]);
+  return blocked.has(normalized);
+}
+
+function looksLikeGibberish(value: string): boolean {
+  const normalized = normalizeText(value)
+    .replace(/[^a-z0-9\s/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) return true;
+
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 0) return true;
+
+  const weirdTokens = tokens.filter((token) => {
+    if (/^\d+$/.test(token)) return false;
+    if (token.length <= 2) return false;
+    const vowels = (token.match(/[aeiou]/g) ?? []).length;
+    if (token.length >= 4 && vowels === 0) return true;
+    if (token.length >= 5 && vowels <= 1) return true;
+    if (/^[bcdfghjklmnpqrstvwxyz]{4,}$/i.test(token)) return true;
+    return false;
+  });
+
+  if (tokens.length === 1) {
+    const token = tokens[0];
+    if (token.length >= 5 && !token.includes(" ")) {
+      if (!/[aeiou]/.test(token) || weirdTokens.length === 1) return true;
+    }
+  }
+
+  return weirdTokens.length === tokens.length;
+}
+
+function validateAnswer(field: DiscField, answer: string): string | null {
+  const normalized = answer.trim();
+
+  if (isBlockedAnswer(normalized) || looksLikeGibberish(normalized)) {
+    return "Não consegui interpretar sua resposta com segurança. Pode escrever de forma mais clara?";
+  }
+
+  if (field === "nome") {
+    const parts = normalized.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) {
+      return "Preciso do nome completo. Informe nome e sobrenome.";
+    }
+    return null;
+  }
+
+  if (field === "vaga") {
+    if (normalized.length < 4) {
+      return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+    }
+    return null;
+  }
+
+  if (normalized.length < 12) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  const words = normalized.split(/\s+/).filter(Boolean);
+  if (words.length < 3) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  return null;
 }
 
 export async function POST(req: NextRequest) {
@@ -55,6 +145,17 @@ export async function POST(req: NextRequest) {
         done: false,
         reply: result.reply,
         nextField: result.nextField ?? null,
+      });
+    }
+
+    const validationError = validateAnswer(body.currentField!, body.answer!.trim());
+
+    if (validationError) {
+      return NextResponse.json({
+        session,
+        done: false,
+        reply: validationError,
+        nextField: body.currentField ?? null,
       });
     }
 
@@ -140,9 +241,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       session: finalSession,
       done: result.done,
-      reply: result.done
-        ? "Relatório DISC gerado com sucesso."
-        : result.reply,
+      reply: result.done ? "Relatório DISC gerado com sucesso." : result.reply,
       nextField: result.nextField ?? null,
       reportMarkdown: finalSession.reportMarkdown ?? null,
     });

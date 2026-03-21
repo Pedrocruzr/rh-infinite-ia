@@ -36,12 +36,94 @@ function mapSessionToRow(session: ProfileSession & { reportMarkdown?: string | n
   };
 }
 
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function isWeakAnswer(value: string): boolean {
+  const normalized = normalizeText(value);
+
+  const blocked = new Set([
+    "oi",
+    "ola",
+    "olá",
+    "ok",
+    "sim",
+    "nao",
+    "não",
+    "teste",
+    "aaa",
+    "bbb",
+    "123",
+    "asd",
+    "qwe",
+  ]);
+
+  if (blocked.has(normalized)) return true;
+  if (normalized.length < 2) return true;
+
+  return false;
+}
+
+function validateAnswer(field: ProfileField, answer: string): string | null {
+  const normalized = answer.trim();
+
+  if (isWeakAnswer(normalized)) {
+    return "Não consegui validar sua resposta. Responda exatamente o que foi pedido, com mais clareza.";
+  }
+
+  if (field === "nome") {
+    const parts = normalized.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) {
+      return "Preciso do nome completo. Informe nome e sobrenome.";
+    }
+  }
+
+  if (field === "vaga" && normalized.length < 4) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  if (
+    field === "competenciaExemplo1" ||
+    field === "competenciaExemplo2" ||
+    field === "competenciaExemplo3"
+  ) {
+    if (normalized.length < 20) {
+      return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+    }
+  }
+
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as RequestBody;
     const supabase = createAdminClient();
 
     let session: ProfileSession = body.session ?? initializeProfileSession();
+
+    if (body.currentField && typeof body.answer === "string") {
+      const validationError = validateAnswer(body.currentField, body.answer.trim());
+
+      if (validationError) {
+        const retryResult = await runProfileStep({
+          session,
+        });
+
+        return NextResponse.json({
+          session,
+          done: false,
+          reply: validationError,
+          nextQuestion: retryResult.nextQuestion,
+          reportMarkdown: null,
+        });
+      }
+    }
 
     if (!session.assessmentId) {
       const now = new Date();
