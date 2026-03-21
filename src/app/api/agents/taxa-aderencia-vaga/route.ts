@@ -101,15 +101,53 @@ function detectRole(value: string): string | null {
   return null;
 }
 
+function isWeakAnswer(value: string): boolean {
+  const normalized = normalizeText(value);
+
+  const blocked = new Set([
+    "oi",
+    "ola",
+    "olá",
+    "ok",
+    "sim",
+    "nao",
+    "não",
+    "teste",
+    "aaa",
+    "bbb",
+    "123",
+    "asd",
+    "qwe",
+  ]);
+
+  if (blocked.has(normalized)) return true;
+  if (normalized.length < 3) return true;
+
+  return false;
+}
+
 function validateAnswer(field: TaxaAderenciaField, answer: string): string | null {
   const normalized = answer.trim();
 
-  if (normalized.length < 2) {
-    return "Não consegui entender sua resposta. Pode escrever novamente com mais clareza?";
+  if (isWeakAnswer(normalized)) {
+    return "Não consegui validar sua resposta. Responda exatamente o que foi pedido, com mais clareza.";
   }
 
-  if (field === "candidateName" && normalized.split(" ").length < 2) {
-    return "Preciso do nome completo do candidato. Pode informar novamente?";
+  if (field === "candidateName") {
+    const parts = normalized.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) {
+      return "Preciso do nome completo do candidato. Informe nome e sobrenome.";
+    }
+    if (parts.some((part) => part.length < 2)) {
+      return "O nome informado parece incompleto. Pode escrever o nome completo do candidato?";
+    }
+  }
+
+  if (field === "recruiterName" || field === "validatorName" || field === "approverName") {
+    const parts = normalized.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) {
+      return "Preciso do nome completo. Informe nome e sobrenome.";
+    }
   }
 
   if (
@@ -119,29 +157,44 @@ function validateAnswer(field: TaxaAderenciaField, answer: string): string | nul
     field === "candidateExperience" ||
     field === "behavioralTestInput"
   ) {
-    if (normalized.length < 12) {
+    if (normalized.length < 15) {
       return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
     }
   }
 
+  if (field === "culturalValues") {
+    const items = normalized
+      .split(/\n|,|;|•/g)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (items.length < 3) {
+      return "Preciso de pelo menos 3 valores da empresa para seguir com a análise.";
+    }
+  }
+
   if (field === "targetRole") {
-    const detected = detectRole(normalized);
-    if (!detected && normalized.length < 4) {
-      return "Não consegui identificar o cargo. Pode escrever o nome da vaga de forma mais completa?";
+    if (normalized.length < 4) {
+      return "Não consegui identificar o cargo. Escreva o nome da vaga de forma mais completa.";
     }
   }
 
   return null;
 }
 
-function buildRoleAck(answer: string): { normalizedRole: string; reply: string } | null {
+function buildRoleAck(answer: string): { normalizedRole: string; reply: string } {
   const detected = detectRole(answer);
 
-  if (!detected) return null;
+  if (detected) {
+    return {
+      normalizedRole: detected,
+      reply: `Perfeito, identifiquei similaridade com o perfil de ${detected}. Já carreguei os requisitos e competências para a análise. Agora informe o nome completo do recrutador responsável pela avaliação.`,
+    };
+  }
 
   return {
-    normalizedRole: detected,
-    reply: `Perfeito, identifiquei similaridade com o perfil de ${detected}. Já carreguei os requisitos e competências para a análise. Agora informe o nome do recrutador responsável pela avaliação.`,
+    normalizedRole: answer.trim(),
+    reply: `Não encontrei uma correspondência exata na base, mas vou estruturar a análise com base no cargo informado: ${answer.trim()}. Agora informe o nome completo do recrutador responsável pela avaliação.`,
   };
 }
 
@@ -198,18 +251,15 @@ export async function POST(request: Request) {
 
     if (currentField === "targetRole") {
       const roleAck = buildRoleAck(answer);
+      session.targetRole = roleAck.normalizedRole;
 
-      if (roleAck) {
-        session.targetRole = roleAck.normalizedRole;
-
-        return NextResponse.json({
-          ok: true,
-          session,
-          nextField: "recruiterName",
-          reply: roleAck.reply,
-          done: false,
-        });
-      }
+      return NextResponse.json({
+        ok: true,
+        session,
+        nextField: "recruiterName",
+        reply: roleAck.reply,
+        done: false,
+      });
     }
 
     session[currentField] = answer;

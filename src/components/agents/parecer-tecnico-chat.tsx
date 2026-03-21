@@ -65,6 +65,7 @@ export default function ParecerTecnicoChat() {
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     startConversation();
@@ -72,7 +73,19 @@ export default function ParecerTecnicoChat() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    const timer = setTimeout(() => {
+      if (!loading && !finished) {
+        inputRef.current?.focus();
+        const el = inputRef.current;
+        if (el) {
+          const len = el.value.length;
+          el.setSelectionRange(len, len);
+        }
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [messages, loading, finished]);
 
   async function startConversation() {
     try {
@@ -245,7 +258,6 @@ export default function ParecerTecnicoChat() {
           </Link>
         </div>
 
-
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm leading-6 text-amber-900">
           <strong>Aviso:</strong> esta avaliação ficará disponível por <strong>3 dias</strong> para consulta do recrutador.
           Recomendamos salvar ou copiar o relatório depois que ele for gerado.
@@ -301,6 +313,8 @@ export default function ParecerTecnicoChat() {
                 className="space-y-4"
               >
                 <textarea
+                  ref={inputRef}
+                  autoFocus
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -322,7 +336,7 @@ export default function ParecerTecnicoChat() {
                 <div className="flex items-center justify-end gap-4">
                   <button
                     type="submit"
-                    disabled={loading || finished || !input.trim() || !currentField}
+                    disabled={loading || finished || !input.trim()}
                     className="rounded-[24px] bg-black px-7 py-4 text-lg text-white disabled:opacity-50"
                   >
                     Enviar
@@ -331,9 +345,9 @@ export default function ParecerTecnicoChat() {
               </form>
 
               {session?.assessmentId && (
-                <p className="mt-4 text-xs text-neutral-400">
-                  ID da avaliação: {session.assessmentId}
-                </p>
+                <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                  Avaliação salva com sucesso e disponível em Avaliações recebidas.
+                </div>
               )}
             </div>
           </div>

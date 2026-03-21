@@ -43,6 +43,7 @@ export default function TestePerfilDiscPage() {
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     startConversation();
@@ -50,7 +51,10 @@ export default function TestePerfilDiscPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    if (!loading && !finished) {
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
+  }, [messages, loading, finished]);
 
   async function startConversation() {
     try {
@@ -260,6 +264,7 @@ export default function TestePerfilDiscPage() {
             <div className="mt-4 border-t border-neutral-200 pt-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <textarea
+                  ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
