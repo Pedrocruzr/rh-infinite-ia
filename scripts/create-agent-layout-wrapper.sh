@@ -19,7 +19,11 @@ import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
 
-type GenericSession = Record<string, string | undefined>;
+type GenericSession = Record<string, string | undefined> & {
+  status?: string;
+  reportStatus?: string;
+  reportMarkdown?: string | null;
+};
 
 type Message = {
   id: string;
@@ -34,6 +38,7 @@ function cloneSession<T>(value: T): T {
 
 export default function ${COMPONENT_NAME}() {
   const [session, setSession] = useState<GenericSession | null>(null);
+  const [currentField, setCurrentField] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,10 +72,11 @@ export default function ${COMPONENT_NAME}() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.reply || "Erro ao iniciar o agente.");
+        throw new Error(data.reply || data.error || "Erro ao iniciar o agente.");
       }
 
       setSession(data.session ?? {});
+      setCurrentField(data.nextField ?? data.currentField ?? null);
       setMessages([
         {
           id: crypto.randomUUID(),
@@ -141,28 +147,31 @@ export default function ${COMPONENT_NAME}() {
         body: JSON.stringify({
           session,
           message: answer,
+          answer,
+          currentField,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.reply || "Erro ao processar resposta.");
+        throw new Error(data.reply || data.error || "Erro ao processar resposta.");
       }
 
       setSession(data.session ?? {});
+      setCurrentField(data.nextField ?? data.currentField ?? null);
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data.completed
+          content: data.done || data.completed
             ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
             : data.reply,
         },
       ]);
 
-      setFinished(Boolean(data.completed));
+      setFinished(Boolean(data.done || data.completed));
     } catch (error) {
       setMessages((prev) => [
         ...prev,
