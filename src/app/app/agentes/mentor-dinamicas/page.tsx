@@ -141,9 +141,7 @@ export default function MentorDinamicasPage() {
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data.completed
-            ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
-            : data.reply,
+          content: data.reply,
         },
       ]);
 
@@ -177,7 +175,8 @@ export default function MentorDinamicasPage() {
       stackerName="Recrutamento & Seleção"
       title="Mentor de Dinâmicas"
       subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Avaliações recebidas."
-      messages={messages.map((message) => ({
+      messages={finished ? [] : messages.map((message) => (
+        {
         id: message.id,
         role: message.role,
         content: message.content,
