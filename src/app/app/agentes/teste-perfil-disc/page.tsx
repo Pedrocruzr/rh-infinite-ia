@@ -10,6 +10,25 @@ type GenericSession = Record<string, string | undefined> & {
   reportMarkdown?: string | null;
 };
 
+
+const FINAL_SUCCESS_MESSAGE =
+  "Relatório gerado com sucesso e disponível em Avaliações recebidas.";
+
+function removeFirstDuplicateFinalMessage(messages: Message[]): Message[] {
+  const duplicatedIndexes = messages
+    .map((message, index) =>
+      message.role === "assistant" && message.content === FINAL_SUCCESS_MESSAGE ? index : -1
+    )
+    .filter((index) => index !== -1);
+
+  if (duplicatedIndexes.length <= 1) {
+    return messages;
+  }
+
+  const firstIndex = duplicatedIndexes[0];
+  return messages.filter((_, index) => index != firstIndex);
+}
+
 type Message = {
   id: string;
   role: "assistant" | "user";
@@ -145,16 +164,17 @@ export default function TestePerfilDiscPage() {
 
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: data.done || data.completed
-            ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
-            : data.reply,
-        },
-      ]);
+
+      if (!(data.done || data.completed) && data.reply?.trim()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply,
+          },
+        ]);
+      }
 
       setFinished(Boolean(data.done || data.completed));
     } catch (error) {
@@ -186,7 +206,7 @@ export default function TestePerfilDiscPage() {
       stackerName="Comportamento"
       title="Teste de Perfil DISC"
       subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
-      messages={messages.map((message) => ({
+      messages={(finished ? [] : removeFirstDuplicateFinalMessage(messages)).map((message) => ({
         id: message.id,
         role: message.role,
         content: message.content,
