@@ -81,13 +81,13 @@ export default function StandardAgentLayout({
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
+                  className={`flex w-full ${message.role === "assistant" ? "justify-center" : "justify-end"}`}
                 >
-                  <div className="max-w-[78%]">
+                  <div className={message.role === "assistant" ? "w-full" : "max-w-[78%]"}>
                     <div
                       className={`rounded-[32px] px-8 py-6 text-[18px] leading-9 shadow-sm ${
                         message.role === "assistant"
-                          ? "border border-neutral-200 bg-white text-neutral-900"
+                          ? "w-full border border-neutral-200 bg-white text-neutral-900"
                           : "bg-neutral-950 text-white"
                       }`}
                       style={{ whiteSpace: "pre-wrap" }}
@@ -103,16 +103,16 @@ export default function StandardAgentLayout({
               ))}
 
               {loading && (
-                <div className="flex justify-start">
-                  <div className="rounded-[32px] border border-neutral-200 bg-white px-8 py-6 text-sm text-neutral-500 shadow-sm">
+                <div className="flex w-full justify-center">
+                  <div className="w-full rounded-[32px] border border-neutral-200 bg-white px-8 py-6 text-sm text-neutral-500 shadow-sm">
                     Digitando...
                   </div>
                 </div>
               )}
 
               {finished && (
-                <div className="flex justify-start">
-                  <div className="rounded-[32px] border border-neutral-200 bg-white px-8 py-6 text-sm text-neutral-700 shadow-sm">
+                <div className="flex w-full justify-center">
+                  <div className="w-full rounded-[32px] border border-neutral-200 bg-white px-8 py-6 text-sm text-neutral-700 shadow-sm">
                     {finishedMessage}
                   </div>
                 </div>
