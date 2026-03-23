@@ -1092,62 +1092,296 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
 
 
 function buildPlanoAcaoReport(session: ClimaSession) {
-  const material = String(session.materialPlanoAcao ?? "");
-  const dims = extractDimensions(material);
+  const material = String(session.materialPlanoAcao ?? "").trim();
 
-  const planItems = (dims.length ? dims : ["liderança", "comunicação", "reconhecimento"]).map((dim, index) => {
-    const info = DIMENSION_LIBRARY[dim as keyof typeof DIMENSION_LIBRARY];
-    const label = info ? info.label : normalizeLine(dim);
-    const actions = info ? info.actions : "Ajustar ações conforme os achados do material enviado.";
+  function normalizeLine(value: string) {
+    const text = String(value ?? "").trim().replace(/\s+/g, " ");
+    if (!text) return "";
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
 
-    return `
-      <tr>
-        <td style="border:1px solid #e5e7eb; padding:8px;">${index + 1}</td>
-        <td style="border:1px solid #e5e7eb; padding:8px;">${escapeHtml(label)}</td>
-        <td style="border:1px solid #e5e7eb; padding:8px;">${escapeHtml(actions)}</td>
-        <td style="border:1px solid #e5e7eb; padding:8px;">Gestor da área + RH</td>
-        <td style="border:1px solid #e5e7eb; padding:8px;">30 a 90 dias</td>
-        <td style="border:1px solid #e5e7eb; padding:8px;">Evolução da dimensão, percepção do time e acompanhamento do plano</td>
-      </tr>
-    `;
-  }).join("");
+  function detectFronts() {
+    const lower = material.toLowerCase();
+    const fronts: Array<{
+      title: string;
+      why: string;
+      actions: string[];
+      owners: string;
+      deadline: string;
+      indicators: string[];
+      preserve?: boolean;
+    }> = [];
+
+    if (/reconhecimento|promoção|promocao|carreira|crescimento|progress[aã]o|crit[eé]rios/i.test(lower)) {
+      fronts.push({
+        title: "Tornar reconhecimento e crescimento mais claros",
+        why:
+          "Esse tema merece prioridade porque afeta diretamente percepção de justiça, confiança na gestão, motivação e retenção. Quando critérios de crescimento, reconhecimento e promoção não são percebidos como claros, a tendência é surgir frustração silenciosa, mesmo em empresas com bom clima relacional.",
+        actions: [
+          "Definir critérios objetivos para promoção e progressão.",
+          "Criar uma matriz simples de competências por nível ou cargo.",
+          "Padronizar conversas de feedback e desenvolvimento.",
+          "Comunicar de forma clara como funcionam reconhecimento, crescimento e próximos passos."
+        ],
+        owners: "RH + diretoria + gestores",
+        deadline: "30 a 60 dias",
+        indicators: [
+          "% de cargos com critérios de progressão definidos",
+          "% de colaboradores com conversa formal de desenvolvimento realizada",
+          "Evolução da percepção sobre critérios de reconhecimento e promoção"
+        ]
+      });
+    }
+
+    if (/comunica[cç][aã]o entre [aá]reas|inter[aá]reas|alinhamento|silos|integra[cç][aã]o/i.test(lower)) {
+      fronts.push({
+        title: "Melhorar a comunicação entre áreas",
+        why:
+          "Esse ponto merece prioridade porque problemas entre áreas geram ruído, retrabalho, lentidão e desgaste. Normalmente, o problema não está dentro das equipes, mas na interface entre elas.",
+        actions: [
+          "Criar um rito periódico de alinhamento entre áreas-chave.",
+          "Definir responsáveis por interface entre setores.",
+          "Revisar canais e frequência de comunicação entre áreas.",
+          "Documentar fluxos simples de passagem de demanda entre times."
+        ],
+        owners: "Lideranças das áreas + RH/Operações como facilitador",
+        deadline: "Início em até 15 dias",
+        indicators: [
+          "Número de alinhamentos interáreas realizados",
+          "Redução de retrabalho e conflitos de interface",
+          "Evolução da percepção sobre comunicação entre áreas"
+        ]
+      });
+    }
+
+    if (/desenvolvimento|pdi|trilha|carreira|evolu[cç][aã]o|crescimento/i.test(lower)) {
+      fronts.push({
+        title: "Estruturar desenvolvimento e carreira",
+        why:
+          "Esse tema merece prioridade porque a percepção de futuro dentro da empresa impacta diretamente motivação, permanência e energia de contribuição. Sem clareza de crescimento, o engajamento tende a perder força no médio prazo.",
+        actions: [
+          "Implantar PDI simples para os colaboradores.",
+          "Definir trilhas de desenvolvimento por família de cargo.",
+          "Alinhar uma competência prioritária de desenvolvimento por pessoa.",
+          "Conectar feedback, capacitação e possibilidade real de evolução."
+        ],
+        owners: "RH + gestores diretos",
+        deadline: "45 a 90 dias",
+        indicators: [
+          "% de colaboradores com PDI ativo",
+          "% de líderes treinados para conduzir PDI",
+          "Evolução da percepção sobre caminhos de desenvolvimento"
+        ]
+      });
+    }
+
+    if (/processos|decis[oõ]es|mudan[cç]as|desorganiza[cç][aã]o|burocracia|improviso/i.test(lower)) {
+      fronts.push({
+        title: "Dar mais previsibilidade aos processos e decisões",
+        why:
+          "Esse ponto merece prioridade porque falta de organização, processos confusos e mudanças mal conduzidas enfraquecem segurança, clareza e confiança no funcionamento da empresa.",
+        actions: [
+          "Mapear os processos mais críticos da operação.",
+          "Definir papéis, aprovações e prazos desses fluxos.",
+          "Criar um padrão mínimo para comunicação de mudanças.",
+          "Divulgar decisões relevantes com contexto, motivo e impacto esperado."
+        ],
+        owners: "Diretoria + gestores + áreas de apoio",
+        deadline: "30 a 90 dias",
+        indicators: [
+          "Número de processos críticos revisados",
+          "Tempo médio de decisão e aprovação",
+          "Evolução da percepção sobre organização e condução de mudanças"
+        ]
+      });
+    }
+
+    if (/sobrecarga|carga de trabalho|ferramentas|sistemas|manual|retrabalho/i.test(lower)) {
+      fronts.push({
+        title: "Atuar em sobrecarga e ferramentas",
+        why:
+          "Esse tema merece prioridade porque desgaste operacional, gargalos de ferramenta e excesso de demanda corroem a experiência do colaborador mesmo quando o clima relacional ainda é positivo.",
+        actions: [
+          "Revisar distribuição de demandas por equipe.",
+          "Levantar gargalos de sistema e ferramentas.",
+          "Separar problemas de capacidade, prioridade e processo.",
+          "Definir melhorias rápidas de produtividade."
+        ],
+        owners: "Gestores de área + TI/Operações",
+        deadline: "30 a 60 dias",
+        indicators: [
+          "Evolução da percepção sobre carga de trabalho",
+          "Número de gargalos eliminados",
+          "Redução de retrabalho e manualidades"
+        ]
+      });
+    }
+
+    if (!fronts.length) {
+      fronts.push(
+        {
+          title: "Estruturar prioridades de reconhecimento e justiça interna",
+          why:
+            "Mesmo quando o material não explicita todos os pontos, temas de reconhecimento, justiça e clareza de crescimento costumam ter forte impacto no clima e na retenção.",
+          actions: [
+            "Definir critérios mínimos de reconhecimento e progressão.",
+            "Padronizar feedback e devolutivas.",
+            "Comunicar melhor critérios e expectativas."
+          ],
+          owners: "RH + gestores",
+          deadline: "30 a 60 dias",
+          indicators: [
+            "Percepção de justiça nos critérios",
+            "Frequência de feedback formal",
+            "Clareza de reconhecimento"
+          ]
+        },
+        {
+          title: "Fortalecer integração e comunicação entre áreas",
+          why:
+            "A interface entre áreas costuma ser uma das maiores fontes de desgaste quando o clima é lido em profundidade.",
+          actions: [
+            "Definir responsáveis por interface entre áreas.",
+            "Criar alinhamentos curtos e frequentes.",
+            "Revisar fluxo de repasse de demandas."
+          ],
+          owners: "Lideranças + RH",
+          deadline: "15 a 45 dias",
+          indicators: [
+            "Redução de ruídos entre áreas",
+            "Mais clareza no repasse de demandas",
+            "Evolução da percepção sobre comunicação"
+          ]
+        },
+        {
+          title: "Dar mais previsibilidade à experiência interna",
+          why:
+            "O clima melhora de forma sustentada quando o colaborador percebe mais estrutura, previsibilidade e coerência entre discurso e prática.",
+          actions: [
+            "Mapear processos críticos.",
+            "Formalizar decisões recorrentes.",
+            "Estabelecer padrão de comunicação de mudanças."
+          ],
+          owners: "Diretoria + gestores",
+          deadline: "30 a 90 dias",
+          indicators: [
+            "Percepção sobre organização",
+            "Tempo de decisão",
+            "Redução de improvisos"
+          ]
+        }
+      );
+    }
+
+    return fronts.slice(0, 5);
+  }
+
+  function detectPreservePoints() {
+    const lower = material.toLowerCase();
+    const preserve = [];
+
+    if (/trabalho em equipe|coopera[cç][aã]o|apoio entre colegas|respeito/i.test(lower)) {
+      preserve.push("o bom trabalho em equipe, a cooperação e o respeito entre as pessoas");
+    }
+    if (/orgulho|pertencimento|engajamento/i.test(lower)) {
+      preserve.push("o orgulho de pertencer e o vínculo emocional com a empresa");
+    }
+    if (/lideran[cç]a|apoio do gestor/i.test(lower)) {
+      preserve.push("os sinais positivos de apoio e respeito da liderança");
+    }
+    if (/flexibilidade|ambiente f[ií]sico/i.test(lower)) {
+      preserve.push("os aspectos positivos do ambiente e da flexibilidade");
+    }
+
+    return preserve.length
+      ? preserve
+      : ["os elementos relacionais que hoje sustentam o clima, como respeito, cooperação e senso de pertencimento"];
+  }
+
+  const fronts = detectFronts();
+  const preservePoints = detectPreservePoints();
+
+  const frontsHtml = fronts.map((front, index) => `
+    <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">${index + 1}) ${escapeHtml(front.title)}</h3>
+
+    <p style="margin:0 0 8px 0;"><strong>Por que priorizar:</strong> ${escapeHtml(front.why)}</p>
+
+    <p style="margin:0 0 8px 0;"><strong>Ações:</strong></p>
+    <ul style="margin:0 0 12px 22px; padding:0;">
+      ${front.actions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}
+    </ul>
+
+    <p style="margin:0 0 6px 0;"><strong>Responsáveis:</strong> ${escapeHtml(front.owners)}</p>
+    <p style="margin:0 0 6px 0;"><strong>Prazo sugerido:</strong> ${escapeHtml(front.deadline)}</p>
+
+    <p style="margin:0 0 8px 0;"><strong>Indicadores de acompanhamento:</strong></p>
+    <ul style="margin:0 0 12px 22px; padding:0;">
+      ${front.indicators.map((indicator) => `<li>${escapeHtml(indicator)}</li>`).join("")}
+    </ul>
+  `).join("");
+
+  const first30 = [
+    "Comunicar resultados e prioridades.",
+    "Escolher responsáveis por cada frente.",
+    "Iniciar rituais de alinhamento entre áreas.",
+    "Mapear processos e gargalos mais críticos.",
+    "Definir as primeiras ações rápidas de correção."
+  ];
+
+  const next30 = [
+    "Iniciar feedbacks estruturados.",
+    "Publicar critérios iniciais de reconhecimento, crescimento ou interface entre áreas.",
+    "Implantar ações-piloto nas frentes priorizadas.",
+    "Acompanhar execução com líderes e responsáveis."
+  ];
+
+  const last30 = [
+    "Consolidar aprendizados do primeiro ciclo.",
+    "Medir evolução inicial dos indicadores.",
+    "Aplicar pulso curto de acompanhamento.",
+    "Ajustar o plano conforme a reação dos colaboradores e da liderança."
+  ];
+
+  const summary = (() => {
+    const order = fronts.map((f) => f.title).join("; ");
+    return `Minha priorização seria: ${order}. Essa ordem faz sentido porque ataca primeiro os temas que mais ameaçam percepção de justiça, clareza, previsibilidade e sustentação do clima — sem perder os ativos relacionais que hoje protegem a experiência do colaborador.`;
+  })();
 
   return `
 <section>
-  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">PLANO DE AÇÃO A PARTIR DOS ACHADOS</h1>
+  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">PLANO DE AÇÃO SUGERIDO</h1>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Material utilizado</h2>
-  <div style="margin:0 0 24px 0; padding:16px; border:1px solid #e5e7eb; border-radius:12px; white-space:pre-wrap;">${escapeHtml(material)}</div>
+  <p style="margin:0 0 24px 0;">Com base nos achados enviados, eu sugeriria um plano de ação em frentes prioritárias, com execução em até 90 dias. A lógica é simples: atacar primeiro os temas que mais fragilizam percepção de justiça, clareza, integração e previsibilidade, sem perder o que hoje sustenta o clima.</p>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Direcionamento do plano</h2>
-  <p style="margin:0 0 24px 0;">O plano abaixo foi estruturado a partir dos achados enviados pelo usuário, priorizando dimensões com maior potencial de impacto no clima, no engajamento e na experiência do colaborador.</p>
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">Plano de ação sugerido</h2>
+  ${frontsHtml}
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">3. Plano de ação sugerido</h2>
-  <table style="border-collapse:collapse; width:100%; margin:0 0 24px 0;">
-    <thead>
-      <tr>
-        <th style="border:1px solid #e5e7eb; padding:8px; text-align:left;">#</th>
-        <th style="border:1px solid #e5e7eb; padding:8px; text-align:left;">Frente</th>
-        <th style="border:1px solid #e5e7eb; padding:8px; text-align:left;">Ações sugeridas</th>
-        <th style="border:1px solid #e5e7eb; padding:8px; text-align:left;">Responsáveis</th>
-        <th style="border:1px solid #e5e7eb; padding:8px; text-align:left;">Prazo</th>
-        <th style="border:1px solid #e5e7eb; padding:8px; text-align:left;">Indicadores</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${planItems}
-    </tbody>
-  </table>
+  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">O que preservar</h2>
+  <p style="margin:0 0 24px 0;">O plano não deve focar só nas dores. Também é importante preservar ${escapeHtml(preservePoints.join("; "))}, porque esses elementos funcionam como ativos relevantes do clima. Melhorar a estrutura não pode destruir o que já funciona bem na experiência humana.</p>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">4. Sequência sugerida</h2>
-  <ul style="margin:0 0 0 22px; padding:0;">
-    <li>Primeiros 30 dias: consolidar prioridades, alinhar responsáveis e comunicar agenda de melhoria.</li>
-    <li>60 dias: executar ações de correção e acompanhamento das frentes priorizadas.</li>
-    <li>90 dias: revisar evolução, consolidar aprendizados e decidir próximos ciclos.</li>
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">Sequência prática de 90 dias</h2>
+
+  <h3 style="font-size:20px; font-weight:700; margin:18px 0 8px 0;">Primeiros 30 dias</h3>
+  <ul style="margin:0 0 16px 22px; padding:0;">
+    ${first30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
   </ul>
+
+  <h3 style="font-size:20px; font-weight:700; margin:18px 0 8px 0;">De 31 a 60 dias</h3>
+  <ul style="margin:0 0 16px 22px; padding:0;">
+    ${next30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+  </ul>
+
+  <h3 style="font-size:20px; font-weight:700; margin:18px 0 8px 0;">De 61 a 90 dias</h3>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${last30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">Síntese executiva</h2>
+  <p style="margin:0 0 0 0;">${escapeHtml(summary)}</p>
 </section>
 `;
 }
+
 
 export function buildClimaReport(session: ClimaSession) {
   switch (session.caminho) {
