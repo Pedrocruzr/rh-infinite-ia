@@ -1,0 +1,161 @@
+import type { DesligamentoSession } from "./flow";
+
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function normalizeSentence(value: string) {
+  let text = String(value ?? "").trim().replace(/\s+/g, " ");
+  if (!text) return "";
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  if (!/[.!?]$/.test(text)) text += ".";
+  return text;
+}
+
+function normalizeLine(value: string) {
+  return normalizeSentence(value).replace(/[.!?]$/, "");
+}
+
+function isNo(value?: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["não", "nao", "n"].includes(text);
+}
+
+function formatDateLong(dateStr?: string) {
+  const text = String(dateStr ?? "").trim();
+  const m = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (!m) return normalizeLine(text || "Não informado");
+
+  let day = Number(m[1]);
+  let month = Number(m[2]);
+  let year = Number(m[3]);
+
+  if (year < 100) year += 2000;
+
+  const meses = [
+    "janeiro","fevereiro","março","abril","maio","junho",
+    "julho","agosto","setembro","outubro","novembro","dezembro"
+  ];
+
+  return `${day} de ${meses[month - 1] ?? "mês"} de ${year}`;
+}
+
+function motivoFrase(motivo?: string) {
+  const text = String(motivo ?? "").trim();
+  const lower = text.toLowerCase();
+
+  if (/desempenho|performance|baixa performance|baixo desempenho/.test(lower)) {
+    return "em função de avaliação de desempenho alinhada às necessidades atuais da posição";
+  }
+
+  if (/reestrutur/.test(lower)) {
+    return "em função de reestruturação organizacional e alinhamento das necessidades atuais da empresa";
+  }
+
+  if (/t[eé]rmino|contrato|experi[eê]ncia/.test(lower)) {
+    return "em função do encerramento previsto do vínculo contratual";
+  }
+
+  return `em função de ${text}`;
+}
+
+export function buildDesligamentoReport(session: DesligamentoSession) {
+  const empresa = normalizeLine(session.empresaNome ?? "Empresa não informada");
+  const cnpj = normalizeLine(session.cnpj ?? "");
+  const endereco = normalizeLine(session.endereco ?? "");
+  const colaborador = normalizeLine(session.colaboradorNome ?? "Colaborador não informado");
+  const cargo = normalizeLine(session.cargoAtual ?? "Cargo não informado");
+  const departamento = normalizeLine(session.departamento ?? "Departamento não informado");
+  const tempoEmpresa = normalizeLine(session.tempoEmpresa ?? "Tempo não informado");
+  const contribuicoes = normalizeLine(session.contribuicoes ?? "Contribuições não informadas");
+  const motivo = normalizeLine(session.motivoDesligamento ?? "Motivo não informado");
+  const motivoCarta = motivoFrase(session.motivoDesligamento);
+  const data = normalizeLine(session.dataDesligamento ?? "Data não informada");
+  const dataLonga = formatDateLong(session.dataDesligamento);
+  const avisoPrevio = normalizeLine(session.avisoPrevio ?? "Não informado");
+  const beneficios = normalizeLine(session.beneficiosEstendidos ?? "Não informado");
+  const ondeQuando = normalizeLine(session.ondeQuando ?? "Não informado");
+  const recolocacao = normalizeLine(session.programaRecolocacao ?? "Não informado");
+
+  const suporteTexto = isNo(session.programaRecolocacao) && isNo(session.beneficiosEstendidos)
+    ? "No momento, não haverá programa formal de recolocação nem benefícios adicionais estendidos, mas a empresa seguirá disponível para esclarecimentos necessários durante a transição."
+    : `Além dos procedimentos formais, a empresa oferecerá o seguinte suporte: ${recolocacao !== "Não" && recolocacao !== "Nao" ? recolocacao : beneficios}.`;
+
+  const orientacaoLocal = /audit[oó]rio/i.test(ondeQuando)
+    ? "Local da conversa: evitar auditório (ambiente impessoal). Priorize sala privada para garantir respeito, confidencialidade e acolhimento."
+    : "Local da conversa: priorize ambiente privado, confortável e sem interrupções para preservar respeito e confidencialidade.";
+
+  return `
+<section>
+  <p style="margin:0 0 20px 0;">Com base nas informações fornecidas, elaborei um material completo para um desligamento humanizado, seguindo boas práticas de transparência, respeito e empatia.</p>
+
+  <h1 style="font-size:28px; font-weight:800; margin:0 0 20px 0;">🗣️ Roteiro de Conversa de Desligamento</h1>
+
+  <h2 style="font-size:20px; font-weight:700; margin:0 0 8px 0;">1. Abertura</h2>
+  <p style="margin:0 0 18px 0;">“${escapeHtml(colaborador)}, obrigado por reservar esse momento. Essa não é uma conversa fácil, mas precisamos te comunicar que a empresa decidiu encerrar seu contrato de trabalho, com efetivação em ${escapeHtml(dataLonga)}.”</p>
+
+  <h2 style="font-size:20px; font-weight:700; margin:0 0 8px 0;">2. Explicação (clara e respeitosa)</h2>
+  <p style="margin:0 0 18px 0;">“Essa decisão está relacionada a ${escapeHtml(motivo.toLowerCase())}, considerando as expectativas atuais do cargo e o momento da empresa.”</p>
+
+  <h2 style="font-size:20px; font-weight:700; margin:0 0 8px 0;">3. Reconhecimento</h2>
+  <p style="margin:0 0 18px 0;">“Gostaríamos de reconhecer sua contribuição durante os ${escapeHtml(tempoEmpresa)} em que esteve conosco, especialmente em ${escapeHtml(contribuicoes.toLowerCase())}. Seu trabalho teve impacto importante nessa trajetória.”</p>
+
+  <h2 style="font-size:20px; font-weight:700; margin:0 0 8px 0;">4. Informações práticas</h2>
+  <p style="margin:0 0 18px 0;">“O aviso prévio será ${escapeHtml(avisoPrevio.toLowerCase())}. O RH entrará em contato para orientar sobre os próximos passos, incluindo verbas rescisórias, documentação, prazos e eventuais procedimentos complementares. ${escapeHtml(isNo(session.beneficiosEstendidos) ? "No momento, não há benefícios estendidos adicionais previstos." : "Também haverá suporte adicional conforme informado pela empresa: " + beneficios)}”</p>
+
+  <h2 style="font-size:20px; font-weight:700; margin:0 0 8px 0;">5. Suporte e acolhimento</h2>
+  <p style="margin:0 0 18px 0;">“Sabemos que esse tipo de momento pode ser difícil. ${escapeHtml(suporteTexto)}”</p>
+
+  <h2 style="font-size:20px; font-weight:700; margin:0 0 8px 0;">6. Espaço para escuta</h2>
+  <p style="margin:0 0 18px 0;">(Permitir que a pessoa fale, ouvir sem interromper e validar emoções com frases como: “Entendo que essa situação pode ser difícil.”)</p>
+
+  <h2 style="font-size:20px; font-weight:700; margin:0 0 8px 0;">7. Encerramento</h2>
+  <p style="margin:0 0 28px 0;">“Agradecemos novamente pelo período em que esteve conosco e desejamos sucesso nos seus próximos passos profissionais.”</p>
+
+  <h1 style="font-size:28px; font-weight:800; margin:0 0 20px 0;">📄 Carta Formal de Desligamento</h1>
+
+  <p style="margin:0 0 6px 0;"><strong>${escapeHtml(empresa.toUpperCase())}</strong></p>
+  ${cnpj ? `<p style="margin:0 0 6px 0;">CNPJ: ${escapeHtml(cnpj)}</p>` : ""}
+  ${endereco ? `<p style="margin:0 0 16px 0;">Endereço: ${escapeHtml(endereco)}</p>` : `<p style="margin:0 0 16px 0;"></p>`}
+
+  <p style="margin:0 0 16px 0;">Data: ${escapeHtml(dataLonga)}</p>
+
+  <p style="margin:0 0 6px 0;">À</p>
+  <p style="margin:0 0 0 0;">${escapeHtml(colaborador)}</p>
+  <p style="margin:0 0 16px 0;">${escapeHtml(cargo)} – Departamento de ${escapeHtml(departamento)}</p>
+
+  <p style="margin:0 0 12px 0;"><strong>Assunto: Comunicação de Desligamento</strong></p>
+
+  <p style="margin:0 0 12px 0;">Prezado(a) ${escapeHtml(colaborador)},</p>
+
+  <p style="margin:0 0 12px 0;">Comunicamos, por meio desta, que a empresa decidiu encerrar seu contrato de trabalho a partir de ${escapeHtml(dataLonga)}, ${escapeHtml(motivoCarta)}.</p>
+
+  <p style="margin:0 0 12px 0;">Gostaríamos de expressar nosso sincero agradecimento por sua dedicação durante os ${escapeHtml(tempoEmpresa)} em que esteve conosco. Reconhecemos especialmente sua contribuição em ${escapeHtml(contribuicoes.toLowerCase())}, que foi importante para o desenvolvimento da empresa.</p>
+
+  <p style="margin:0 0 12px 0;">Informamos que o aviso prévio será ${escapeHtml(avisoPrevio.toLowerCase())}, conforme a legislação vigente. A equipe de Recursos Humanos entrará em contato para fornecer todas as orientações necessárias sobre os procedimentos de desligamento, incluindo verbas rescisórias, documentação e prazos.</p>
+
+  <p style="margin:0 0 12px 0;">${escapeHtml(isNo(session.programaRecolocacao) ? "Neste momento, não haverá programa formal de recolocação adicional, mas seguimos disponíveis para os esclarecimentos necessários durante a transição." : "A empresa também disponibilizará suporte complementar durante a transição: " + recolocacao + ".")}</p>
+
+  <p style="margin:0 0 18px 0;">Agradecemos pelo profissionalismo demonstrado ao longo da sua trajetória e desejamos muito sucesso em seus futuros desafios.</p>
+
+  <p style="margin:0 0 4px 0;">Atenciosamente,</p>
+  <p style="margin:0 0 4px 0;">[Nome do Responsável]</p>
+  <p style="margin:0 0 4px 0;">[Cargo do Responsável]</p>
+  <p style="margin:0 0 28px 0;">${escapeHtml(empresa)}</p>
+
+  <h1 style="font-size:28px; font-weight:800; margin:0 0 20px 0;">✅ Orientações Complementares</h1>
+  <ul style="margin:0 0 0 22px; padding:0;">
+    <li>${escapeHtml(orientacaoLocal)}</li>
+    <li>Tom da conversa: firme, direto e empático, sem prolongar excessivamente nem criar falsas expectativas.</li>
+    <li>Momento previsto para a conversa: ${escapeHtml(ondeQuando)}.</li>
+    <li>Pós-conversa: oferecer espaço de privacidade, reforçar os próximos passos com RH e evitar exposição desnecessária.</li>
+    <li>Comunicação ao time: objetiva, respeitosa e sem expor motivos pessoais além do necessário.</li>
+  </ul>
+</section>
+`;
+}
