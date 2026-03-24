@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
 
-type GenericSession = Record<string, string | undefined> & {
+type GenericSession = Record<string, any> & {
   status?: string;
   reportStatus?: string;
   reportMarkdown?: string | null;
+  assessmentId?: string;
 };
 
 type Message = {
@@ -51,7 +52,7 @@ export default function CustoContratacaoPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ currentField: "periodo", session: {} }),
       });
 
       const data = await response.json();
@@ -62,13 +63,19 @@ export default function CustoContratacaoPage() {
 
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setMessages([
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: data.reply,
-        },
-      ]);
+      setFinished(Boolean(data.completed === true));
+
+      if (String(data.reply || "").trim()) {
+        setMessages([
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply,
+          },
+        ]);
+      } else {
+        setMessages([]);
+      }
     } catch (error) {
       setMessages([
         {
@@ -78,6 +85,7 @@ export default function CustoContratacaoPage() {
             error instanceof Error ? error.message : "Erro ao iniciar o agente.",
         },
       ]);
+      setFinished(false);
     } finally {
       setLoading(false);
     }
@@ -143,20 +151,22 @@ export default function CustoContratacaoPage() {
         throw new Error(data.reply || data.error || "Erro ao processar resposta.");
       }
 
+      const completed = Boolean(data.done || data.completed);
+
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: data.done || data.completed
-            ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
-            : data.reply,
-        },
-      ]);
+      setFinished(completed);
 
-      setFinished(Boolean(data.done || data.completed));
+      if (!completed && String(data.reply || "").trim()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply,
+          },
+        ]);
+      }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -169,12 +179,13 @@ export default function CustoContratacaoPage() {
               : "Erro ao processar sua resposta.",
         },
       ]);
+      setFinished(false);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       void sendAnswer();
@@ -186,21 +197,27 @@ export default function CustoContratacaoPage() {
       stackerName="Diagnóstico"
       title="Custo de Contratação"
       subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Avaliações recebidas."
-      messages={messages.map((message) => ({
-        id: message.id,
-        role: message.role,
-        content: message.content,
-        actions:
-          message.role === "user" ? (
-            <UserMessageActions
-              onCopy={() => void copyMessage(message.content)}
-              onEdit={() => editMessage(message.id)}
-            />
-          ) : undefined,
-      }))}
+      messages={
+        finished
+          ? []
+          : messages
+              .filter((message) => String(message.content || "").trim() !== "")
+              .map((message) => ({
+                id: message.id,
+                role: message.role,
+                content: message.content,
+                actions:
+                  message.role === "user" ? (
+                    <UserMessageActions
+                      onCopy={() => void copyMessage(message.content)}
+                      onEdit={() => editMessage(message.id)}
+                    />
+                  ) : undefined,
+              }))
+      }
       loading={loading}
       finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Avaliações recebidas." : ""}
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}
