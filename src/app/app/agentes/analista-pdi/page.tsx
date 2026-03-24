@@ -186,7 +186,7 @@ export default function AnalistaPDIPage() {
       stackerName="Desenvolvimento"
       title="Analista de PDI"
       subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Avaliações recebidas."
-      messages={messages.map((message) => ({
+      messages={(finished ? [] : messages).map((message) => ({
         id: message.id,
         role: message.role,
         content: message.content,
