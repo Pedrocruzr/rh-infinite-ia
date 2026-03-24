@@ -1,0 +1,39 @@
+
+> rh-infinite-ia@0.1.0 build
+> next build
+
+▲ Next.js 16.2.0 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 2 errors:
+./src/app/app/recrutador/assessments/[id]/page.tsx:91:5
+Expression expected
+  [90m89 |[0m         </div>
+  [90m90 |[0m       </div>
+[31m[1m>[0m [90m91 |[0m     </main>
+  [90m   |[0m     [31m[1m^[0m
+  [90m92 |[0m   );
+  [90m93 |[0m }
+  [90m94 |[0m
+
+Parsing ecmascript source code failed
+
+
+./src/app/app/recrutador/assessments/[id]/page.tsx:91:6
+Unterminated regexp literal
+  [90m89 |[0m         </div>
+  [90m90 |[0m       </div>
+[31m[1m>[0m [90m91 |[0m     </main>
+  [90m   |[0m      [31m[1m^^^^^^[0m
+  [90m92 |[0m   );
+  [90m93 |[0m }
+  [90m94 |[0m
+
+Parsing ecmascript source code failed
+
+
+    at <unknown> (./src/app/app/recrutador/assessments/[id]/page.tsx:91:5)
+    at <unknown> (./src/app/app/recrutador/assessments/[id]/page.tsx:91:6)

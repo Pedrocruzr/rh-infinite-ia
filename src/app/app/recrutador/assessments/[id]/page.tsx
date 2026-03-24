@@ -48,24 +48,21 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
         </div>
 
         <div className="mb-6 rounded-3xl border border-neutral-200 bg-neutral-50/50 p-6">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm text-neutral-500">Candidato</p>
-              <p className="mt-2 text-lg font-medium">{assessment.candidate_name || "—"}</p>
+              <p className="text-sm text-neutral-500">Agente usado</p>
+              <p className="mt-2 text-lg font-medium">{assessment.agent_name || "—"}</p>
             </div>
             <div>
-              <p className="text-sm text-neutral-500">Vaga</p>
-              <p className="mt-2 text-lg font-medium">{assessment.target_role || "—"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-neutral-500">Status</p>
-              <p className="mt-2 text-lg font-medium">{assessment.status || "—"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-neutral-500">Relatório</p>
-              <p className="mt-2 text-lg font-medium">{assessment.report_status || "—"}</p>
+              <p className="text-sm text-neutral-500">Criado em</p>
+              <p className="mt-2 text-lg font-medium">
+                {assessment.created_at
+                  ? new Date(assessment.created_at).toLocaleString("pt-BR")
+                  : "—"}
+              </p>
             </div>
           </div>
+        </div>
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white p-10">

@@ -32,12 +32,8 @@ export default async function RecruiterAssessmentsPage() {
           <table className="w-full border-collapse text-left">
             <thead className="bg-neutral-50">
               <tr className="text-sm text-neutral-600">
-                <th className="px-6 py-4">Candidato</th>
-                <th className="px-6 py-4">Vaga</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Relatório</th>
-                <th className="px-6 py-4">Criado em</th>
                 <th className="px-6 py-4">Agente usado</th>
+                <th className="px-6 py-4">Criado em</th>
                 <th className="px-6 py-4">Ação</th>
               </tr>
             </thead>
@@ -45,16 +41,12 @@ export default async function RecruiterAssessmentsPage() {
               {assessments && assessments.length > 0 ? (
                 assessments.map((assessment) => (
                   <tr key={assessment.id} className="border-t border-neutral-200">
-                    <td className="px-6 py-5">{assessment.candidate_name || "—"}</td>
-                    <td className="px-6 py-5">{assessment.target_role || "—"}</td>
-                    <td className="px-6 py-5">{assessment.status || "—"}</td>
-                    <td className="px-6 py-5">{assessment.report_status || "—"}</td>
+                    <td className="px-6 py-5">{assessment.agent_name || "—"}</td>
                     <td className="px-6 py-5">
                       {assessment.created_at
                         ? new Date(assessment.created_at).toLocaleString("pt-BR")
                         : "—"}
                     </td>
-                    <td className="px-6 py-5">{assessment.agent_name || "—"}</td>
                     <td className="px-6 py-5">
                       <Link
                         href={`/app/recrutador/assessments/${assessment.id}`}
@@ -67,7 +59,7 @@ export default async function RecruiterAssessmentsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-neutral-500">
+                  <td colSpan={3} className="px-6 py-8 text-neutral-500">
                     Nenhuma avaliação encontrada.
                   </td>
                 </tr>
