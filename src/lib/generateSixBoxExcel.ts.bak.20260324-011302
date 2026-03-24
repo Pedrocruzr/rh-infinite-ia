@@ -1,0 +1,26 @@
+import * as XLSX from "xlsx";
+
+export function generateExcel(data: any) {
+  const wb = XLSX.utils.book_new();
+
+  const resumo = data.blocos.map((b: any) => ({
+    Bloco: b.nome,
+    Média: b.media,
+    Classificação:
+      b.media <= 3.9
+        ? "Crítico"
+        : b.media <= 5.9
+        ? "Atenção"
+        : b.media <= 7.9
+        ? "Adequado"
+        : "Excelência",
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(resumo);
+  XLSX.utils.book_append_sheet(wb, ws, "Resumo Executivo");
+
+  const filePath = `/tmp/Diagnostico_Six_Box_${Date.now()}.xlsx`;
+  XLSX.writeFile(wb, filePath);
+
+  return filePath;
+}
