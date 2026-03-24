@@ -1,0 +1,280 @@
+type Session = Record<string, any>;
+
+function esc(value: unknown) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function round2(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function money(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function productivityRate(hours: number, entregas: number) {
+  return hours > 0 ? entregas / hours : 0;
+}
+
+function atingimento(real: number, meta: number) {
+  return meta > 0 ? (real / meta) * 100 : 0;
+}
+
+function retorno(receita: number, custo: number) {
+  return custo > 0 ? receita / custo : 0;
+}
+
+function inferUnit(indicador: string) {
+  const i = String(indicador ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (i.includes("atendimento")) return "atendimentos/hora";
+  if (i.includes("venda")) return "vendas/hora";
+  if (i.includes("process")) return "processos/hora";
+  if (i.includes("tarefa")) return "tarefas/hora";
+  if (i.includes("document")) return "documentos/hora";
+  if (i.includes("receita")) return "receita por hora";
+  return "entregas/hora";
+}
+
+function classificacaoMeta(pct: number) {
+  if (pct > 100) return "Acima da meta";
+  if (pct >= 95) return "Na meta";
+  if (pct >= 80) return "Próximo da meta";
+  return "Abaixo da meta";
+}
+
+function statusByPct(pct: number) {
+  if (pct >= 100) return "Bom";
+  if (pct >= 80) return "Bom";
+  return "Atenção";
+}
+
+export function buildProdutividadeColaboradorReport(rawAnswers: Session) {
+  const nomeColaborador = String(rawAnswers.nomeColaborador ?? "Não informado");
+  const cargo = String(rawAnswers.cargo ?? "Não informado");
+  const setor = String(rawAnswers.setor ?? "Não informado");
+  const periodo = String(rawAnswers.periodo ?? "Não informado");
+  const tipoIndicador = String(rawAnswers.tipoIndicador ?? "Não informado");
+  const unidade = inferUnit(tipoIndicador);
+  const horasTrabalhadas = Number(rawAnswers.horasTrabalhadas ?? 0);
+  const entregas = Number(rawAnswers.entregas ?? 0);
+  const receitaGerada = Number(rawAnswers.receitaGerada ?? 0);
+  const custoColaborador = Number(rawAnswers.custoColaborador ?? 0);
+  const metaEsperada = Number(rawAnswers.metaEsperada ?? 0);
+  const observacoes = String(rawAnswers.observacoes ?? "Sem observações relevantes.");
+
+  const produtividade = productivityRate(horasTrabalhadas, entregas);
+  const metaProdutividade = horasTrabalhadas > 0 ? metaEsperada / horasTrabalhadas : 0;
+  const atingMeta = atingimento(entregas, metaEsperada);
+  const atingProd = atingimento(produtividade, metaProdutividade);
+  const retornoFinanceiro = retorno(receitaGerada, custoColaborador);
+  const classeMeta = classificacaoMeta(atingMeta);
+
+  const obs = String(observacoes ?? "").trim();
+  const obsLow = obs
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  const contextAnalysis =
+    !obs || obsLow === "sem observacoes" || obsLow === "sem observações" || obsLow === "sem observacoes relevantes"
+      ? "Não foram registradas observações contextuais relevantes na coleta. Ainda assim, é recomendável validar com a liderança se houve algum fator operacional, técnico ou comportamental que possa ter influenciado a produtividade no período analisado."
+      : obsLow.includes("novo na funcao") || obsLow.includes("nova funcao") || obsLow.includes("novo no cargo")
+      ? "O contexto informado indica que o colaborador pode ainda estar em fase de adaptação à função. Nesse cenário, a produtividade precisa ser lida com cautela, considerando curva de aprendizagem, assimilação de rotina, domínio técnico e segurança na execução. Para RH e liderança, o mais adequado é acompanhar a evolução ao longo dos próximos ciclos, realizar uma conversa estruturada sobre dificuldades iniciais e verificar se há necessidade de apoio, integração adicional ou treinamento direcionado."
+      : obsLow.includes("treinamento em andamento") || obsLow.includes("em treinamento") || obsLow.includes("capacitando")
+      ? "O contexto informado mostra que o colaborador está em processo de treinamento ou desenvolvimento. Isso pode impactar diretamente o ritmo de entrega no curto prazo, sem necessariamente indicar baixo desempenho estrutural. O ponto de atenção para RH e gestão é observar se a produtividade atual está compatível com a fase de desenvolvimento, acompanhar a evolução após o treinamento e validar se o conteúdo aplicado está gerando ganho real de desempenho."
+      : obsLow.includes("falta de sistema") || obsLow.includes("sistema lento") || obsLow.includes("problema no sistema") || obsLow.includes("instabilidade")
+      ? "O contexto aponta um possível gargalo estrutural ou tecnológico. Nesse caso, a produtividade observada pode estar sendo afetada por limitações de sistema, lentidão operacional ou falhas de ferramenta, e não apenas por fatores individuais. A leitura correta para RH e liderança é investigar o impacto real da estrutura sobre o desempenho, mapear o nível de retrabalho gerado e evitar conclusões precipitadas sobre performance individual enquanto esse fator persistir."
+      : obsLow.includes("sobrecarga") || obsLow.includes("muita demanda") || obsLow.includes("equipe reduzida") || obsLow.includes("acumulo")
+      ? "O contexto informado sugere sobrecarga operacional. Isso significa que a produtividade precisa ser interpretada junto à distribuição de demanda, volume de trabalho, priorização e capacidade real de execução. Para RH e gestão, o ponto central é entender se a queda de performance vem de falta de capacidade individual ou de excesso estrutural de demanda. Nesses casos, é recomendável revisar fluxo, redistribuição de tarefas e apoio da liderança."
+      : obsLow.includes("falta de treinamento") || obsLow.includes("precisa de treinamento") || obsLow.includes("sem treinamento")
+      ? "O contexto sugere lacuna de capacitação. Nesse cenário, a produtividade pode estar abaixo do esperado por ausência de preparo técnico, clareza de processo ou prática suficiente. A melhor leitura para RH é tratar o dado como sinal de desenvolvimento necessário, e não como julgamento isolado de desempenho. O caminho mais indicado é mapear as lacunas, estruturar treinamento e reavaliar após novo ciclo."
+      : `O contexto informado pelo usuário exige leitura qualitativa complementar. A observação registrada foi: "${obs}". Isso indica que a produtividade não deve ser interpretada apenas pelo número final, mas também pelas condições em que o colaborador executou suas atividades. Para RH e liderança, o ideal é validar impacto real desse fator no desempenho, identificar se se trata de causa temporária ou estrutural e acompanhar a evolução em um novo período de análise.`;
+
+  const leituraCalculo =
+    metaEsperada > 0
+      ? `O colaborador realizou ${round2(produtividade)} ${unidade}, atingindo ${round2(atingMeta)}% da meta estabelecida. Isso representa um desempenho ${classeMeta.toLowerCase()} para a função, considerando o contexto informado.`
+      : `O colaborador realizou ${round2(produtividade)} ${unidade}. Como a meta não foi definida, a leitura deve considerar o contexto, a qualidade e a comparação com o padrão interno da área.`;
+
+  const analiseFinanceira =
+    receitaGerada > 0
+      ? `A área apresenta receita direta atribuível. O retorno financeiro estimado é de ${round2(retornoFinanceiro)}x sobre o custo do colaborador.`
+      : `A área não apresenta receita direta atribuível. A análise financeira deve considerar valor agregado indireto, como qualidade, redução de retrabalho, eficiência e experiência do cliente.`;
+
+  return `
+<section>
+  <h1>Modelo de Relatório de Taxa de Produtividade por Colaborador</h1>
+
+  <h2>1. Resumo Executivo</h2>
+  <table>
+    <tbody>
+      <tr><td><strong>Colaborador(a)</strong></td><td>${esc(nomeColaborador)}</td></tr>
+      <tr><td><strong>Cargo</strong></td><td>${esc(cargo)}</td></tr>
+      <tr><td><strong>Área / Setor</strong></td><td>${esc(setor)}</td></tr>
+      <tr><td><strong>Período de análise</strong></td><td>${esc(periodo)}</td></tr>
+      <tr><td><strong>Gestor(a) responsável</strong></td><td>Não informado na coleta</td></tr>
+      <tr><td><strong>Classificação geral</strong></td><td>${esc(statusByPct(atingMeta))}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Produtividade – Indicadores Objetivos</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Indicador</th>
+        <th>Valor</th>
+        <th>Meta</th>
+        <th>Atingimento</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Horas trabalhadas</td><td>${esc(horasTrabalhadas)}</td><td>${esc(horasTrabalhadas)}</td><td>100%</td><td>OK</td></tr>
+      <tr><td>Volume realizado</td><td>${esc(entregas)}</td><td>${esc(metaEsperada)}</td><td>${esc(round2(atingMeta))}%</td><td>${esc(classeMeta)}</td></tr>
+      <tr><td>Qualidade / Acurácia</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado</td></tr>
+      <tr><td>Prazo / Eficiência</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado</td></tr>
+      <tr><td>Produtividade (${esc(unidade)})</td><td>${esc(round2(produtividade))}</td><td>${esc(round2(metaProdutividade))}</td><td>${esc(round2(atingProd))}%</td><td>${esc(classeMeta)}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Cálculo de Produtividade Detalhado</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+        <th>Cálculo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Horas trabalhadas no período</td><td>${esc(horasTrabalhadas)}</td><td>Total de horas registradas</td></tr>
+      <tr><td>Entregas realizadas</td><td>${esc(entregas)}</td><td>Total de unidades produzidas no período</td></tr>
+      <tr><td>Taxa de produtividade bruta</td><td>${esc(round2(produtividade))}</td><td>${esc(entregas)} ÷ ${esc(horasTrabalhadas)} = ${esc(round2(produtividade))}</td></tr>
+      <tr><td>Unidade de medida</td><td>${esc(unidade)}</td><td>Conforme natureza da função</td></tr>
+      <tr><td>Meta de produtividade esperada</td><td>${esc(round2(metaProdutividade))}</td><td>Meta total ÷ horas trabalhadas</td></tr>
+      <tr><td>Percentual de atingimento da meta</td><td>${esc(round2(atingMeta))}%</td><td>(${esc(entregas)} ÷ ${esc(metaEsperada)}) × 100 = ${esc(round2(atingMeta))}%</td></tr>
+      <tr><td>Classificação</td><td>${esc(classeMeta)}</td><td>Conforme faixa de atingimento</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Leitura do cálculo:</strong></p>
+  <p>${esc(leituraCalculo)}</p>
+
+  <h2>4. Análise Financeira</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Valor</th>
+        <th>Cálculo / Observação</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Receita gerada pelo colaborador</td><td>${esc(money(receitaGerada))}</td><td>${receitaGerada > 0 ? "Receita direta atribuída ao colaborador" : "Área sem receita direta atribuída"}</td></tr>
+      <tr><td>Custo total do colaborador</td><td>${esc(money(custoColaborador))}</td><td>Valor informado na coleta</td></tr>
+      <tr><td>Retorno financeiro (ROI)</td><td>${receitaGerada > 0 ? esc(round2(retornoFinanceiro) + "x") : "Não se aplica"}</td><td>${receitaGerada > 0 ? "Receita ÷ custo do colaborador" : "Área de suporte e relacionamento"}</td></tr>
+      <tr><td>Valor agregado identificado</td><td>${receitaGerada > 0 ? "Direto" : "Indireto"}</td><td>Considerar qualidade, eficiência, satisfação e redução de retrabalho</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Análise complementar:</strong></p>
+  <p>${esc(analiseFinanceira)}</p>
+
+  <h2>5. Clima e Contexto – Indicadores Subjetivos</h2>
+  <p><strong>Contexto informado:</strong> ${esc(observacoes)}</p>
+  <p><strong>Análise contextual:</strong></p>
+  <p>${esc(contextAnalysis)}</p>
+  <p><strong>Pontos de atenção para RH e liderança:</strong></p>
+  <ul>
+    <li>Verificar se o contexto informado impacta diretamente o ritmo, a qualidade ou a consistência das entregas.</li>
+    <li>Evitar leitura isolada da produtividade sem considerar o cenário operacional do período.</li>
+    <li>Confirmar com a liderança imediata se houve impacto temporário, estrutural ou recorrente.</li>
+    <li>Usar esse dado como base para suporte, desenvolvimento e ajuste de processo.</li>
+  </ul>
+
+  <h2>6. Comparação com Meta e Referências</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Critério</th>
+        <th>Resultado</th>
+        <th>Referência</th>
+        <th>Análise</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Meta de volume</td><td>${esc(round2(atingMeta))}%</td><td>Meta: ${esc(metaEsperada)} unidades</td><td>${atingMeta >= 100 ? "Atingiu ou superou a meta" : `Abaixo em ${esc(round2(100 - atingMeta))}%`}</td></tr>
+      <tr><td>Meta de qualidade</td><td>Não informado</td><td>Não informado na coleta</td><td>Sem dados suficientes</td></tr>
+      <tr><td>Média da área</td><td>${esc(round2(produtividade))}</td><td>Sem benchmark interno informado</td><td>Usar comparação entre funções equivalentes</td></tr>
+      <tr><td>Evolução</td><td>Não informado</td><td>Período anterior não coletado</td><td>Sem base comparativa histórica</td></tr>
+    </tbody>
+  </table>
+
+  <h2>7. Análise Integrada – O que os dados dizem juntos</h2>
+  <p><strong>Diagnóstico:</strong> ${esc(classeMeta)} com necessidade de leitura integrada entre números, contexto e qualidade.</p>
+  <p>A produtividade deve ser interpretada junto com contexto operacional, complexidade das tarefas e condições de trabalho. A base metodológica recomenda evitar leitura puramente numérica e considerar fatores estruturais antes de qualquer conclusão individual. ${esc(observacoes)}</p>
+
+  <h2>8. Leitura Estratégica para RH e Gestão</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Dimensão</th>
+        <th>Análise</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>O que os números mostram?</td><td>Produtividade de ${esc(round2(produtividade))} ${esc(unidade)}, com ${esc(round2(atingMeta))}% de atingimento da meta.</td></tr>
+      <tr><td>O que a produtividade detalhada revela?</td><td>${esc(entregas)} entregas em ${esc(horasTrabalhadas)} horas, com meta total de ${esc(metaEsperada)}.</td></tr>
+      <tr><td>O que a análise financeira indica?</td><td>${esc(analiseFinanceira)}</td></tr>
+      <tr><td>O que o clima revela?</td><td>Contexto informado: ${esc(observacoes)}</td></tr>
+      <tr><td>Existe descolamento entre produtividade e clima?</td><td>Sem coleta completa de clima, a análise deve ser feita com cautela.</td></tr>
+      <tr><td>A causa é individual, da liderança ou estrutural?</td><td>A análise deve investigar primeiro fatores contextuais, estruturais e de processo antes de concluir causa individual.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9. Recomendações e Plano de Ação</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Oportunidade</th>
+        <th>Ação</th>
+        <th>Responsável</th>
+        <th>Prazo</th>
+        <th>Prioridade</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Clareza de meta</td><td>Formalizar meta por função com unidade objetiva e critério de qualidade.</td><td>Gestor / RH</td><td>15 dias</td><td>Alta</td></tr>
+      <tr><td>Contexto operacional</td><td>Investigar gargalos, sobrecarga, sistema e distribuição de demanda.</td><td>Gestor</td><td>15 dias</td><td>Alta</td></tr>
+      <tr><td>Desenvolvimento</td><td>Realizar feedback estruturado e plano de melhoria individual.</td><td>Gestor / RH</td><td>30 dias</td><td>Média</td></tr>
+      <tr><td>Monitoramento</td><td>Acompanhar produtividade com qualidade e contexto, não só volume.</td><td>RH</td><td>30 dias</td><td>Média</td></tr>
+    </tbody>
+  </table>
+
+  <h2>10. Próximos Passos e Monitoramento</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Etapa</th>
+        <th>Descrição</th>
+        <th>Data limite</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1. Devolutiva ao colaborador</td><td>Compartilhar análise e alinhar percepção do contexto.</td><td>Definir internamente</td></tr>
+      <tr><td>2. Acompanhamento</td><td>Verificar evolução da produtividade após ajustes.</td><td>Definir internamente</td></tr>
+      <tr><td>3. Reavaliação</td><td>Nova análise integrada após ciclo de ações.</td><td>Definir internamente</td></tr>
+    </tbody>
+  </table>
+
+  <h2>11. Observações Adicionais</h2>
+  <p>${esc(observacoes)}</p>
+</section>
+`.trim();
+}
