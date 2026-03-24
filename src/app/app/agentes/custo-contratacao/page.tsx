@@ -63,7 +63,7 @@ export default function CustoContratacaoPage() {
 
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setFinished(Boolean(data.completed === true));
+      setFinished(Boolean(data.done || data.completed));
 
       if (String(data.reply || "").trim()) {
         setMessages([
