@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
-import RegenerateReportButton from "@/components/reports/regenerate-report-button";
 import RegenerateReportDialog from "@/components/assessments/regenerate-report-dialog";
 
 type Props = {
@@ -62,7 +61,6 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
-        </div>
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white p-10">
