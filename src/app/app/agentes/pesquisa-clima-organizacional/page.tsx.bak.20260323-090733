@@ -4,7 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
 
-type GenericSession = Record<string, string | undefined>;
+type GenericSession = Record<string, string | undefined> & {
+  status?: string;
+  reportStatus?: string;
+  reportMarkdown?: string | null;
+};
 
 type Message = {
   id: string;
@@ -17,8 +21,9 @@ function cloneSession<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
 }
 
-export default function Nome do componente da página (ex: TestePerfilDiscPage): MentorDeDinamicasPage() {
+export default function PesquisaClimaOrganizacionalPage() {
   const [session, setSession] = useState<GenericSession | null>(null);
+  const [currentField, setCurrentField] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,7 +46,7 @@ export default function Nome do componente da página (ex: TestePerfilDiscPage):
     try {
       setLoading(true);
 
-      const response = await fetch("/api/agents/Slug do agente: mentor-de-dinamicas", {
+      const response = await fetch("/api/agents/pesquisa-clima-organizacional", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,10 +57,11 @@ export default function Nome do componente da página (ex: TestePerfilDiscPage):
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.reply || "Erro ao iniciar o agente.");
+        throw new Error(data.reply || data.error || "Erro ao iniciar o agente.");
       }
 
       setSession(data.session ?? {});
+      setCurrentField(data.nextField ?? data.currentField ?? null);
       setMessages([
         {
           id: crypto.randomUUID(),
@@ -118,7 +124,7 @@ export default function Nome do componente da página (ex: TestePerfilDiscPage):
     setLoading(true);
 
     try {
-      const response = await fetch("/api/agents/Slug do agente: mentor-de-dinamicas", {
+      const response = await fetch("/api/agents/pesquisa-clima-organizacional", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,28 +132,31 @@ export default function Nome do componente da página (ex: TestePerfilDiscPage):
         body: JSON.stringify({
           session,
           message: answer,
+          answer,
+          currentField,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.reply || "Erro ao processar resposta.");
+        throw new Error(data.reply || data.error || "Erro ao processar resposta.");
       }
 
       setSession(data.session ?? {});
+      setCurrentField(data.nextField ?? data.currentField ?? null);
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: "assistant",
-          content: data.completed
+          content: data.done || data.completed
             ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
             : data.reply,
         },
       ]);
 
-      setFinished(Boolean(data.completed));
+      setFinished(Boolean(data.done || data.completed));
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -174,9 +183,9 @@ export default function Nome do componente da página (ex: TestePerfilDiscPage):
 
   return (
     <StandardAgentLayout
-      stackerName="Nome completo do stacker (ex: Diagnóstico, Recrutamento & Seleção, Desenvolvimento & Cultura): Recrutamento & Seleção"
-      title="Título do agente: Mentor de Dinâmicas"
-      subtitle="Subtítulo do agente: Responda uma pergunta por vez. Ao final, o material ficará disponível em Avaliações recebidas."
+      stackerName="Diagnóstico"
+      title="Pesquisa de Clima Organizacional"
+      subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
       messages={messages.map((message) => ({
         id: message.id,
         role: message.role,

@@ -1,0 +1,88 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  initializeClimaSession,
+  runClimaStep,
+  type ClimaField,
+  type ClimaSession,
+} from "@/lib/agents/pesquisa-clima-organizacional/flow";
+import { buildClimaReport } from "@/lib/agents/pesquisa-clima-organizacional/runner";
+
+type RequestBody = {
+  session?: ClimaSession;
+  answer?: string;
+  message?: string;
+  currentField?: ClimaField;
+};
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = (await req.json()) as RequestBody;
+    const session = body.session ?? initializeClimaSession();
+    const answer = body.answer ?? body.message ?? "";
+    const currentField = body.currentField;
+
+    const step = runClimaStep(session, answer, currentField);
+
+    if (!step.completed) {
+      return NextResponse.json({
+        session: step.session,
+        currentField: step.currentField,
+        nextField: step.nextField,
+        completed: false,
+        reply: step.reply,
+      });
+    }
+
+    const reportMarkdown = buildClimaReport(step.session);
+    const supabase = createAdminClient();
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from("profile_assessments")
+      .insert({
+        candidate_name: step.session.nomeEmpresa ?? "Pesquisa de Clima Organizacional",
+        target_role: "Pesquisa de Clima Organizacional",
+        agent_name: "Pesquisa de Clima Organizacional",
+        agent_slug: "pesquisa-clima-organizacional",
+        raw_answers: step.session,
+        report_markdown: reportMarkdown,
+        status: "completed",
+        report_status: "generated",
+        updated_at: now,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        {
+          session: step.session,
+          completed: true,
+          reply: `Relatório gerado, mas ocorreu erro ao salvar: ${error.message}`,
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      session: {
+        ...step.session,
+        assessmentId: data.id,
+      },
+      completed: true,
+      reply: "",
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Erro interno desconhecido";
+
+    return NextResponse.json(
+      {
+        completed: false,
+        reply: `Falha interna ao processar o agente de pesquisa de clima organizacional. ${message}`,
+      },
+      { status: 500 }
+    );
+  }
+}

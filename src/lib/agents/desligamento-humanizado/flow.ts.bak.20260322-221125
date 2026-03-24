@@ -1,0 +1,260 @@
+export type DesligamentoField =
+  | "empresaNome"
+  | "querIncluirCnpj"
+  | "cnpj"
+  | "querIncluirEndereco"
+  | "endereco"
+  | "colaboradorNome"
+  | "cargoAtual"
+  | "departamento"
+  | "tempoEmpresa"
+  | "contribuicoes"
+  | "motivoDesligamento"
+  | "dataDesligamento"
+  | "avisoPrevio"
+  | "beneficiosEstendidos"
+  | "conduziraConversa"
+  | "ondeQuando"
+  | "preocupacaoReacao"
+  | "programaRecolocacao";
+
+export type DesligamentoSession = {
+  assessmentId?: string;
+  empresaNome?: string;
+  querIncluirCnpj?: string;
+  cnpj?: string;
+  querIncluirEndereco?: string;
+  endereco?: string;
+  colaboradorNome?: string;
+  cargoAtual?: string;
+  departamento?: string;
+  tempoEmpresa?: string;
+  contribuicoes?: string;
+  motivoDesligamento?: string;
+  dataDesligamento?: string;
+  avisoPrevio?: string;
+  beneficiosEstendidos?: string;
+  conduziraConversa?: string;
+  ondeQuando?: string;
+  preocupacaoReacao?: string;
+  programaRecolocacao?: string;
+  status?: "in_progress" | "completed";
+  reportStatus?: "pending" | "generated";
+};
+
+function hasVowel(token: string) {
+  return /[aeiouáàâãéêíóôõúü]/i.test(token);
+}
+
+function isComprehensible(value: string) {
+  const text = String(value ?? "").trim();
+  if (!text) return false;
+
+  const tokens = text
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-zA-ZÀ-ÿ0-9\-\/]/g, ""))
+    .filter(Boolean);
+
+  if (tokens.length === 0) return false;
+
+  const validTokens = tokens.filter((token) => {
+    if (token.length <= 2) return true;
+    if (/\d/.test(token)) return true;
+    return hasVowel(token);
+  });
+
+  return validTokens.length / tokens.length >= 0.6;
+}
+
+function isYes(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["sim", "s", "quero", "pode incluir", "incluir"].includes(text);
+}
+
+function isNo(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["não", "nao", "n", "não quero", "nao quero", "não incluir", "nao incluir"].includes(text);
+}
+
+function question(field: DesligamentoField) {
+  switch (field) {
+    case "empresaNome":
+      return "Qual o nome da empresa?";
+    case "querIncluirCnpj":
+      return "Você quer incluir o CNPJ da empresa no material final? Responda 'sim' ou 'não'.";
+    case "cnpj":
+      return "Qual o CNPJ da empresa?";
+    case "querIncluirEndereco":
+      return "Você quer incluir o endereço da empresa no material final? Responda 'sim' ou 'não'.";
+    case "endereco":
+      return "Qual o endereço da empresa?";
+    case "colaboradorNome":
+      return "Qual o nome completo do colaborador?";
+    case "cargoAtual":
+      return "Qual o cargo/função atual do colaborador?";
+    case "departamento":
+      return "Em qual departamento o colaborador trabalha?";
+    case "tempoEmpresa":
+      return "Há quanto tempo o colaborador está na empresa?";
+    case "contribuicoes":
+      return "Quais foram as principais contribuições ou áreas de atuação do colaborador?";
+    case "motivoDesligamento":
+      return "Qual o motivo principal do desligamento? (Ex: reestruturação, término de contrato, performance, etc.)";
+    case "dataDesligamento":
+      return "Quando será a data efetiva do desligamento?";
+    case "avisoPrevio":
+      return "O colaborador cumprirá aviso prévio ou será indenizado?";
+    case "beneficiosEstendidos":
+      return "Existem benefícios estendidos ou suporte adicional que serão oferecidos?";
+    case "conduziraConversa":
+      return "Quem conduzirá a conversa de desligamento?\n\nOpções:\n1. Gestor direto\n2. RH\n3. Gestor + RH juntos";
+    case "ondeQuando":
+      return "Onde e quando a conversa acontecerá?";
+    case "preocupacaoReacao":
+      return "Existe alguma preocupação específica sobre como o colaborador pode reagir?";
+    case "programaRecolocacao":
+      return "A empresa oferecerá algum programa de recolocação ou suporte adicional?";
+    default:
+      return "";
+  }
+}
+
+function nextField(session: DesligamentoSession, field: DesligamentoField, answer: string): DesligamentoField | null {
+  if (field === "empresaNome") return "querIncluirCnpj";
+
+  if (field === "querIncluirCnpj") {
+    return isYes(answer) ? "cnpj" : "querIncluirEndereco";
+  }
+
+  if (field === "cnpj") return "querIncluirEndereco";
+
+  if (field === "querIncluirEndereco") {
+    return isYes(answer) ? "endereco" : "colaboradorNome";
+  }
+
+  if (field === "endereco") return "colaboradorNome";
+
+  const order: DesligamentoField[] = [
+    "colaboradorNome",
+    "cargoAtual",
+    "departamento",
+    "tempoEmpresa",
+    "contribuicoes",
+    "motivoDesligamento",
+    "dataDesligamento",
+    "avisoPrevio",
+    "beneficiosEstendidos",
+    "conduziraConversa",
+    "ondeQuando",
+    "preocupacaoReacao",
+    "programaRecolocacao",
+  ];
+
+  const idx = order.indexOf(field);
+  return idx >= 0 && idx < order.length - 1 ? order[idx + 1] : null;
+}
+
+function validate(field: DesligamentoField, value: string) {
+  const text = String(value ?? "").trim();
+
+  if (!text) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  if (field === "querIncluirCnpj" || field === "querIncluirEndereco") {
+    if (!isYes(text) && !isNo(text)) {
+      return "Responda apenas com 'sim' ou 'não'.";
+    }
+    return null;
+  }
+
+  if (!isComprehensible(text)) {
+    return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+  }
+
+  if (["empresaNome", "colaboradorNome", "cargoAtual", "departamento"].includes(field) && text.length < 3) {
+    return "Preciso dessa resposta com um pouco mais de clareza. Pode escrever novamente?";
+  }
+
+  return null;
+}
+
+export function initializeDesligamentoSession(): DesligamentoSession {
+  return {
+    status: "in_progress",
+    reportStatus: "pending",
+  };
+}
+
+export function runDesligamentoStep(
+  session: DesligamentoSession,
+  answer?: string,
+  currentField?: DesligamentoField
+) {
+  if (!currentField) {
+    const firstField: DesligamentoField = "empresaNome";
+    const q = question(firstField);
+    return {
+      session,
+      completed: false,
+      currentField: firstField,
+      nextField: firstField,
+      question: q,
+      reply: q,
+    };
+  }
+
+  const raw = String(answer ?? "").trim();
+  const error = validate(currentField, raw);
+
+  if (error) {
+    return {
+      session,
+      completed: false,
+      currentField,
+      nextField: currentField,
+      question: question(currentField),
+      reply: error,
+    };
+  }
+
+  const updated: DesligamentoSession = {
+    ...session,
+    [currentField]: raw,
+  };
+
+  if (currentField === "querIncluirCnpj" && isNo(raw)) {
+    updated.cnpj = "";
+  }
+
+  if (currentField === "querIncluirEndereco" && isNo(raw)) {
+    updated.endereco = "";
+  }
+
+  const next = nextField(updated, currentField, raw);
+
+  if (!next) {
+    updated.status = "completed";
+    updated.reportStatus = "generated";
+
+    return {
+      session: updated,
+      completed: true,
+      currentField: null,
+      nextField: null,
+      question: null,
+      reply: null,
+    };
+  }
+
+  const q = question(next);
+
+  return {
+    session: updated,
+    completed: false,
+    currentField: next,
+    nextField: next,
+    question: q,
+    reply: q,
+  };
+}

@@ -251,6 +251,19 @@ function validate(field: OnboardingField, value: string) {
     return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
   }
 
+  if (field === "tempoIntegracao") {
+    const lower = text.toLowerCase();
+    const hasNumber = /\d+/.test(lower);
+    const hasMorning = /manhã|manha/.test(lower);
+    const hasAfternoon = /tarde/.test(lower);
+
+    if (!hasNumber || (!hasMorning && !hasAfternoon)) {
+      return "Informe sempre o tempo + período. Exemplos: 3 horas de manhã, 2 horas à tarde, 3 horas de manhã e 2 horas à tarde.";
+    }
+
+    return null;
+  }
+
   if (field === "temDinamicaPropria") {
     if (!isYes(text) && !isNo(text)) {
       return "Responda apenas com 'sim' ou 'não'.";
@@ -267,24 +280,10 @@ function validate(field: OnboardingField, value: string) {
 
   if (field === "validacaoDinamicaSugerida") {
     if (isOk(text)) return null;
-    if (field === "tempoIntegracao") {
-    const lower = text.toLowerCase();
-    const hasNumber = /\d+/.test(lower);
-    const hasMorning = /manhã|manha/.test(lower);
-    const hasAfternoon = /tarde/.test(lower);
-
-    if (!hasNumber || (!hasMorning && !hasAfternoon)) {
-      return "Informe sempre o tempo + período. Exemplos: 3 horas de manhã, 2 horas à tarde, 3 horas de manhã e 2 horas à tarde.";
-    }
 
     return null;
   }
 
-  if (!isComprehensible(text)) {
-      return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
-    }
-    return null;
-  }
 
   if (field === "sistemasApresentados") {
     if (!isSystemLike(text)) {

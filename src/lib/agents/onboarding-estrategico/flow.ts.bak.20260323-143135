@@ -1,0 +1,491 @@
+export type OnboardingField =
+  | "quantidadeColaboradores"
+  | "nivelHierarquico"
+  | "departamentos"
+  | "missaoEmpresa"
+  | "visaoEmpresa"
+  | "valoresEmpresa"
+  | "temasDepartamentos"
+  | "facilitadoresDisponiveis"
+  | "sistemasApresentados"
+  | "tempoIntegracao"
+  | "temDinamicaPropria"
+  | "categoriaDinamica"
+  | "dinamicaPropria"
+  | "validacaoDinamicaSugerida"
+  | "documentosBase";
+
+export type OnboardingSession = {
+  assessmentId?: string;
+  quantidadeColaboradores?: string;
+  nivelHierarquico?: string;
+  departamentos?: string;
+  missaoEmpresa?: string;
+  visaoEmpresa?: string;
+  valoresEmpresa?: string;
+  temasDepartamentos?: string;
+  facilitadoresDisponiveis?: string;
+  sistemasApresentados?: string;
+  tempoIntegracao?: string;
+  temDinamicaPropria?: string;
+  categoriaDinamica?: string;
+  dinamicaPropria?: string;
+  dinamicaOrigem?: "usuario" | "base";
+  dinamicaSugerida?: string;
+  documentosBase?: string;
+  status?: "in_progress" | "completed";
+  reportStatus?: "pending" | "generated";
+};
+
+type DynamicOption = {
+  titulo: string;
+  categoria: string;
+};
+
+const CATEGORY_OPTIONS = [
+  "Comunicação",
+  "Trabalho em Equipe",
+  "Liderança",
+  "Criatividade",
+  "Raciocínio Lógico",
+  "Proatividade",
+  "Fit Cultural",
+  "Resiliência e Estresse",
+  "Organização e Tempo",
+  "Negociação e Persuasão",
+  "Empatia e Escuta",
+] as const;
+
+const CATEGORY_DYNAMICS: Record<string, DynamicOption[]> = {
+  "Comunicação": [
+    { titulo: "Pitch de 1 Minuto", categoria: "Comunicação" },
+    { titulo: "Telefone sem Fio Profissional", categoria: "Comunicação" },
+    { titulo: "Explicando um Objeto Misterioso", categoria: "Comunicação" },
+  ],
+  "Trabalho em Equipe": [
+    { titulo: "Torre de Papel A4", categoria: "Trabalho em Equipe" },
+    { titulo: "Ponte de Palitos", categoria: "Trabalho em Equipe" },
+    { titulo: "Quebra-Cabeça Misto", categoria: "Trabalho em Equipe" },
+  ],
+  "Liderança": [
+    { titulo: "Delegação Relâmpago", categoria: "Liderança" },
+    { titulo: "Porta-Voz do Grupo", categoria: "Liderança" },
+    { titulo: "Reunião Stand-up Simulada", categoria: "Liderança" },
+  ],
+  "Criatividade": [
+    { titulo: "Usos Alternativos", categoria: "Criatividade" },
+    { titulo: "Slogan Relâmpago", categoria: "Criatividade" },
+    { titulo: "Desenhe um Conceito", categoria: "Criatividade" },
+  ],
+  "Raciocínio Lógico": [
+    { titulo: "Sequência que Falta", categoria: "Raciocínio Lógico" },
+    { titulo: "Problema de Alocação", categoria: "Raciocínio Lógico" },
+    { titulo: "Caso Analítico", categoria: "Raciocínio Lógico" },
+  ],
+  "Proatividade": [
+    { titulo: "Quem Se Oferece?", categoria: "Proatividade" },
+    { titulo: "Melhorias em 5 Minutos", categoria: "Proatividade" },
+    { titulo: "Plano Relâmpago", categoria: "Proatividade" },
+  ],
+  "Fit Cultural": [
+    { titulo: "Meus 3 Valores", categoria: "Fit Cultural" },
+    { titulo: "Orgulho Profissional", categoria: "Fit Cultural" },
+    { titulo: "Dilema Ético", categoria: "Fit Cultural" },
+  ],
+  "Resiliência e Estresse": [
+    { titulo: "Tempo Curtíssimo", categoria: "Resiliência e Estresse" },
+    { titulo: "Interrupções Planejadas", categoria: "Resiliência e Estresse" },
+    { titulo: "Erro no Enunciado", categoria: "Resiliência e Estresse" },
+  ],
+  "Organização e Tempo": [
+    { titulo: "Matriz Urgente x Importante", categoria: "Organização e Tempo" },
+    { titulo: "Planeje Seu Dia", categoria: "Organização e Tempo" },
+    { titulo: "Priorize o Backlog", categoria: "Organização e Tempo" },
+  ],
+  "Negociação e Persuasão": [
+    { titulo: "Barganha de Mercado", categoria: "Negociação e Persuasão" },
+    { titulo: "Ganha-Ganha com Limites", categoria: "Negociação e Persuasão" },
+    { titulo: "Defenda seu Orçamento", categoria: "Negociação e Persuasão" },
+  ],
+  "Empatia e Escuta": [
+    { titulo: "Escuta Refletida", categoria: "Empatia e Escuta" },
+    { titulo: "Paráfrase em 3 Passos", categoria: "Empatia e Escuta" },
+    { titulo: "Mapa de Empatia", categoria: "Empatia e Escuta" },
+  ],
+};
+
+function hasVowel(token: string) {
+  return /[aeiouáàâãéêíóôõúü]/i.test(token);
+}
+
+function isComprehensible(value: string) {
+  const text = String(value ?? "").trim();
+  if (!text) return false;
+
+  const tokens = text
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-zA-ZÀ-ÿ0-9\-\/]/g, ""))
+    .filter(Boolean);
+
+  if (tokens.length === 0) return false;
+
+  const validTokens = tokens.filter((token) => {
+    if (token.length <= 2) return true;
+    if (/\d/.test(token)) return true;
+    return hasVowel(token);
+  });
+
+  return validTokens.length / tokens.length >= 0.6;
+}
+
+function isYes(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["sim", "s", "tenho", "já tenho", "ja tenho", "quero"].includes(text);
+}
+
+function isNo(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["não", "nao", "n", "não tenho", "nao tenho"].includes(text);
+}
+
+function isOk(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["ok", "sim", "certo", "validado", "pode seguir", "seguir"].includes(text);
+}
+
+function normalizeText(value: string) {
+  return String(value ?? "").trim().replace(/\s+/g, " ");
+}
+
+function isSystemLike(value: string) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return false;
+
+  const items = raw
+    .split(/\n|,|;/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (!items.length) return false;
+
+  const knownShort = [
+    "crm", "erp", "sap", "totvs", "rm", "tss", "wms", "tms", "bi",
+    "bpm", "hrm", "cms", "oms", "pms", "protheus"
+  ];
+
+  return items.every((item) => {
+    const lower = item.toLowerCase();
+
+    if (knownShort.includes(lower)) return true;
+    if (/^[a-z0-9]{2,8}$/i.test(item)) return true;
+    if (item.length >= 3) return true;
+
+    return false;
+  });
+}
+
+function normalizeCategory(value: string) {
+  const raw = normalizeText(value).toLowerCase();
+
+  if (/comunica/.test(raw)) return "Comunicação";
+  if (/trabalho.*equipe|equipe/.test(raw)) return "Trabalho em Equipe";
+  if (/lider/.test(raw)) return "Liderança";
+  if (/criativ/.test(raw)) return "Criatividade";
+  if (/racioc/.test(raw)) return "Raciocínio Lógico";
+  if (/proativ/.test(raw)) return "Proatividade";
+  if (/fit/.test(raw)) return "Fit Cultural";
+  if (/resili|estress/.test(raw)) return "Resiliência e Estresse";
+  if (/organiz|tempo/.test(raw)) return "Organização e Tempo";
+  if (/negocia|persu/.test(raw)) return "Negociação e Persuasão";
+  if (/empatia|escuta/.test(raw)) return "Empatia e Escuta";
+
+  return "";
+}
+
+function formatSuggestedDynamics(category: string) {
+  const items = CATEGORY_DYNAMICS[category] ?? [];
+  return items.map((item, index) => `${index + 1}. ${item.titulo}`).join("\n");
+}
+
+function question(field: OnboardingField) {
+  switch (field) {
+    case "quantidadeColaboradores":
+      return "Quantos novos colaboradores participarão da integração?";
+    case "nivelHierarquico":
+      return "Qual é o nível hierárquico desses colaboradores? (Operacional, Técnico ou Gestão)";
+    case "departamentos":
+      return "Quais departamentos estarão envolvidos nessa integração?";
+    case "missaoEmpresa":
+      return "Qual é a missão da empresa?";
+    case "visaoEmpresa":
+      return "Qual é a visão da empresa?";
+    case "valoresEmpresa":
+      return "Quais são os valores da empresa?";
+    case "temasDepartamentos":
+      return "Quais temas específicos devem ser abordados em cada departamento?";
+    case "facilitadoresDisponiveis":
+      return "Quais facilitadores estarão disponíveis para conduzir a integração?";
+    case "sistemasApresentados":
+      return "Quais sistemas devem ser apresentados nessa integração?";
+    case "tempoIntegracao":
+      return "Quanto tempo você tem disponível para essa integração? Informe sempre o tempo + período. Exemplos:\n\n3 horas de manhã\n2 horas à tarde\n3 horas de manhã e 2 horas à tarde";
+    case "temDinamicaPropria":
+      return "Você já tem alguma dinâmica que queira inserir? Responda 'sim' ou 'não'.";
+    case "categoriaDinamica":
+      return "Para qual categoria de competência você gostaria de receber dinâmicas?\n\nComunicação\nTrabalho em Equipe\nLiderança\nCriatividade\nRaciocínio Lógico\nProatividade\nFit Cultural\nResiliência e Estresse\nOrganização e Tempo\nNegociação e Persuasão\nEmpatia e Escuta";
+    case "dinamicaPropria":
+      return "Perfeito. Escreva a dinâmica que você quer inserir. Se quiser, pode colocar mais de uma.";
+    case "validacaoDinamicaSugerida":
+      return "Com base na categoria escolhida, sugeri 3 dinâmicas da base. Se estiver de acordo, responda 'ok'. Se quiser ajustar, escreva a dinâmica da base que deseja utilizar.";
+    case "documentosBase":
+      return "Quais documentos você quer utilizar nessa integração? Você pode escolher, por exemplo:\n\nManual do Colaborador\nGuia Rápido de Sistemas\nFluxogramas de Processos\nGlossário Técnico\n\nOu qualquer outro material. Coloque abaixo o nome do documento.";
+    default:
+      return "";
+  }
+}
+
+function validate(field: OnboardingField, value: string) {
+  const text = String(value ?? "").trim();
+
+  if (!text) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  if (field === "tempoIntegracao") {
+    const lower = text.toLowerCase();
+    const hasNumber = /\d+/.test(lower);
+    const hasMorning = /manhã|manha/.test(lower);
+    const hasAfternoon = /tarde/.test(lower);
+
+    if (!hasNumber || (!hasMorning && !hasAfternoon)) {
+      return "Informe sempre o tempo + período. Exemplos: 3 horas de manhã, 2 horas à tarde, 3 horas de manhã e 2 horas à tarde.";
+    }
+
+    return null;
+  }
+
+  if (field === "temDinamicaPropria") {
+    if (!isYes(text) && !isNo(text)) {
+      return "Responda apenas com 'sim' ou 'não'.";
+    }
+    return null;
+  }
+
+  if (field === "categoriaDinamica") {
+    if (!normalizeCategory(text)) {
+      return "Escolha uma das categorias listadas para eu sugerir 3 dinâmicas da base.";
+    }
+    return null;
+  }
+
+  if (field === "validacaoDinamicaSugerida") {
+    if (isOk(text)) return null;
+
+    return null;
+  }
+
+  if (!isComprehensible(text)) {
+      return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+    }
+    return null;
+  }
+
+  if (field === "sistemasApresentados") {
+    if (!isSystemLike(text)) {
+      return "Informe o nome dos sistemas que devem ser apresentados. Pode usar siglas e nomes curtos, por exemplo: CRM, TOTVS, ERP, SAP.";
+    }
+    return null;
+  }
+
+  if (!isComprehensible(text)) {
+    return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+  }
+
+  return null;
+}
+
+function nextField(field: OnboardingField): OnboardingField | null {
+  const order: OnboardingField[] = [
+    "quantidadeColaboradores",
+    "nivelHierarquico",
+    "departamentos",
+    "missaoEmpresa",
+    "visaoEmpresa",
+    "valoresEmpresa",
+    "temasDepartamentos",
+    "facilitadoresDisponiveis",
+    "sistemasApresentados",
+    "tempoIntegracao",
+    "temDinamicaPropria",
+    "documentosBase",
+  ];
+  const idx = order.indexOf(field);
+  return idx >= 0 && idx < order.length - 1 ? order[idx + 1] : null;
+}
+
+export function initializeOnboardingSession(): OnboardingSession {
+  return {
+    status: "in_progress",
+    reportStatus: "pending",
+  };
+}
+
+export function runOnboardingStep(
+  session: OnboardingSession,
+  answer?: string,
+  currentField?: OnboardingField
+) {
+  if (!currentField) {
+    const firstField: OnboardingField = "quantidadeColaboradores";
+    const q = question(firstField);
+    return {
+      session,
+      completed: false,
+      currentField: firstField,
+      nextField: firstField,
+      question: q,
+      reply: q,
+    };
+  }
+
+  const raw = String(answer ?? "").trim();
+  const error = validate(currentField, raw);
+
+  if (error) {
+    return {
+      session,
+      completed: false,
+      currentField,
+      nextField: currentField,
+      question: question(currentField),
+      reply: error,
+    };
+  }
+
+  if (currentField === "temDinamicaPropria") {
+    const updated: OnboardingSession = {
+      ...session,
+      temDinamicaPropria: raw,
+    };
+
+    if (isYes(raw)) {
+      const next: OnboardingField = "dinamicaPropria";
+      const q = question(next);
+      return {
+        session: updated,
+        completed: false,
+        currentField: next,
+        nextField: next,
+        question: q,
+        reply: q,
+      };
+    }
+
+    const next: OnboardingField = "categoriaDinamica";
+    const q = question(next);
+    return {
+      session: updated,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: q,
+      reply: "Entendi. Então vou sugerir dinâmicas com base nas respostas anteriores e na categoria de competência que você escolher.\n\n" + q,
+    };
+  }
+
+  if (currentField === "categoriaDinamica") {
+    const categoria = normalizeCategory(raw);
+    const suggestionText = formatSuggestedDynamics(categoria);
+
+    const updated: OnboardingSession = {
+      ...session,
+      categoriaDinamica: categoria,
+      dinamicaOrigem: "base",
+      dinamicaSugerida: suggestionText,
+      dinamicaPropria: suggestionText
+        .split("\n")
+        .map((line) => line.replace(/^\d+\.\s*/, "").trim())
+        .join(", "),
+    };
+
+    const next: OnboardingField = "validacaoDinamicaSugerida";
+    return {
+      session: updated,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: question(next),
+      reply: `Com base na categoria escolhida (${categoria}), estas são 3 dinâmicas da base:\n\n${suggestionText}\n\n${question(next)}`,
+    };
+  }
+
+  if (currentField === "dinamicaPropria") {
+    const updated: OnboardingSession = {
+      ...session,
+      dinamicaPropria: raw,
+      dinamicaOrigem: "usuario",
+    };
+
+    const next: OnboardingField = "documentosBase";
+    const q = question(next);
+    return {
+      session: updated,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: q,
+      reply: q,
+    };
+  }
+
+  if (currentField === "validacaoDinamicaSugerida") {
+    const updated: OnboardingSession = {
+      ...session,
+      dinamicaPropria: isOk(raw) ? session.dinamicaPropria : raw,
+      dinamicaOrigem: "base",
+    };
+
+    const next: OnboardingField = "documentosBase";
+    const q = question(next);
+    return {
+      session: updated,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: q,
+      reply: q,
+    };
+  }
+
+  const updated: OnboardingSession = {
+    ...session,
+    [currentField]: raw,
+  };
+
+  const next = nextField(currentField);
+
+  if (!next) {
+    updated.status = "completed";
+    updated.reportStatus = "generated";
+
+    return {
+      session: updated,
+      completed: true,
+      currentField: null,
+      nextField: null,
+      question: null,
+      reply: null,
+    };
+  }
+
+  const q = question(next);
+
+  return {
+    session: updated,
+    completed: false,
+    currentField: next,
+    nextField: next,
+    question: q,
+    reply: q,
+  };
+}

@@ -17,21 +17,20 @@ export default function InternalAppLayout({
             <Link href="/app/agentes" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
               Agentes
             </Link>
-
-            <Link href="/app/tutorial" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+<Link href="/app/tutorial" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
               Tutorial
             </Link>
-
-            <Link href="/app/suporte" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+<Link href="/app/suporte" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
               Suporte
             </Link>
-
-            <Link href="/app/configuracoes" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
-              Configurações
-            </Link>
-
-            <Link href="/app/recrutador/assessments" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+<Link href="/app/recrutador/assessments" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
               Avaliações recebidas
+            </Link>
+<Link href="/app/painel-de-vagas" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+              Painel de Vagas
+            </Link>
+<Link href="/app/configuracoes" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+              Configurações
             </Link>
           </nav>
         </aside>

@@ -15,6 +15,7 @@ type Message = {
   role: "assistant" | "user";
   content: string;
   sessionSnapshot?: GenericSession | null;
+  fieldSnapshot?: string | null;
 };
 
 function cloneSession<T>(value: T): T {
@@ -100,6 +101,7 @@ export default function MapeamentoCompetenciasPage() {
       if (target.role !== "user") return prev;
 
       setSession(target.sessionSnapshot ?? null);
+      setCurrentField(target.fieldSnapshot ?? null);
       setInput(target.content);
       setFinished(false);
 
@@ -117,6 +119,7 @@ export default function MapeamentoCompetenciasPage() {
       role: "user",
       content: answer,
       sessionSnapshot: cloneSession(session),
+      fieldSnapshot: currentField,
     };
 
     setMessages((prev) => [...prev, userMessage]);

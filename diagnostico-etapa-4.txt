@@ -1,0 +1,234 @@
+
+--- supabase helpers ---
+src/components/agents/agent-workspace-client.tsx
+src/components/agents/agents-catalog-client.tsx
+src/lib/supabase/admin.ts
+src/lib/supabase/server.ts
+
+--- clientes supabase ---
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {
+          // noop for now
+        },
+      },
+    }
+  );
+}
+
+--- padrao de actions / services / repositories ---
+src/components/agents/user-message-actions.tsx
+
+--- uso de insert update delete select no projeto ---
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-105951:15:    .from("profile_assessments")
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-105951:16:    .select("*")
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-135045:15:    .from("profile_assessments")
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-135045:16:    .select("*")
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-105951.bak.20260323-111025:14:    .from("profile_assessments")
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-105951.bak.20260323-111025:15:    .select("*")
+src/app/app/recrutador/assessments/[id]/page.tsx:15:    .from("profile_assessments")
+src/app/app/recrutador/assessments/[id]/page.tsx:16:    .select("*")
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-111713:14:    .from("profile_assessments")
+src/app/app/recrutador/assessments/[id]/page.tsx.bak.20260323-111713:15:    .select("*")
+src/app/app/recrutador/assessments/page.tsx:8:    .from("profile_assessments")
+src/app/app/recrutador/assessments/page.tsx:9:    .delete()
+src/app/app/recrutador/assessments/page.tsx:13:    .from("profile_assessments")
+src/app/app/recrutador/assessments/page.tsx:14:    .select("*")
+src/app/api/assessments/[id]/regenerate/route.ts:17:      .from("profile_assessments")
+src/app/api/assessments/[id]/regenerate/route.ts:18:      .select("id, agent_slug, raw_answers")
+src/app/api/assessments/[id]/regenerate/route.ts:34:      .from("profile_assessments")
+src/app/api/assessments/[id]/regenerate/route.ts:35:      .update({
+src/app/api/assessments/[id]/regenerate/route.ts.bak.20260323-225249:18:      .from("profile_assessments")
+src/app/api/assessments/[id]/regenerate/route.ts.bak.20260323-225249:19:      .select("id, agent_slug, raw_answers")
+src/app/api/assessments/[id]/regenerate/route.ts.bak.20260323-225249:35:      .from("profile_assessments")
+src/app/api/assessments/[id]/regenerate/route.ts.bak.20260323-225249:36:      .update({
+src/app/api/recrutador/assessments/[id]/regenerate-parecer/route.ts:16:      .from("profile_assessments")
+src/app/api/recrutador/assessments/[id]/regenerate-parecer/route.ts:17:      .select("*")
+src/app/api/recrutador/assessments/[id]/regenerate-parecer/route.ts:50:      .from("profile_assessments")
+src/app/api/recrutador/assessments/[id]/regenerate-parecer/route.ts:51:      .update({
+src/app/api/recrutador/relatorio/route.ts:241:      .from("profile_assessments")
+src/app/api/recrutador/relatorio/route.ts:242:      .select("*")
+src/app/api/recrutador/relatorio/route.ts:269:      .from("profile_assessments")
+src/app/api/recrutador/relatorio/route.ts:270:      .update({
+src/app/api/agents/mentor-dinamicas/route.ts:109:      .from("profile_assessments")
+src/app/api/agents/mentor-dinamicas/route.ts:110:      .insert(payload)
+src/app/api/agents/mentor-dinamicas/route.ts:111:      .select("id")
+src/app/api/agents/analista-custo-contratacao/route.ts.bak.20260324-014307:42:      .from("profile_assessments")
+src/app/api/agents/analista-custo-contratacao/route.ts.bak.20260324-014307:43:      .insert({
+src/app/api/agents/analista-custo-contratacao/route.ts.bak.20260324-014307:54:      .select("id")
+src/app/api/agents/teste-perfil-comportamental/route.ts:133:        .from("profile_assessments")
+src/app/api/agents/teste-perfil-comportamental/route.ts:134:        .insert({
+src/app/api/agents/teste-perfil-comportamental/route.ts:146:        .select("id")
+src/app/api/agents/teste-perfil-comportamental/route.ts:188:      .from("profile_assessments")
+src/app/api/agents/teste-perfil-comportamental/route.ts:189:      .update(mapSessionToRow(finalSession))
+src/app/api/agents/analista-diagnostico-six-box/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/analista-diagnostico-six-box/route.ts:43:      .insert({
+src/app/api/agents/analista-diagnostico-six-box/route.ts:54:      .select("id")
+src/app/api/agents/taxa-aderencia-vaga/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/taxa-aderencia-vaga/route.ts:43:      .insert({
+src/app/api/agents/taxa-aderencia-vaga/route.ts:54:      .select("id")
+src/app/api/agents/desligamento-humanizado/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/desligamento-humanizado/route.ts:43:      .insert({
+src/app/api/agents/desligamento-humanizado/route.ts:54:      .select("id")
+src/app/api/agents/pesquisa-clima-organizacional/route.ts.bak.20260323-154607:42:      .from("profile_assessments")
+src/app/api/agents/pesquisa-clima-organizacional/route.ts.bak.20260323-154607:43:      .insert({
+src/app/api/agents/pesquisa-clima-organizacional/route.ts.bak.20260323-154607:54:      .select("id")
+src/app/api/agents/pesquisa-clima-organizacional/route.ts:45:      .from("profile_assessments")
+src/app/api/agents/pesquisa-clima-organizacional/route.ts:46:      .insert({
+src/app/api/agents/pesquisa-clima-organizacional/route.ts:57:      .select("id")
+src/app/api/agents/entrevistador-automatizado/route.ts:115:      .from("profile_assessments")
+src/app/api/agents/entrevistador-automatizado/route.ts:116:      .insert(payload)
+src/app/api/agents/entrevistador-automatizado/route.ts:117:      .select("id")
+src/app/api/agents/taxa-de-aderencia-com-a-vaga/route.ts:75:        .from("profile_assessments")
+src/app/api/agents/taxa-de-aderencia-com-a-vaga/route.ts:76:        .update(payload)
+src/app/api/agents/taxa-de-aderencia-com-a-vaga/route.ts:78:        .select("id, candidate_name, target_role, agent_slug, status, report_status")
+src/app/api/agents/taxa-de-aderencia-com-a-vaga/route.ts:97:      .from("profile_assessments")
+src/app/api/agents/taxa-de-aderencia-com-a-vaga/route.ts:98:      .insert({
+src/app/api/agents/taxa-de-aderencia-com-a-vaga/route.ts:102:      .select("id, candidate_name, target_role, agent_slug, status, report_status")
+src/app/api/agents/analista-fit-cultural/route.ts:43:      .from("profile_assessments")
+src/app/api/agents/analista-fit-cultural/route.ts:44:      .insert({
+src/app/api/agents/analista-fit-cultural/route.ts:55:      .select("id")
+src/app/api/agents/analista-fit-cultural/route.ts.bak:43:      .from("profile_assessments")
+src/app/api/agents/analista-fit-cultural/route.ts.bak:44:      .insert({
+src/app/api/agents/analista-fit-cultural/route.ts.bak:55:      .select("id")
+src/app/api/agents/mapeamento-competencias/route.ts:43:      .from("profile_assessments")
+src/app/api/agents/mapeamento-competencias/route.ts:44:      .insert({
+src/app/api/agents/mapeamento-competencias/route.ts:55:      .select("id")
+src/app/api/agents/mapeamento-competencias/route.ts.bak:43:      .from("profile_assessments")
+src/app/api/agents/mapeamento-competencias/route.ts.bak:44:      .insert({
+src/app/api/agents/mapeamento-competencias/route.ts.bak:55:      .select("id")
+src/app/api/agents/teste-perfil-disc/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/teste-perfil-disc/route.ts:43:      .insert({
+src/app/api/agents/teste-perfil-disc/route.ts:54:      .select("id")
+src/app/api/agents/teste-perfil-disc/route.ts.bak:42:      .from("profile_assessments")
+src/app/api/agents/teste-perfil-disc/route.ts.bak:43:      .insert({
+src/app/api/agents/teste-perfil-disc/route.ts.bak:54:      .select("id")
+src/app/api/agents/execute/route.ts:13:      .from("agents")
+src/app/api/agents/execute/route.ts:14:      .select("id, name, slug, credit_cost")
+src/app/api/agents/execute/route.ts:36:      .from("agent_runs")
+src/app/api/agents/execute/route.ts:37:      .insert({
+src/app/api/agents/execute/route.ts:52:      .select("id")
+src/app/api/agents/execute/route.ts:67:      .from("usage_events")
+src/app/api/agents/execute/route.ts:68:      .insert({
+src/app/api/agents/descricao-cargo-competencia/route.ts.bak.20260322-164511:43:      .from("profile_assessments")
+src/app/api/agents/descricao-cargo-competencia/route.ts.bak.20260322-164511:44:      .insert({
+src/app/api/agents/descricao-cargo-competencia/route.ts.bak.20260322-164511:55:      .select("id")
+src/app/api/agents/descricao-cargo-competencia/route.ts:43:      .from("profile_assessments")
+src/app/api/agents/descricao-cargo-competencia/route.ts:44:      .insert({
+src/app/api/agents/descricao-cargo-competencia/route.ts:55:      .select("id")
+src/app/api/agents/coletor-dados-six-box/route.ts:50:      .from("profile_assessments")
+src/app/api/agents/coletor-dados-six-box/route.ts:51:      .insert({
+src/app/api/agents/coletor-dados-six-box/route.ts:65:      .select("id")
+src/app/api/agents/parecer-tecnico-entrevista/route.ts:222:        .from("profile_assessments")
+src/app/api/agents/parecer-tecnico-entrevista/route.ts:223:        .insert({
+src/app/api/agents/parecer-tecnico-entrevista/route.ts:235:        .select("id")
+src/app/api/agents/parecer-tecnico-entrevista/route.ts:265:      .from("profile_assessments")
+src/app/api/agents/parecer-tecnico-entrevista/route.ts:266:      .update(mapSessionToRow(finalSession))
+src/app/api/agents/onboarding-estrategico/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/onboarding-estrategico/route.ts:43:      .insert({
+src/app/api/agents/onboarding-estrategico/route.ts:54:      .select("id")
+src/app/api/agents/analista-pdi/route.ts.bak.20260322-173018:42:      .from("profile_assessments")
+src/app/api/agents/analista-pdi/route.ts.bak.20260322-173018:43:      .insert({
+src/app/api/agents/analista-pdi/route.ts.bak.20260322-173018:54:      .select("id")
+src/app/api/agents/analista-pdi/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/analista-pdi/route.ts:43:      .insert({
+src/app/api/agents/analista-pdi/route.ts:54:      .select("id")
+src/app/api/agents/custo-contratacao/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/custo-contratacao/route.ts:43:      .insert({
+src/app/api/agents/custo-contratacao/route.ts:54:      .select("id")
+src/app/api/agents/taxa-produtividade-colaborador/route.ts:42:      .from("profile_assessments")
+src/app/api/agents/taxa-produtividade-colaborador/route.ts:43:      .insert({
+src/app/api/agents/taxa-produtividade-colaborador/route.ts:54:      .select("id")
+src/components/ui/select.tsx:9:function Select({
+src/lib/agents/entrevistador-automatizado/runner.ts:194:  const uniqueCompetencies = Array.from(
+src/lib/agents/taxa-de-aderencia-com-a-vaga/runner.ts:270:  return Array.from(new Set(items)).slice(0, 6);
+src/lib/agents/taxa-de-aderencia-com-a-vaga/runner.ts:288:  return Array.from(new Set(items)).slice(0, 4);
+src/lib/agents/taxa-de-aderencia-com-a-vaga/runner.ts:301:  return Array.from(new Set(items)).slice(0, 5);
+src/lib/agents/taxa-de-aderencia-com-a-vaga/runner.ts:314:  return Array.from(new Set(items)).slice(0, 3);
+
+--- uso de zod / forms / react-hook-form ---
+src/components/ui/dialog.tsx:4:import { Dialog as DialogPrimitive } from "radix-ui"
+src/components/ui/dialog.tsx:10:function Dialog({
+src/components/ui/dialog.tsx:12:}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+src/components/ui/dialog.tsx:13:  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+src/components/ui/dialog.tsx:16:function DialogTrigger({
+src/components/ui/dialog.tsx:18:}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+src/components/ui/dialog.tsx:19:  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+src/components/ui/dialog.tsx:22:function DialogPortal({
+src/components/ui/dialog.tsx:24:}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+src/components/ui/dialog.tsx:25:  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+src/components/ui/dialog.tsx:28:function DialogClose({
+src/components/ui/dialog.tsx:30:}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+src/components/ui/dialog.tsx:31:  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+src/components/ui/dialog.tsx:34:function DialogOverlay({
+src/components/ui/dialog.tsx:37:}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+src/components/ui/dialog.tsx:39:    <DialogPrimitive.Overlay
+src/components/ui/dialog.tsx:40:      data-slot="dialog-overlay"
+src/components/ui/dialog.tsx:50:function DialogContent({
+src/components/ui/dialog.tsx:55:}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+src/components/ui/dialog.tsx:59:    <DialogPortal>
+src/components/ui/dialog.tsx:60:      <DialogOverlay />
+src/components/ui/dialog.tsx:61:      <DialogPrimitive.Content
+src/components/ui/dialog.tsx:62:        data-slot="dialog-content"
+src/components/ui/dialog.tsx:71:          <DialogPrimitive.Close data-slot="dialog-close" asChild>
+src/components/ui/dialog.tsx:81:          </DialogPrimitive.Close>
+src/components/ui/dialog.tsx:83:      </DialogPrimitive.Content>
+src/components/ui/dialog.tsx:84:    </DialogPortal>
+src/components/ui/dialog.tsx:88:function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+src/components/ui/dialog.tsx:91:      data-slot="dialog-header"
+src/components/ui/dialog.tsx:98:function DialogFooter({
+src/components/ui/dialog.tsx:108:      data-slot="dialog-footer"
+src/components/ui/dialog.tsx:117:        <DialogPrimitive.Close asChild>
+src/components/ui/dialog.tsx:119:        </DialogPrimitive.Close>
+src/components/ui/dialog.tsx:125:function DialogTitle({
+src/components/ui/dialog.tsx:128:}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+src/components/ui/dialog.tsx:130:    <DialogPrimitive.Title
+src/components/ui/dialog.tsx:131:      data-slot="dialog-title"
+src/components/ui/dialog.tsx:138:function DialogDescription({
+src/components/ui/dialog.tsx:141:}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+src/components/ui/dialog.tsx:143:    <DialogPrimitive.Description
+src/components/ui/dialog.tsx:144:      data-slot="dialog-description"
+src/components/ui/dialog.tsx:155:  Dialog,
+src/components/ui/dialog.tsx:156:  DialogClose,
+src/components/ui/dialog.tsx:157:  DialogContent,
+src/components/ui/dialog.tsx:158:  DialogDescription,
+src/components/ui/dialog.tsx:159:  DialogFooter,
+src/components/ui/dialog.tsx:160:  DialogHeader,
+src/components/ui/dialog.tsx:161:  DialogOverlay,
+src/components/ui/dialog.tsx:162:  DialogPortal,
+src/components/ui/dialog.tsx:163:  DialogTitle,
+src/components/ui/dialog.tsx:164:  DialogTrigger,
+src/lib/disc-flow.ts:39:A) Eu assumo o controle rapidamente e foco em resolver o problema o mais rápido possível.
+src/lib/disc-flow.ts:91:A) Vejo como um desafio e ajo rapidamente para me adaptar e resolver.
+src/lib/agents/entrevistador-automatizado/runner.ts:113:      "Conte uma situação em que sua compreensão do cliente foi decisiva para resolver um problema.",
+src/lib/agents/taxa-de-aderencia-com-a-vaga/runner.ts:321:    "Fale sobre uma situação em que precisou resolver um problema sem ter o gestor por perto.",
+src/lib/agents/analista-pdi/runner.ts.bak.20260324-103309:46:function prazoDistribuido(totalMeses: number, indice: number, totalObjetivos: number) {
+src/lib/agents/analista-pdi/runner.ts.bak.20260324-103309:176:      prazo: prazoDistribuido(totalMeses, idx, Math.max(gaps.length, 1)),
+src/lib/agents/analista-pdi/runner.ts.bak.20260324-103309:187:      prazo: prazoDistribuido(totalMeses, idx, Math.max(gaps.length, 1)),
+src/lib/agents/analista-pdi/runner.ts:46:function prazoDistribuido(totalMeses: number, indice: number, totalObjetivos: number) {
+src/lib/agents/analista-pdi/runner.ts:176:      prazo: prazoDistribuido(totalMeses, idx, Math.max(gaps.length, 1)),
+src/lib/agents/analista-pdi/runner.ts:187:      prazo: prazoDistribuido(totalMeses, idx, Math.max(gaps.length, 1)),
+
+--- componentes de tabela / badge / filtros ---
+src/components/ui/dialog.tsx
+src/components/ui/badge.tsx
+src/components/ui/table.tsx
+src/components/ui/button.tsx
+src/components/ui/select.tsx
+src/components/ui/textarea.tsx
+src/components/ui/input.tsx
+src/components/recruiter/regenerate-parecer-button.tsx
+src/components/recruiter/generate-report-button.tsx
+src/components/reports/regenerate-report-button.tsx

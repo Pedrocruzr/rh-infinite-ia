@@ -1,0 +1,279 @@
+import type { ClimaSession } from "./flow";
+
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function normalizeSentence(value: string) {
+  let text = String(value ?? "").trim().replace(/\s+/g, " ");
+  if (!text) return "";
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  if (!/[.!?]$/.test(text)) text += ".";
+  return text;
+}
+
+function normalizeLine(value: string) {
+  return normalizeSentence(value).replace(/[.!?]$/, "");
+}
+
+function splitList(text?: string) {
+  return String(text ?? "")
+    .split(/\n|;|,/)
+    .map((item) => item.replace(/^\d+[\).\-\s]*/, "").trim())
+    .filter(Boolean)
+    .map(normalizeLine);
+}
+
+function unique(items: string[]) {
+  return [...new Set(items)];
+}
+
+function renderList(items: string[]) {
+  return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+}
+
+function renderQuestionBlock(title: string, items: string[]) {
+  return `
+    <div style="margin:0 0 22px 0;">
+      <p style="margin:0 0 8px 0;"><strong>${escapeHtml(title)}</strong></p>
+      <ul style="margin:0 0 0 22px; padding:0;">
+        ${items.map((item) => `<li style="margin:0 0 6px 0;">${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function standardQuestionnaireHtml() {
+  return `
+    <p style="margin:0 0 8px 0;"><strong>Objetivo:</strong> entender a percepção dos colaboradores sobre o ambiente de trabalho e identificar pontos fortes e oportunidades de melhoria.</p>
+
+    <p style="margin:0 0 8px 0;"><strong>Escala de resposta</strong></p>
+    <p style="margin:0 0 4px 0;">Use esta escala para todas as afirmações:</p>
+    <ul style="margin:0 0 24px 22px; padding:0;">
+      <li>1 = Discordo totalmente</li>
+      <li>2 = Discordo parcialmente</li>
+      <li>3 = Nem concordo nem discordo</li>
+      <li>4 = Concordo parcialmente</li>
+      <li>5 = Concordo totalmente</li>
+    </ul>
+
+    ${renderQuestionBlock("1) Liderança", [
+      "Meu líder me orienta com clareza sobre o que é esperado do meu trabalho.",
+      "Recebo apoio do meu líder quando enfrento dificuldades.",
+      "Meu líder trata a equipe com respeito.",
+      "Meu líder dá feedbacks úteis para meu desenvolvimento.",
+    ])}
+
+    ${renderQuestionBlock("2) Comunicação", [
+      "As informações importantes circulam de forma clara na empresa.",
+      "Sei o que está acontecendo na minha área.",
+      "A comunicação entre áreas funciona bem.",
+      "Sinto que posso expressar minha opinião.",
+    ])}
+
+    ${renderQuestionBlock("3) Reconhecimento e valorização", [
+      "Meu trabalho é reconhecido quando entrego bons resultados.",
+      "Sinto que minha contribuição é valorizada pela empresa.",
+      "Os critérios de reconhecimento são justos.",
+      "Recebo retorno sobre meu desempenho com frequência adequada.",
+    ])}
+
+    ${renderQuestionBlock("4) Trabalho em equipe", [
+      "Existe cooperação entre as pessoas da minha equipe.",
+      "Posso contar com meus colegas quando preciso.",
+      "O ambiente de trabalho favorece a colaboração.",
+      "Há respeito nas relações entre as pessoas.",
+    ])}
+
+    ${renderQuestionBlock("5) Condições de trabalho", [
+      "Tenho os recursos necessários para realizar bem meu trabalho.",
+      "As ferramentas e sistemas disponíveis atendem às necessidades da função.",
+      "O ambiente físico de trabalho é adequado.",
+      "A carga de trabalho é compatível com minhas responsabilidades.",
+    ])}
+
+    ${renderQuestionBlock("6) Desenvolvimento e crescimento", [
+      "Tenho oportunidades de aprender e me desenvolver.",
+      "A empresa incentiva o crescimento profissional.",
+      "Entendo quais caminhos de desenvolvimento existem para mim.",
+      "Recebo estímulos para aprimorar minhas competências.",
+    ])}
+
+    ${renderQuestionBlock("7) Organização e processos", [
+      "Os processos de trabalho são claros.",
+      "As responsabilidades estão bem definidas.",
+      "A empresa toma decisões de forma organizada.",
+      "As mudanças são comunicadas e conduzidas adequadamente.",
+    ])}
+
+    ${renderQuestionBlock("8) Engajamento e pertencimento", [
+      "Sinto orgulho de trabalhar nesta empresa.",
+      "Eu recomendaria esta empresa como um bom lugar para trabalhar.",
+      "Sinto-me motivado(a) para realizar meu trabalho.",
+      "Percebo sentido no que faço aqui.",
+    ])}
+
+    <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">Perguntas abertas</h3>
+    <ul style="margin:0 0 24px 22px; padding:0;">
+      <li>O que a empresa faz hoje que mais contribui para um bom ambiente de trabalho?</li>
+      <li>O que mais precisa melhorar no ambiente de trabalho?</li>
+      <li>Que sugestão você daria para tornar a empresa um lugar melhor para trabalhar?</li>
+    </ul>
+
+    <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">Perguntas de perfil</h3>
+    <p style="margin:0 0 8px 0;">Use apenas o necessário para preservar anonimato:</p>
+    <ul style="margin:0 0 24px 22px; padding:0;">
+      <li>Área/setor</li>
+      <li>Tempo de empresa</li>
+      <li>Cargo ou nível</li>
+      <li>Unidade/filial, se houver</li>
+    </ul>
+
+    <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">Orientações de aplicação</h3>
+    <ul style="margin:0 0 24px 22px; padding:0;">
+      <li>Garanta anonimato.</li>
+      <li>Evite coletar dados que identifiquem pessoas em equipes muito pequenas.</li>
+      <li>Explique o objetivo da pesquisa antes da aplicação.</li>
+      <li>Divulgue depois os principais resultados e o plano de ação.</li>
+    </ul>
+
+    <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">Como interpretar</h3>
+    <ul style="margin:0 0 24px 22px; padding:0;">
+      <li>4,1 a 5,0: ponto forte</li>
+      <li>3,1 a 4,0: atenção moderada</li>
+      <li>1,0 a 3,0: prioridade de melhoria</li>
+    </ul>
+  `;
+}
+
+function buildImprovedQuestionnaireReport(session: ClimaSession) {
+  const demandaInicial = normalizeSentence(session.nomeEmpresa ?? "Não informado");
+  const objetivoComplementar = normalizeSentence(session.objetivoPesquisa ?? "Não informado");
+  const publico = normalizeLine(session.publicoAlvo ?? "Não informado");
+  const respondentes = normalizeLine(session.quantidadeRespondentes ?? "Não informado");
+  const questionarioUsuario = String(session.questionarioUsuario ?? "").trim();
+  const dimensoes = unique(splitList(session.dimensoesPrioritarias));
+
+  const dimensoesFinais = dimensoes.length
+    ? dimensoes
+    : [
+        "Liderança",
+        "Comunicação",
+        "Reconhecimento e valorização",
+        "Trabalho em equipe",
+        "Condições de trabalho",
+        "Desenvolvimento e crescimento",
+        "Organização e processos",
+        "Engajamento e pertencimento",
+      ];
+
+  return `
+<section>
+  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">MODELO APRIMORADO DE PESQUISA DE CLIMA ORGANIZACIONAL</h1>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Contexto da solicitação</h2>
+  <p style="margin:0 0 8px 0;"><strong>Demanda inicial:</strong> ${escapeHtml(demandaInicial)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Objetivo complementar:</strong> ${escapeHtml(objetivoComplementar)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Público-alvo:</strong> ${escapeHtml(publico)}</p>
+  <p style="margin:0 0 24px 0;"><strong>Quantidade estimada de respondentes:</strong> ${escapeHtml(respondentes)}</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Modelo enviado pelo usuário</h2>
+  <div style="margin:0 0 24px 0; padding:16px; border:1px solid #e5e7eb; border-radius:12px; white-space:pre-wrap;">${escapeHtml(questionarioUsuario)}</div>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">3. Comparativo com a base de conhecimento</h2>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    <li>Foi comparado o modelo enviado com a estrutura-base de pesquisa de clima organizacional disponível no agente.</li>
+    <li>A base recomenda questionário com escala Likert, dimensões clássicas de clima, perguntas abertas, perguntas de perfil e orientações de aplicação.</li>
+    <li>Também foram considerados fatores de liderança, comunicação, reconhecimento, desenvolvimento, relacionamento, ambiente, autonomia, identidade e padrões.</li>
+    <li>As dimensões priorizadas nesta demanda foram: ${escapeHtml(dimensoesFinais.join(", "))}.</li>
+    <li>O modelo abaixo já foi reorganizado e ampliado para ficar mais completo, comparável e pronto para uso interno.</li>
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">4. Novo modelo com melhorias</h2>
+  ${standardQuestionnaireHtml()}
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">5. Recomendações finais</h2>
+  <ul style="margin:0 0 0 22px; padding:0;">
+    <li>Usar linguagem simples e uniforme em todas as afirmações.</li>
+    <li>Preservar anonimato e evitar identificação de respondentes em grupos pequenos.</li>
+    <li>Aplicar a pesquisa com comunicação prévia sobre objetivo, confidencialidade e uso dos resultados.</li>
+    <li>Depois da coleta, consolidar resultados por dimensão e construir plano de ação.</li>
+  </ul>
+</section>
+`;
+}
+
+export function buildClimaReport(session: ClimaSession) {
+  if (String(session.questionarioUsuario ?? "").trim()) {
+    return buildImprovedQuestionnaireReport(session);
+  }
+
+  const demandaInicial = normalizeSentence(session.nomeEmpresa ?? "Não informado");
+  const objetivoComplementar = normalizeSentence(session.objetivoPesquisa ?? "Não informado");
+  const publico = normalizeLine(session.publicoAlvo ?? "Não informado");
+  const respondentes = normalizeLine(session.quantidadeRespondentes ?? "Não informado");
+  const usarPadrao = /sim/i.test(String(session.usarQuestionarioPadrao ?? ""));
+  const dimensoes = unique(splitList(session.dimensoesPrioritarias));
+  const observacoes =
+    ["não", "nao", ""].includes(String(session.observacoes ?? "").trim().toLowerCase())
+      ? ""
+      : normalizeSentence(session.observacoes ?? "");
+
+  const dimensoesFinais = dimensoes.length
+    ? dimensoes
+    : [
+        "Liderança",
+        "Comunicação",
+        "Reconhecimento",
+        "Desenvolvimento",
+        "Relacionamento",
+        "Ambiente",
+        "Autonomia",
+        "Identidade",
+        "Padrões",
+      ];
+
+  return `
+<section>
+  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">PESQUISA DE CLIMA ORGANIZACIONAL</h1>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Contexto da pesquisa</h2>
+  <p style="margin:0 0 8px 0;"><strong>Demanda inicial:</strong> ${escapeHtml(demandaInicial)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Objetivo complementar:</strong> ${escapeHtml(objetivoComplementar)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Público-alvo:</strong> ${escapeHtml(publico)}</p>
+  <p style="margin:0 0 24px 0;"><strong>Quantidade estimada de respondentes:</strong> ${escapeHtml(respondentes)}</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Estrutura recomendada da pesquisa</h2>
+  <p style="margin:0 0 8px 0;">${usarPadrao
+    ? "A recomendação é utilizar o questionário padrão de clima organizacional com estrutura completa."
+    : "A recomendação é estruturar a pesquisa com base no modelo padrão, adaptando a linguagem ao contexto da organização."}</p>
+  <p style="margin:0 0 24px 0;">A base de conhecimento sugere estrutura com escala de resposta, dimensões de clima, perguntas abertas, perguntas de perfil e critérios claros de interpretação.</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">3. Modelo base pronto para uso</h2>
+  ${standardQuestionnaireHtml()}
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">4. Dimensões prioritárias para análise</h2>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${renderList(dimensoesFinais)}
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">5. Base teórica de interpretação</h2>
+  <p style="margin:0 0 8px 0;">A leitura do clima pode considerar fatores clássicos como estrutura, responsabilidade, desafio, recompensa, relacionamento, cooperação, conflito, identidade e padrões.</p>
+  <p style="margin:0 0 8px 0;">Também é recomendável conectar a análise com teorias de motivação e percepção para interpretar por que colaboradores respondem de formas diferentes ao mesmo contexto organizacional.</p>
+  ${observacoes ? `<p style="margin:0 0 24px 0;"><strong>Observações adicionais:</strong> ${escapeHtml(observacoes)}</p>` : `<p style="margin:0 0 24px 0;"></p>`}
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">6. Recomendações executivas</h2>
+  <ul style="margin:0 0 0 22px; padding:0;">
+    <li>Aplicar a pesquisa com comunicação clara sobre objetivo, confidencialidade e uso dos resultados.</li>
+    <li>Consolidar médias por dimensão e identificar prioridades de melhoria.</li>
+    <li>Cruzar dados quantitativos com respostas abertas para aprofundar causas.</li>
+    <li>Produzir plano de ação com responsáveis, prazos e acompanhamento em até 90 dias.</li>
+  </ul>
+</section>
+`;
+}

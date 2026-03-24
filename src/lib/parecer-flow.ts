@@ -36,7 +36,9 @@ export type ParecerField =
   | "referencias"
   | "aderenciaCultural"
   | "pontosDesenvolvimento"
-  | "recomendacaoFinal";
+  | "recomendacaoFinal"
+  | "competenciasTecnicas"
+  | "competenciasComportamentais";
 
 export type ParecerSession = {
   assessmentId?: string;
@@ -77,6 +79,8 @@ export type ParecerSession = {
   pontosDesenvolvimento?: string;
   recomendacaoFinal?: string;
   nivelVaga?: ParecerNivel;
+  competenciasTecnicas?: string;
+  competenciasComportamentais?: string;
   status?: "in_progress" | "completed";
   reportStatus?: "pending" | "generated";
   reportMarkdown?: string | null;

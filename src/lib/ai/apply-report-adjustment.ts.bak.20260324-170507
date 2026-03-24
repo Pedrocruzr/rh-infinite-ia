@@ -1,0 +1,44 @@
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+});
+
+export async function applyReportAdjustment(rawAnswers: any, instruction: string) {
+  const prompt = `
+Você é um especialista em RH e análise de dados.
+
+Recebe:
+1) Um JSON com respostas originais (raw_answers)
+2) Uma instrução do usuário pedindo alteração
+
+Sua função:
+- Interpretar a instrução
+- Alterar o JSON corretamente
+- Manter coerência com o restante dos dados
+- Corrigir erros gramaticais
+- NÃO inventar dados não solicitados
+
+Retorne APENAS o JSON atualizado.
+
+RAW:
+${JSON.stringify(rawAnswers, null, 2)}
+
+INSTRUÇÃO:
+${instruction}
+`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-5-2-instant",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0,
+  });
+
+  const content = response.choices[0]?.message?.content || "{}";
+
+  try {
+    return JSON.parse(content);
+  } catch {
+    return rawAnswers;
+  }
+}

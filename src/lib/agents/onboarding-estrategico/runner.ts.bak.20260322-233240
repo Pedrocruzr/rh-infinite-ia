@@ -1,0 +1,93 @@
+import type { OnboardingSession } from "./flow";
+
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function normalizeSentence(value: string) {
+  let text = String(value ?? "").trim().replace(/\s+/g, " ");
+  if (!text) return "";
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  if (!/[.!?]$/.test(text)) text += ".";
+  return text;
+}
+
+function normalizeLine(value: string) {
+  return normalizeSentence(value).replace(/[.!?]$/, "");
+}
+
+function splitList(text?: string) {
+  return String(text ?? "")
+    .split(/\n|;|,/)
+    .map((item) => item.replace(/^\d+[\).\-\s]*/, "").trim())
+    .filter(Boolean)
+    .map(normalizeLine);
+}
+
+function unique(items: string[]) {
+  return [...new Set(items)];
+}
+
+function renderList(items: string[]) {
+  return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+}
+
+export function buildOnboardingReport(session: OnboardingSession) {
+  const quantidade = normalizeLine(session.quantidadeColaboradores ?? "Não informado");
+  const nivel = normalizeLine(session.nivelHierarquico ?? "Não informado");
+  const departamentos = unique(splitList(session.departamentos));
+  const facilitadores = normalizeLine(session.facilitadoresDisponiveis ?? "Não informado");
+  const tempo = normalizeLine(session.tempoIntegracao ?? "Não informado");
+  const sistemas = unique(splitList(session.sistemasApresentados));
+  const documentos = unique(splitList(session.documentosBase));
+  const dinamicas = unique(splitList(session.dinamicaPropria));
+  const temas = normalizeLine(session.temasDepartamentos ?? "Não informado");
+
+  return `
+<section>
+  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">ROTEIRO DE INTEGRAÇÃO PERSONALIZADO</h1>
+
+  <p style="margin:0 0 8px 0;"><strong>Quantidade de colaboradores:</strong> ${escapeHtml(quantidade)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Nível hierárquico:</strong> ${escapeHtml(nivel)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Departamentos:</strong> ${escapeHtml(departamentos.join(", "))}</p>
+  <p style="margin:0 0 8px 0;"><strong>Facilitadores:</strong> ${escapeHtml(facilitadores)}</p>
+  <p style="margin:0 0 24px 0;"><strong>Tempo total:</strong> ${escapeHtml(tempo)}</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Alinhamento Cultural</h2>
+  <p style="margin:0 0 8px 0;"><strong>Missão:</strong> ${escapeHtml(normalizeLine(session.missaoEmpresa ?? "Não informado"))}</p>
+  <p style="margin:0 0 8px 0;"><strong>Visão:</strong> ${escapeHtml(normalizeLine(session.visaoEmpresa ?? "Não informado"))}</p>
+  <p style="margin:0 0 24px 0;"><strong>Valores:</strong> ${escapeHtml(normalizeLine(session.valoresEmpresa ?? "Não informado"))}</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Dinâmicas da Integração</h2>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${renderList(dinamicas)}
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">3. Temas por Departamento</h2>
+  <p style="margin:0 0 24px 0;">${escapeHtml(temas)}</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">4. Sistemas Apresentados</h2>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${renderList(sistemas)}
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">5. Documentos Utilizados</h2>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${renderList(documentos)}
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">6. Estrutura Sugerida do Cronograma</h2>
+  <p style="margin:0 0 8px 0;"><strong>Abertura:</strong> apresentação da agenda e contexto da integração.</p>
+  <p style="margin:0 0 8px 0;"><strong>Bloco cultural:</strong> missão, visão, valores e apresentação institucional.</p>
+  <p style="margin:0 0 8px 0;"><strong>Bloco de dinâmica:</strong> execução da dinâmica selecionada para integração do grupo.</p>
+  <p style="margin:0 0 8px 0;"><strong>Bloco departamental:</strong> exposição dos temas e rotinas das áreas envolvidas.</p>
+  <p style="margin:0 0 8px 0;"><strong>Bloco de sistemas:</strong> apresentação prática das ferramentas de trabalho.</p>
+  <p style="margin:0 0 0 0;"><strong>Fechamento:</strong> dúvidas, reforço dos documentos e próximos passos.</p>
+</section>
+`;
+}

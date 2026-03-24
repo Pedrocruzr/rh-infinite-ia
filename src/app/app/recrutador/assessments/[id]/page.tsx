@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import RegenerateReportButton from "@/components/reports/regenerate-report-button";
+import RegenerateReportDialog from "@/components/assessments/regenerate-report-dialog";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -34,12 +36,15 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
             </p>
           </div>
 
-          <Link
-            href="/app/recrutador/assessments"
-            className="rounded-2xl border border-neutral-300 px-5 py-3 text-sm hover:bg-neutral-50"
-          >
-            Voltar
-          </Link>
+          <div className="flex items-center gap-3">
+            {assessment?.id ? <RegenerateReportDialog assessmentId={assessment.id} /> : null}
+            <Link
+              href="/app/recrutador/assessments"
+              className="rounded-2xl border border-neutral-300 px-5 py-3 text-sm hover:bg-neutral-50"
+            >
+              Voltar
+            </Link>
+          </div>
         </div>
 
         <div className="mb-6 rounded-3xl border border-neutral-200 bg-neutral-50/50 p-6">

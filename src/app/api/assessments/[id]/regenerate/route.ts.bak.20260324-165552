@@ -1,0 +1,72 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { regenerateReportBySlug } from "@/lib/reports/regenerate";
+import { applyReportAdjustment } from "@/lib/ai/apply-report-adjustment";
+
+export async function POST(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const body = await req.json().catch(() => ({}));
+    const instruction = String(body?.instruction || "").trim();
+
+    const { data, error } = await supabase
+      .from("profile_assessments")
+      .select("id, agent_slug, raw_answers")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json(
+        { error: "Assessment não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    let rawAnswers = data.raw_answers ?? {};
+
+    if (instruction) {
+      rawAnswers = await applyReportAdjustment(rawAnswers, instruction);
+    }
+
+    const reportMarkdown = regenerateReportBySlug(
+      String(data.agent_slug || "").trim(),
+      rawAnswers
+    );
+
+    const { error: updateError } = await supabase
+      .from("profile_assessments")
+      .update({
+        raw_answers: rawAnswers,
+        report_markdown: reportMarkdown,
+      })
+      .eq("id", id);
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: `Erro ao atualizar assessment: ${updateError.message}` },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erro interno ao regenerar relatório",
+      },
+      { status: 500 }
+    );
+  }
+}

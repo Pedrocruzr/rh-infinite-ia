@@ -5,6 +5,7 @@ import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
 
 type GenericSession = Record<string, string | undefined> & {
+  assessmentId?: string;
   status?: string;
   reportStatus?: string;
   reportMarkdown?: string | null;
@@ -15,6 +16,7 @@ type Message = {
   role: "assistant" | "user";
   content: string;
   sessionSnapshot?: GenericSession | null;
+  fieldSnapshot?: string | null;
 };
 
 function cloneSession<T>(value: T): T {
@@ -100,6 +102,7 @@ export default function PesquisaClimaOrganizacionalPage() {
       if (target.role !== "user") return prev;
 
       setSession(target.sessionSnapshot ?? null);
+      setCurrentField(target.fieldSnapshot ?? null);
       setInput(target.content);
       setFinished(false);
 
@@ -117,6 +120,7 @@ export default function PesquisaClimaOrganizacionalPage() {
       role: "user",
       content: answer,
       sessionSnapshot: cloneSession(session),
+      fieldSnapshot: currentField,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -145,16 +149,17 @@ export default function PesquisaClimaOrganizacionalPage() {
 
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: data.done || data.completed
-            ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
-            : data.reply,
-        },
-      ]);
+
+      if (!(data.done || data.completed) && data.reply?.trim()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply,
+          },
+        ]);
+      }
 
       setFinished(Boolean(data.done || data.completed));
     } catch (error) {
@@ -174,6 +179,53 @@ export default function PesquisaClimaOrganizacionalPage() {
     }
   }
 
+
+  async function regenerateReport() {
+    if (!session || loading) return;
+
+    setLoading(true);
+
+    try {
+      const finalAnswer = session.observacoes?.trim() || "não";
+
+      const response = await fetch("/api/agents/pesquisa-clima-organizacional", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session,
+          message: finalAnswer,
+          answer: finalAnswer,
+          currentField: "observacoes",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.reply || data.error || "Erro ao gerar novamente o relatório.");
+      }
+
+      setSession(data.session ?? session);
+      setFinished(Boolean(data.done || data.completed || true));
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content:
+            error instanceof Error
+              ? `Erro ao gerar novamente o relatório: ${error.message}`
+              : "Erro ao gerar novamente o relatório.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -182,33 +234,50 @@ export default function PesquisaClimaOrganizacionalPage() {
   }
 
   return (
-    <StandardAgentLayout
-      stackerName="Diagnóstico"
-      title="Pesquisa de Clima Organizacional"
-      subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
-      messages={messages.map((message) => ({
-        id: message.id,
-        role: message.role,
-        content: message.content,
-        actions:
-          message.role === "user" ? (
-            <UserMessageActions
-              onCopy={() => void copyMessage(message.content)}
-              onEdit={() => editMessage(message.id)}
-            />
-          ) : undefined,
-      }))}
-      loading={loading}
-      finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
-      inputValue={input}
-      onInputChange={setInput}
-      onSend={() => void sendAnswer()}
-      onKeyDown={handleKeyDown}
-      inputRef={inputRef}
-      bottomRef={bottomRef}
-      disableInput={loading || finished}
-      disableSend={loading || finished || !input.trim()}
-    />
+    <>
+      <StandardAgentLayout
+        stackerName="Diagnóstico"
+        title="Pesquisa de Clima Organizacional"
+        subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
+        messages={(finished ? [] : messages).map((message) => ({
+          id: message.id,
+          role: message.role,
+          content: message.content,
+          actions:
+            message.role === "user" ? (
+              <UserMessageActions
+                onCopy={() => void copyMessage(message.content)}
+                onEdit={() => editMessage(message.id)}
+              />
+            ) : undefined,
+        }))}
+        loading={loading}
+        finished={finished}
+        finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+        inputValue={input}
+        onInputChange={setInput}
+        onSend={() => void sendAnswer()}
+        onKeyDown={handleKeyDown}
+        inputRef={inputRef}
+        bottomRef={bottomRef}
+        disableInput={loading || finished}
+        disableSend={loading || finished || !input.trim()}
+      />
+
+      {finished ? (
+        <div className="mx-auto mt-4 w-full max-w-5xl px-4 pb-6">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <button
+              type="button"
+              onClick={() => void regenerateReport()}
+              disabled={loading}
+              className="rounded-xl px-4 py-2 text-sm font-medium border border-white/15 bg-white/10 hover:bg-white/15 disabled:opacity-50"
+            >
+              {loading ? "Gerando novamente..." : "Gerar novamente o relatório"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

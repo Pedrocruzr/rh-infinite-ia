@@ -1,0 +1,700 @@
+
+--- assessments page ---
+import Link from "next/link";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export default async function RecruiterAssessmentsPage() {
+  const supabase = createAdminClient();
+
+  await supabase
+    .from("profile_assessments")
+    .delete()
+    .lt("expires_at", new Date().toISOString());
+
+  const { data: assessments } = await supabase
+    .from("profile_assessments")
+    .select("*")
+    .eq("report_status", "generated")
+    .order("created_at", { ascending: false });
+
+  return (
+    <main className="min-h-screen bg-white px-8 py-10 text-black">
+      <div className="mx-auto max-w-7xl">
+        <p className="text-sm text-neutral-500">Recrutador</p>
+        <h1 className="mt-3 text-5xl font-semibold tracking-tight">
+          Avaliações recebidas
+        </h1>
+
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-7 text-amber-900">
+          <strong>Aviso:</strong> este relatório ficará disponível por <strong>3 dias</strong> a partir da data de criação.
+          Para evitar perda de informações, recomendamos que o recrutador <strong>copie ou salve o conteúdo</strong> para consulta posterior antes do prazo de expiração.
+        </div>
+
+        <div className="mt-8 overflow-hidden rounded-3xl border border-neutral-200">
+          <table className="w-full border-collapse text-left">
+            <thead className="bg-neutral-50">
+              <tr className="text-sm text-neutral-600">
+                <th className="px-6 py-4">Candidato</th>
+                <th className="px-6 py-4">Vaga</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Relatório</th>
+                <th className="px-6 py-4">Criado em</th>
+                <th className="px-6 py-4">Agente usado</th>
+                <th className="px-6 py-4">Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assessments && assessments.length > 0 ? (
+                assessments.map((assessment) => (
+                  <tr key={assessment.id} className="border-t border-neutral-200">
+                    <td className="px-6 py-5">{assessment.candidate_name || "—"}</td>
+                    <td className="px-6 py-5">{assessment.target_role || "—"}</td>
+                    <td className="px-6 py-5">{assessment.status || "—"}</td>
+                    <td className="px-6 py-5">{assessment.report_status || "—"}</td>
+                    <td className="px-6 py-5">
+                      {assessment.created_at
+                        ? new Date(assessment.created_at).toLocaleString("pt-BR")
+                        : "—"}
+                    </td>
+                    <td className="px-6 py-5">{assessment.agent_name || "—"}</td>
+                    <td className="px-6 py-5">
+                      <Link
+                        href={`/app/recrutador/assessments/${assessment.id}`}
+                        className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
+                      >
+                        Abrir
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-neutral-500">
+                    Nenhuma avaliação encontrada.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+--- assessment detail page ---
+
+--- api execute agent ---
+import { NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { executeAgentRuntime } from "@/lib/agents/runtime";
+
+const DEV_USER_ID = "00000000-0000-0000-0000-000000000001";
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const supabase = createAdminClient();
+
+    const { data: agent, error: agentError } = await supabase
+      .from("agents")
+      .select("id, name, slug, credit_cost")
+      .eq("slug", body?.slug ?? "")
+      .single();
+
+    if (agentError || !agent) {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "agent_lookup",
+          error: agentError?.message ?? "Agente não encontrado",
+        },
+        { status: 500 }
+      );
+    }
+
+    const runtimeResult = await executeAgentRuntime({
+      agentName: agent.name,
+      context: body?.context ?? "",
+      objective: body?.objective ?? "",
+    });
+
+    const { data: insertedRun, error: runError } = await supabase
+      .from("agent_runs")
+      .insert({
+        user_id: DEV_USER_ID,
+        agent_id: agent.id,
+        status: "success",
+        input_summary: body?.objective || body?.context || "execução manual",
+        output_summary: runtimeResult.text,
+        credits_consumed: agent.credit_cost ?? 1,
+        prompt_version: runtimeResult.model,
+        metadata: {
+          context: body?.context ?? "",
+          objective: body?.objective ?? "",
+          mode: "real",
+          model: runtimeResult.model,
+        },
+      })
+      .select("id")
+      .single();
+
+    if (runError || !insertedRun) {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "insert_run",
+          error: runError?.message ?? "Falha ao criar agent_run",
+        },
+        { status: 500 }
+      );
+    }
+
+    const { error: usageError } = await supabase
+      .from("usage_events")
+      .insert({
+        user_id: DEV_USER_ID,
+        agent_id: agent.id,
+        agent_run_id: insertedRun.id,
+        event_type: "agent_execution",
+        credits_delta: -(agent.credit_cost ?? 1),
+        metadata: {
+          slug: agent.slug,
+          mode: "real",
+          model: runtimeResult.model,
+        },
+      });
+
+    if (usageError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "insert_usage_event",
+          error: usageError?.message ?? "Falha ao criar usage_event",
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      runId: insertedRun.id,
+      slug: agent.slug,
+      result: runtimeResult.text,
+      creditsUsed: agent.credit_cost ?? 1,
+      model: runtimeResult.model,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : "Erro inesperado",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+--- api regenerate example ---
+
+--- painel de vagas atual ---
+export default function PainelDeVagasPage() {
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      <section className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
+        <h1 className="text-4xl font-semibold tracking-tight">
+          Painel de Vagas
+        </h1>
+        <p className="text-muted-foreground">
+          Estrutura inicial do módulo de vagas.
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            Em aberto
+          </div>
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            Pausadas
+          </div>
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            Fechadas
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+--- catalog client example ---
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+
+type Agent = {
+  slug: string;
+  name: string;
+  category: string;
+  shortDescription: string;
+  image: string;
+  creditCost: number;
+  active: boolean;
+};
+
+function groupAgentsByCategory(agents: Agent[]) {
+  return agents.reduce<Record<string, Agent[]>>((acc, agent) => {
+    if (!acc[agent.category]) acc[agent.category] = [];
+    acc[agent.category].push(agent);
+    return acc;
+  }, {});
+}
+
+interface Props {
+  agents: Agent[];
+}
+
+export function AgentsCatalogClient({ agents }: Props) {
+  const [query, setQuery] = useState("");
+
+  const filteredAgents = useMemo(() => {
+    const term = query.trim().toLowerCase();
+
+    if (!term) return agents;
+
+    return agents.filter((agent) => {
+      return (
+        agent.name.toLowerCase().includes(term) ||
+        agent.category.toLowerCase().includes(term) ||
+        agent.shortDescription.toLowerCase().includes(term)
+      );
+    });
+  }, [agents, query]);
+
+  const groupedAgents = useMemo(
+    () => groupAgentsByCategory(filteredAgents),
+    [filteredAgents]
+  );
+
+  return (
+    <section className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-10">
+      <div className="flex flex-col gap-4">
+        <div>
+          <div className="text-sm text-muted-foreground">RH Infinite IA</div>
+          <h1 className="text-4xl font-semibold tracking-tight">
+            Catálogo de Agentes
+          </h1>
+        </div>
+
+        <p className="max-w-3xl text-muted-foreground">
+          Explore os agentes disponíveis para estruturar recrutamento,
+          desenvolvimento, desempenho, people analytics e gestão de pessoas.
+        </p>
+
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <input
+            type="text"
+            placeholder="Buscar agente..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full rounded-md border bg-background px-4 py-3 text-sm outline-none"
+          />
+          <p className="mt-2 text-xs text-muted-foreground">
+            {filteredAgents.length} agente(s) encontrado(s)
+          </p>
+        </div>
+      </div>
+
+      {Object.keys(groupedAgents).length === 0 ? (
+        <div className="rounded-2xl border bg-card p-8 text-sm text-muted-foreground shadow-sm">
+          Nenhum agente encontrado para a busca informada.
+        </div>
+      ) : (
+        Object.entries(groupedAgents).map(([category, agents]) => (
+          <section key={category} className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">{category}</h2>
+              <span className="text-sm text-muted-foreground">
+                {agents.length} agente(s)
+              </span>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {agents.map((agent) => (
+                <article
+                  key={agent.slug}
+                  className="rounded-2xl border bg-card p-5 shadow-sm transition hover:shadow-md"
+                >
+                  <div className="flex h-full flex-col justify-between gap-4">
+                    <div className="space-y-3">
+                      <div className="text-sm text-muted-foreground">
+                        {agent.category}
+                      </div>
+
+                      <h3 className="text-xl font-semibold">{agent.name}</h3>
+
+                      <p className="text-sm text-muted-foreground">
+                        {agent.shortDescription}
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Créditos: {agent.creditCost}</span>
+                        <span className="text-emerald-600">
+                          {agent.active ? "Ativo" : "Inativo"}
+                        </span>
+                      </div>
+
+                      <Link
+                        href={`/app/agentes/${agent.slug}`}
+                        className="inline-flex w-full items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90"
+                      >
+                        Abrir agente
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))
+      )}
+    </section>
+  );
+}
+
+--- dialog ui ---
+"use client"
+
+import * as React from "react"
+import { Dialog as DialogPrimitive } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { XIcon } from "lucide-react"
+
+function Dialog({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+}
+
+function DialogTrigger({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+}
+
+function DialogPortal({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+}
+
+function DialogClose({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+}
+
+function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  return (
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn(
+        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  showCloseButton?: boolean
+}) {
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        className={cn(
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-background p-4 text-sm ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close data-slot="dialog-close" asChild>
+            <Button
+              variant="ghost"
+              className="absolute top-2 right-2"
+              size="icon-sm"
+            >
+              <XIcon
+              />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  )
+}
+
+function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-header"
+      className={cn("flex flex-col gap-2", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogFooter({
+  className,
+  showCloseButton = false,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & {
+  showCloseButton?: boolean
+}) {
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn(
+        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      {showCloseButton && (
+        <DialogPrimitive.Close asChild>
+          <Button variant="outline">Close</Button>
+        </DialogPrimitive.Close>
+      )}
+    </div>
+  )
+}
+
+function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title
+      data-slot="dialog-title"
+      className={cn("text-base leading-none font-medium", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      data-slot="dialog-description"
+      className={cn(
+        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+}
+
+--- table ui ---
+"use client"
+
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Table({ className, ...props }: React.ComponentProps<"table">) {
+  return (
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto"
+    >
+      <table
+        data-slot="table"
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
+    </div>
+  )
+}
+
+function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+  return (
+    <thead
+      data-slot="table-header"
+      className={cn("[&_tr]:border-b", className)}
+      {...props}
+    />
+  )
+}
+
+function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+  return (
+    <tbody
+      data-slot="table-body"
+      className={cn("[&_tr:last-child]:border-0", className)}
+      {...props}
+    />
+  )
+}
+
+function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+  return (
+    <tfoot
+      data-slot="table-footer"
+      className={cn(
+        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+  return (
+    <tr
+      data-slot="table-row"
+      className={cn(
+        "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+  return (
+    <th
+      data-slot="table-head"
+      className={cn(
+        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+  return (
+    <td
+      data-slot="table-cell"
+      className={cn(
+        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function TableCaption({
+  className,
+  ...props
+}: React.ComponentProps<"caption">) {
+  return (
+    <caption
+      data-slot="table-caption"
+      className={cn("mt-4 text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+}
+
+--- badge ui ---
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
+
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        secondary:
+          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
+        destructive:
+          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+        outline:
+          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+        ghost:
+          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+function Badge({
+  className,
+  variant = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot.Root : "span"
+
+  return (
+    <Comp
+      data-slot="badge"
+      data-variant={variant}
+      className={cn(badgeVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+export { Badge, badgeVariants }

@@ -1,0 +1,108 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import StandardAgentLayout from "@/components/agents/standard-agent-layout";
+
+type GenericSession = Record<string, string | undefined> & {
+  status?: string;
+  reportStatus?: string;
+  reportMarkdown?: string | null;
+};
+
+type Message = {
+  id: string;
+  role: "assistant" | "user";
+  content: string;
+  sessionSnapshot?: GenericSession | null;
+};
+
+export default function ColetorDadosSixBoxPage() {
+  const [session, setSession] = useState<GenericSession | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    void startConversation();
+  }, []);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  async function startConversation() {
+    try {
+      setLoading(true);
+
+      const response = await fetch("/api/agents/coletor-dados-six-box", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.reply || data.error || "Erro ao carregar o questionário.");
+      }
+
+      const content =
+        data.reply ||
+        data.report ||
+        "Questionário carregado, mas sem conteúdo disponível.";
+
+      setSession(data.session ?? {});
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content,
+        },
+      ]);
+      setFinished(Boolean(data?.completed === true));
+    } catch (error) {
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content:
+            error instanceof Error
+              ? error.message
+              : "Erro ao carregar o questionário.",
+        },
+      ]);
+      setFinished(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <StandardAgentLayout
+      stackerName="Diagnóstico"
+      title="Coletor de Dados Six Box"
+      subtitle="Este agente disponibiliza o questionário Six Box e orienta como usar no Google Forms ou no respondi.app."
+      messages={(finished ? [] : messages.filter((message) => String(message.content || "").trim() !== "")).map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+      }))}
+      loading={loading}
+      finished={finished}
+      finishedMessage={finished ? "Avaliação concluída." : ""}
+      inputValue={input}
+      onInputChange={setInput}
+      onSend={() => {}}
+      onKeyDown={() => {}}
+      inputRef={inputRef}
+      bottomRef={bottomRef}
+      disableInput={finished || loading}
+      disableSend={finished || loading || !input.trim()}
+    />
+  );
+}

@@ -1,0 +1,268 @@
+export type ClimaField =
+  | "nomeEmpresa"
+  | "objetivoPesquisa"
+  | "publicoAlvo"
+  | "quantidadeRespondentes"
+  | "usarQuestionarioPadrao"
+  | "questionarioUsuario"
+  | "dimensoesPrioritarias"
+  | "observacoes";
+
+export type ClimaSession = {
+  assessmentId?: string;
+  nomeEmpresa?: string;
+  objetivoPesquisa?: string;
+  publicoAlvo?: string;
+  quantidadeRespondentes?: string;
+  usarQuestionarioPadrao?: string;
+  questionarioUsuario?: string;
+  dimensoesPrioritarias?: string;
+  observacoes?: string;
+  status?: "in_progress" | "completed";
+  reportStatus?: "pending" | "generated";
+};
+
+function hasVowel(token: string) {
+  return /[aeiouáàâãéêíóôõúü]/i.test(token);
+}
+
+function isComprehensible(value: string) {
+  const text = String(value ?? "").trim();
+  if (!text) return false;
+
+  const tokens = text
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-zA-ZÀ-ÿ0-9\-\/]/g, ""))
+    .filter(Boolean);
+
+  if (tokens.length === 0) return false;
+
+  const validTokens = tokens.filter((token) => {
+    if (token.length <= 2) return true;
+    if (/\d/.test(token)) return true;
+    return hasVowel(token);
+  });
+
+  return validTokens.length / tokens.length >= 0.6;
+}
+
+function isYes(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["sim", "s", "quero", "usar"].includes(text);
+}
+
+function isNo(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["não", "nao", "n"].includes(text);
+}
+
+function question(field: ClimaField) {
+  switch (field) {
+    case "nomeEmpresa":
+      return `Qual é o principal objetivo desta pesquisa de clima organizacional?
+
+Posso te ajudar a:
+
+- montar ou adaptar um questionário de clima organizacional;
+- analisar resultados de uma pesquisa;
+- interpretar dimensões como liderança, comunicação, reconhecimento, motivação e ambiente;
+- estruturar um relatório executivo com recomendações.
+
+Me diga o que você quer fazer agora.`;
+    case "objetivoPesquisa":
+      return "Qual é o principal objetivo desta pesquisa de clima organizacional?";
+    case "publicoAlvo":
+      return "Quem responderá a pesquisa? Ex.: todos os colaboradores, uma área específica, liderança, operação.";
+    case "quantidadeRespondentes":
+      return "Quantas pessoas participarão da pesquisa?";
+    case "usarQuestionarioPadrao":
+      return "Você quer usar o questionário padrão de clima organizacional? Responda 'sim' ou 'não'.";
+    case "questionarioUsuario":
+      return "Perfeito. Cole aqui o modelo/questionário de clima que você já tem. Vou comparar com a base de conhecimento, melhorar a estrutura e gerar a versão aprimorada em Avaliações recebidas.";
+    case "dimensoesPrioritarias":
+      return "Quais dimensões você quer priorizar na análise? Ex.: liderança, comunicação, reconhecimento, desenvolvimento, relacionamento, ambiente, autonomia, identidade, padrões.";
+    case "observacoes":
+      return "Existe alguma observação adicional importante para estruturar a pesquisa e o relatório? Se não houver, responda: não.";
+    default:
+      return "";
+  }
+}
+
+function nextField(field: ClimaField): ClimaField | null {
+  const order: ClimaField[] = [
+    "nomeEmpresa",
+    "objetivoPesquisa",
+    "publicoAlvo",
+    "quantidadeRespondentes",
+    "usarQuestionarioPadrao",
+    "dimensoesPrioritarias",
+    "observacoes",
+  ];
+  const idx = order.indexOf(field);
+  return idx >= 0 && idx < order.length - 1 ? order[idx + 1] : null;
+}
+
+function validate(field: ClimaField, value: string) {
+  const text = String(value ?? "").trim();
+
+  if (!text) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  if (field === "usarQuestionarioPadrao") {
+    if (!isYes(text) && !isNo(text)) {
+      return "Responda apenas com 'sim' ou 'não'.";
+    }
+    return null;
+  }
+
+  if (field === "questionarioUsuario") {
+    if (text.split(/\s+/).length < 8) {
+      return "Cole o modelo/questionário que você já tem para eu comparar e melhorar.";
+    }
+    return null;
+  }
+
+  if (!isComprehensible(text)) {
+    return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+  }
+
+  return null;
+}
+
+export function initializeClimaSession(): ClimaSession {
+  return {
+    status: "in_progress",
+    reportStatus: "pending",
+  };
+}
+
+export function runClimaStep(
+  session: ClimaSession,
+  answer?: string,
+  currentField?: ClimaField
+) {
+  if (!currentField) {
+    const firstField: ClimaField = "nomeEmpresa";
+    const q = question(firstField);
+    return {
+      session,
+      completed: false,
+      currentField: firstField,
+      nextField: firstField,
+      question: q,
+      reply: q,
+    };
+  }
+
+  const raw = String(answer ?? "").trim();
+  const error = validate(currentField, raw);
+
+  if (error) {
+    return {
+      session,
+      completed: false,
+      currentField,
+      nextField: currentField,
+      question: question(currentField),
+      reply: error,
+    };
+  }
+
+  if (currentField === "usarQuestionarioPadrao") {
+    const updated: ClimaSession = {
+      ...session,
+      usarQuestionarioPadrao: raw,
+    };
+
+    if (isYes(raw)) {
+      const next: ClimaField = "questionarioUsuario";
+      const q = question(next);
+      return {
+        session: updated,
+        completed: false,
+        currentField: next,
+        nextField: next,
+        question: q,
+        reply: q,
+      };
+    }
+
+    const next = nextField(currentField);
+
+    if (!next) {
+      updated.status = "completed";
+      updated.reportStatus = "generated";
+
+      return {
+        session: updated,
+        completed: true,
+        currentField: null,
+        nextField: null,
+        question: null,
+        reply: null,
+      };
+    }
+
+    const q = question(next);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: q,
+      reply: q,
+    };
+  }
+
+  if (currentField === "questionarioUsuario") {
+    const updated: ClimaSession = {
+      ...session,
+      questionarioUsuario: raw,
+      status: "completed",
+      reportStatus: "generated",
+    };
+
+    return {
+      session: updated,
+      completed: true,
+      currentField: null,
+      nextField: null,
+      question: null,
+      reply: null,
+    };
+  }
+
+  const updated: ClimaSession = {
+    ...session,
+    [currentField]: raw,
+  };
+
+  const next = nextField(currentField);
+
+  if (!next) {
+    updated.status = "completed";
+    updated.reportStatus = "generated";
+
+    return {
+      session: updated,
+      completed: true,
+      currentField: null,
+      nextField: null,
+      question: null,
+      reply: null,
+    };
+  }
+
+  const q = question(next);
+
+  return {
+    session: updated,
+    completed: false,
+    currentField: next,
+    nextField: next,
+    question: q,
+    reply: q,
+  };
+}

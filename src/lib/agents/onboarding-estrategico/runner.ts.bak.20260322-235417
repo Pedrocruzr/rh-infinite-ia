@@ -1,0 +1,363 @@
+import type { OnboardingSession } from "./flow";
+
+type SystemInfo = {
+  nome: string;
+  descricao: string;
+  responsavel: string;
+  acesso: string;
+  tempo: string;
+};
+
+type MaterialInfo = {
+  titulo: string;
+  descricao: string;
+  tipo: string;
+};
+
+const MATERIALS_BASE: Record<string, MaterialInfo> = {
+  "Manual do Colaborador": {
+    titulo: "Manual do Colaborador",
+    descricao: "PDF com informações essenciais sobre a empresa, benefícios e políticas.",
+    tipo: "PDF",
+  },
+  "Guia Rápido de Sistemas": {
+    titulo: "Guia Rápido de Sistemas",
+    descricao: "PDF interativo com instruções básicas dos principais sistemas corporativos.",
+    tipo: "PDF Interativo",
+  },
+  "Glossário Técnico": {
+    titulo: "Glossário Técnico",
+    descricao: "Documento com termos e conceitos técnicos utilizados na empresa.",
+    tipo: "Documento Online",
+  },
+  "Fluxogramas de Processos": {
+    titulo: "Fluxogramas de Processos",
+    descricao: "Apresentação com visualização dos principais fluxos de trabalho da empresa.",
+    tipo: "Apresentação",
+  },
+};
+
+const SYSTEMS_BASE: Record<string, SystemInfo> = {
+  "Portal RH": {
+    nome: "Portal RH",
+    descricao: "Sistema para gestão de benefícios, férias e informações pessoais.",
+    responsavel: "Recursos Humanos",
+    acesso: "Todos os colaboradores",
+    tempo: "30 minutos",
+  },
+  "CRM Corporativo": {
+    nome: "CRM Corporativo",
+    descricao: "Sistema de gestão de relacionamento com clientes.",
+    responsavel: "Comercial/Marketing",
+    acesso: "Equipes comerciais e atendimento",
+    tempo: "60 minutos",
+  },
+  "Sistema ERP": {
+    nome: "Sistema ERP",
+    descricao: "Sistema integrado de gestão empresarial.",
+    responsavel: "Financeiro/Operações",
+    acesso: "Variável por departamento",
+    tempo: "90 minutos",
+  },
+  "Intranet Corporativa": {
+    nome: "Intranet Corporativa",
+    descricao: "Portal interno com notícias, documentos e ferramentas.",
+    responsavel: "Comunicação Interna",
+    acesso: "Todos os colaboradores",
+    tempo: "20 minutos",
+  },
+  "Plataforma de Treinamentos": {
+    nome: "Plataforma de Treinamentos",
+    descricao: "Sistema de cursos e capacitações online.",
+    responsavel: "Recursos Humanos/T&D",
+    acesso: "Todos os colaboradores",
+    tempo: "45 minutos",
+  },
+};
+
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function normalizeSentence(value: string) {
+  let text = String(value ?? "").trim().replace(/\s+/g, " ");
+  if (!text) return "";
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+  if (!/[.!?]$/.test(text)) text += ".";
+  return text;
+}
+
+function normalizeLine(value: string) {
+  return normalizeSentence(value).replace(/[.!?]$/, "");
+}
+
+function splitList(text?: string) {
+  return String(text ?? "")
+    .split(/\n|;|,/)
+    .map((item) => item.replace(/^\d+[\).\-\s]*/, "").trim())
+    .filter(Boolean)
+    .map(normalizeLine);
+}
+
+function unique(items: string[]) {
+  return [...new Set(items)];
+}
+
+function parseHours(text?: string) {
+  const raw = String(text ?? "").toLowerCase();
+  const m = raw.match(/\d+/);
+  if (!m) return 5;
+  return Number(m[0]);
+}
+
+function renderList(items: string[]) {
+  return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+}
+
+function pickDepartmentThemes(allThemes: string[], matcher: RegExp, fallback: string[]) {
+  const selected = allThemes.filter((item) => matcher.test(item.toLowerCase()));
+  return selected.length ? selected : fallback;
+}
+
+function buildDepartmentModules(departments: string[], themes: string[]) {
+  const modules: string[] = [];
+
+  const hasComercial = departments.some((dep) => /comercial|vendas/.test(dep.toLowerCase()));
+  const hasAdministrativo = departments.some((dep) => /administr|adm/.test(dep.toLowerCase()));
+
+  if (hasComercial) {
+    const comercialThemes = pickDepartmentThemes(
+      themes,
+      /atendimento|telef|cliente|meta|crm|comunica/,
+      [
+        "Atendimento telefônico",
+        "Atendimento ao público",
+        "Metas mensais",
+        "Uso do CRM no fluxo comercial",
+        "Padrão de comunicação com cliente",
+      ]
+    );
+
+    modules.push(`
+      <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">Módulo Comercial / Vendas</h3>
+      <p style="margin:0 0 10px 0;">Baseei este bloco no departamento Comercial da base, que destaca produtos e serviços, técnicas de vendas, metas e indicadores, atendimento ao cliente e relaciona CRM Corporativo.</p>
+      <p style="margin:0 0 8px 0;"><strong>Temas do módulo:</strong></p>
+      <ul style="margin:0 0 16px 22px; padding:0;">
+        ${renderList(comercialThemes)}
+      </ul>
+      <p style="margin:0 0 8px 0;"><strong>Vídeo recomendado da base:</strong></p>
+      <p style="margin:0 0 24px 0;">Atendimento ao Cliente: Nosso Diferencial — cobre empatia, resolução de problemas e comunicação eficaz; indicado para Operacional e Técnico.</p>
+    `);
+  }
+
+  if (hasAdministrativo) {
+    const administrativoThemes = pickDepartmentThemes(
+      themes,
+      /e-mail|email|relat|organiz|demanda|registro|controle|cont[aá]bil|contabil|obriga/,
+      [
+        "Checagem de e-mail",
+        "Confecção de relatórios administrativos",
+        "Rotina de organização de demandas",
+        "Boas práticas de registro e controle",
+        "Interface com processos contábeis e obrigações internas",
+      ]
+    );
+
+    modules.push(`
+      <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">Módulo Administrativo</h3>
+      <p style="margin:0 0 10px 0;">A base não traz um departamento “Administrativo”, então este bloco foi estruturado com seus temas e com proximidade ao departamento Financeiro, que na base cobre processos contábeis, controles internos, orçamento e compliance.</p>
+      <p style="margin:0 0 8px 0;"><strong>Temas do módulo:</strong></p>
+      <ul style="margin:0 0 24px 22px; padding:0;">
+        ${renderList(administrativoThemes)}
+      </ul>
+    `);
+  }
+
+  if (!modules.length) {
+    modules.push(`
+      <p style="margin:0 0 24px 0;">Os módulos departamentais foram estruturados com base nos departamentos informados e nos temas priorizados pelo usuário, mantendo coerência com os elementos disponíveis na base.</p>
+    `);
+  }
+
+  return modules.join("");
+}
+
+function buildSystemsSection(selectedSystems: string[]) {
+  const official = selectedSystems.filter((item) => SYSTEMS_BASE[item]);
+  const nonBase = selectedSystems.filter((item) => !SYSTEMS_BASE[item]);
+
+  const officialHtml = official
+    .map((item) => {
+      const sys = SYSTEMS_BASE[item];
+      return `
+        <div style="margin:0 0 18px 0;">
+          <p style="margin:0 0 8px 0;"><strong>${escapeHtml(sys.nome)}</strong></p>
+          <p style="margin:0 0 4px 0;"><strong>Descrição:</strong> ${escapeHtml(sys.descricao)}</p>
+          <p style="margin:0 0 4px 0;"><strong>Responsável:</strong> ${escapeHtml(sys.responsavel)}</p>
+          <p style="margin:0 0 4px 0;"><strong>Acesso:</strong> ${escapeHtml(sys.acesso)}</p>
+          <p style="margin:0 0 0 0;"><strong>Tempo de apresentação na base:</strong> ${escapeHtml(sys.tempo)}</p>
+        </div>
+      `;
+    })
+    .join("");
+
+  const noteHtml = nonBase.length
+    ? nonBase
+        .map((item) => {
+          if (/e-mail|email corporativo/i.test(item)) {
+            return `<p style="margin:0 0 8px 0;"><strong>Observação importante</strong><br />E-mail corporativo foi solicitado por você, mas não aparece na lista de sistemas da base. Por isso, recomendo tratar esse tema como orientação operacional do departamento, sem classificá-lo como sistema oficial da base.</p>`;
+          }
+          return `<p style="margin:0 0 8px 0;"><strong>Observação importante</strong><br />${escapeHtml(item)} foi solicitado por você, mas não aparece na lista de sistemas da base. Por isso, recomendo tratar esse tema como orientação operacional, e não como sistema oficial da base.</p>`;
+        })
+        .join("")
+    : "";
+
+  return officialHtml + noteHtml;
+}
+
+function buildMaterialsSection(selectedDocs: string[]) {
+  return selectedDocs
+    .map((doc) => {
+      const info = MATERIALS_BASE[doc];
+      if (info) {
+        return `<li><strong>${escapeHtml(info.titulo)}</strong> — ${escapeHtml(info.descricao)}</li>`;
+      }
+      return `<li><strong>${escapeHtml(doc)}</strong> — Material informado pelo usuário para apoio à integração.</li>`;
+    })
+    .join("");
+}
+
+function buildCronograma(totalHours: number, dinamica: string, hasComercial: boolean, hasAdministrativo: boolean, selectedSystems: string[]) {
+  const crmIncluded = selectedSystems.includes("CRM Corporativo");
+  const comercialBlock = hasComercial
+    ? `
+      <p style="margin:0 0 4px 0;"><strong>09:20–10:10 | Módulo Comercial com chefe de vendas</strong></p>
+      <p style="margin:0 0 12px 0;">Atendimento telefônico<br />Atendimento ao público<br />Metas mensais<br />Introdução ao CRM</p>
+      <p style="margin:0 0 4px 0;"><strong>10:10–10:25 | Vídeo de apoio</strong></p>
+      <p style="margin:0 0 12px 0;">Atendimento ao Cliente: Nosso Diferencial</p>
+    `
+    : "";
+
+  const crmBlock = crmIncluded
+    ? `
+      <p style="margin:0 0 4px 0;"><strong>10:25–11:00 | Apresentação do CRM</strong></p>
+      <p style="margin:0 0 16px 0;">Acesso<br />Uso básico<br />Fluxo de registro comercial<br />A base prevê 60 minutos, mas aqui foi ajustado para caber no tempo total disponível.</p>
+    `
+    : "";
+
+  const administrativoBlock = hasAdministrativo
+    ? `
+      <p style="margin:0 0 4px 0;"><strong>13:00–13:50 | Módulo Administrativo com chefe administrativo</strong></p>
+      <p style="margin:0 0 16px 0;">Checagem de e-mail<br />Organização de demandas<br />Confecção de relatórios administrativos<br />Boas práticas de comunicação interna</p>
+    `
+    : "";
+
+  if (totalHours >= 5) {
+    return `
+      <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">Manhã — 3 horas</h3>
+      <p style="margin:0 0 4px 0;"><strong>08:00–08:15 | Abertura com RH</strong></p>
+      <p style="margin:0 0 12px 0;">Boas-vindas<br />Apresentação da agenda<br />Contextualização da integração</p>
+
+      <p style="margin:0 0 4px 0;"><strong>08:15–08:35 | Alinhamento Cultural</strong></p>
+      <p style="margin:0 0 12px 0;">Missão<br />Visão<br />Valores<br />Papel de cada colaborador na cultura da empresa</p>
+
+      <p style="margin:0 0 4px 0;"><strong>08:35–08:55 | Dinâmica da Base</strong></p>
+      <p style="margin:0 0 12px 0;">${escapeHtml(dinamica)}</p>
+
+      <p style="margin:0 0 4px 0;"><strong>08:55–09:00 | Pausa rápida</strong></p>
+      <p style="margin:0 0 12px 0;"></p>
+
+      <p style="margin:0 0 4px 0;"><strong>09:00–09:20 | Vídeo institucional</strong></p>
+      <p style="margin:0 0 12px 0;">Boas-vindas do CEO</p>
+
+      ${comercialBlock}
+      ${crmBlock}
+
+      <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">Tarde — 2 horas</h3>
+      ${administrativoBlock}
+      <p style="margin:0 0 4px 0;"><strong>13:50–14:20 | Documentação de apoio</strong></p>
+      <p style="margin:0 0 12px 0;">Manual do Colaborador<br />Guia Rápido de Sistemas<br />Fluxogramas de Processos</p>
+
+      <p style="margin:0 0 4px 0;"><strong>14:20–14:45 | Aplicação prática orientada</strong></p>
+      <p style="margin:0 0 12px 0;">Simulação simples de rotina:<br />receber demanda<br />registrar no fluxo correto<br />responder e-mail de forma adequada<br />encaminhar ou reportar status</p>
+
+      <p style="margin:0 0 4px 0;"><strong>14:45–15:00 | Fechamento com RH</strong></p>
+      <p style="margin:0 0 0 0;">Recapitulação dos pontos principais<br />Espaço para dúvidas<br />Próximos passos<br />Reforço de cultura e expectativas</p>
+    `;
+  }
+
+  return `
+    <p style="margin:0 0 8px 0;"><strong>Abertura:</strong> boas-vindas, agenda e contexto da integração.</p>
+    <p style="margin:0 0 8px 0;"><strong>Bloco cultural:</strong> missão, visão, valores e vídeo institucional.</p>
+    <p style="margin:0 0 8px 0;"><strong>Bloco de dinâmica:</strong> ${escapeHtml(dinamica)}.</p>
+    <p style="margin:0 0 8px 0;"><strong>Bloco departamental:</strong> apresentação dos temas-chave das áreas envolvidas.</p>
+    <p style="margin:0 0 8px 0;"><strong>Bloco de sistemas:</strong> apresentação prática dos sistemas do fluxo.</p>
+    <p style="margin:0 0 0 0;"><strong>Fechamento:</strong> dúvidas, reforço dos documentos e próximos passos.</p>
+  `;
+}
+
+export function buildOnboardingReport(session: OnboardingSession) {
+  const quantidade = normalizeLine(session.quantidadeColaboradores ?? "Não informado");
+  const nivel = normalizeLine(session.nivelHierarquico ?? "Não informado");
+  const departments = unique(splitList(session.departamentos));
+  const themes = unique(splitList(session.temasDepartamentos));
+  const facilitadores = normalizeLine(session.facilitadoresDisponiveis ?? "Não informado");
+  const tempo = normalizeLine(session.tempoIntegracao ?? "Não informado");
+  const totalHours = parseHours(session.tempoIntegracao);
+  const selectedSystems = unique(splitList(session.sistemasApresentados));
+  const selectedDocs = unique(splitList(session.documentosBase));
+  const dinamicas = unique(splitList(session.dinamicaPropria));
+  const selectedDynamic = dinamicas[0] ?? "Dinâmica não informada";
+
+  const hasComercial = departments.some((dep) => /comercial|vendas/.test(dep.toLowerCase()));
+  const hasAdministrativo = departments.some((dep) => /administr|adm/.test(dep.toLowerCase()));
+
+  return `
+<section>
+  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">ROTEIRO DE INTEGRAÇÃO PERSONALIZADO PRONTO</h1>
+
+  <p style="margin:0 0 8px 0;"><strong>Quantidade de colaboradores:</strong> ${escapeHtml(quantidade)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Nível hierárquico:</strong> ${escapeHtml(nivel)}</p>
+  <p style="margin:0 0 8px 0;"><strong>Departamentos:</strong> ${escapeHtml(departments.join(", "))}</p>
+  <p style="margin:0 0 8px 0;"><strong>Facilitadores disponíveis:</strong> ${escapeHtml(facilitadores)}</p>
+  <p style="margin:0 0 24px 0;"><strong>Tempo total da integração:</strong> ${escapeHtml(tempo)}</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Alinhamento Cultural</h2>
+  <p style="margin:0 0 8px 0;"><strong>Missão:</strong> ${escapeHtml(normalizeLine(session.missaoEmpresa ?? "Não informado"))}</p>
+  <p style="margin:0 0 8px 0;"><strong>Visão:</strong> ${escapeHtml(normalizeLine(session.visaoEmpresa ?? "Não informado"))}</p>
+  <p style="margin:0 0 16px 0;"><strong>Valores:</strong> ${escapeHtml(normalizeLine(session.valoresEmpresa ?? "Não informado"))}</p>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Dinâmica Selecionada</h2>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${renderList(dinamicas)}
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">3. Módulos Departamentais</h2>
+  ${buildDepartmentModules(departments, themes)}
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">4. Apresentação de Sistemas</h2>
+  ${buildSystemsSection(selectedSystems)}
+
+  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">5. Documentação de Apoio</h2>
+  <p style="margin:0 0 8px 0;"><strong>Materiais escolhidos por você e presentes na base:</strong></p>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${buildMaterialsSection(selectedDocs)}
+  </ul>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">6. Cronograma Integrado</h2>
+  ${buildCronograma(totalHours, selectedDynamic, hasComercial, hasAdministrativo, selectedSystems)}
+
+  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">Resumo de compatibilidade da base</h2>
+  <p style="margin:0 0 8px 0;">Dinâmica escolhida: ${escapeHtml(selectedDynamic)}.</p>
+  <p style="margin:0 0 8px 0;">Vídeos usados: compatíveis com integração geral e, quando aplicável, com o módulo comercial.</p>
+  <p style="margin:0 0 8px 0;">Materiais usados: os documentos listados foram tratados a partir dos materiais escolhidos e dos itens da base.</p>
+  <p style="margin:0 0 8px 0;">Sistema oficial usado: ${escapeHtml(selectedSystems.filter((item) => SYSTEMS_BASE[item]).join(", ") || "Nenhum sistema oficial da base informado")}.</p>
+  <p style="margin:0 0 0 0;">Itens que não constam como sistema oficial da base foram mantidos apenas como prática operacional ou orientação de rotina.</p>
+</section>
+`;
+}

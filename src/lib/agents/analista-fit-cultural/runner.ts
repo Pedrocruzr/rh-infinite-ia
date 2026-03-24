@@ -17,110 +17,252 @@ function normalizeSentence(value: string) {
   return text;
 }
 
-function buildMissionVisionValues(session: FitCulturalSession) {
-  const cultura = String(session.culturaAtual ?? "").toLowerCase();
-  const valores = String(session.valoresDecisoes ?? "").toLowerCase();
-  const recompensas = String(session.comportamentosRecompensados ?? "").toLowerCase();
-  const evolucao = String(session.evolucaoDesejada ?? "").toLowerCase();
-  const proposito = String(session.proposito ?? "").toLowerCase();
-  const sucesso = String(session.sucesso ?? "").toLowerCase();
-  const lideranca = String(session.lideranca ?? "").toLowerCase();
+function collectContext(session: FitCulturalSession) {
+  const parts = [
+    session.objetivo,
+    session.culturaAtual,
+    session.valoresDecisoes,
+    session.discrepancia,
+    session.comportamentosRecompensados,
+    session.evolucaoDesejada,
+    session.diferenciaisCulturais,
+    session.proposito,
+    session.sucesso,
+    session.comportamentosInaceitaveis,
+    session.lideranca,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 
-  const base = [cultura, valores, recompensas, evolucao, proposito, sucesso, lideranca].join(" ");
+  return parts;
+}
 
-  const sugestoes = [];
+function containsAny(text: string, patterns: string[]) {
+  return patterns.some((pattern) => text.includes(pattern));
+}
 
-  if (
-    /resultado|performance|meta|entrega|execução|execucao|alta performance|crescimento/.test(base)
-  ) {
-    sugestoes.push({
-      mission:
-        "Impulsionar resultados sustentáveis por meio de pessoas comprometidas, processos consistentes e cultura de alta performance.",
-      vision:
-        "Ser reconhecida como uma organização de referência em performance, coerência cultural e excelência na execução.",
-      values:
-        "Comprometimento, Foco em resultados, Disciplina, Excelência.",
-      explanation:
-        "Esta sugestão foi construída porque suas respostas indicam forte valorização de entrega, consistência, responsabilidade e desempenho organizacional."
-    });
+function inferSignals(session: FitCulturalSession) {
+  const base = collectContext(session);
+
+  return {
+    performance: containsAny(base, [
+      "resultado",
+      "resultados",
+      "meta",
+      "metas",
+      "performance",
+      "entrega",
+      "entregas",
+      "execução",
+      "execucao",
+      "alta performance",
+      "produtividade",
+      "eficiência",
+      "eficiencia",
+      "disciplina",
+    ]),
+    collaboration: containsAny(base, [
+      "colaboração",
+      "colaboracao",
+      "equipe",
+      "times",
+      "pessoas",
+      "cooperação",
+      "cooperacao",
+      "escuta",
+      "parceria",
+      "relacionamento",
+      "comunicação",
+      "comunicacao",
+    ]),
+    development: containsAny(base, [
+      "desenvolvimento",
+      "crescimento",
+      "aprendizado",
+      "aprendizagem",
+      "evolução",
+      "evolucao",
+      "capacitação",
+      "capacitacao",
+      "talentos",
+    ]),
+    innovation: containsAny(base, [
+      "inovação",
+      "inovacao",
+      "mudança",
+      "mudanca",
+      "adaptabilidade",
+      "agilidade",
+      "evoluir",
+      "transformação",
+      "transformacao",
+      "criatividade",
+    ]),
+    client: containsAny(base, [
+      "cliente",
+      "clientes",
+      "experiência",
+      "experiencia",
+      "atendimento",
+      "valor",
+      "mercado",
+    ]),
+    ethics: containsAny(base, [
+      "ética",
+      "etica",
+      "integridade",
+      "respeito",
+      "transparência",
+      "transparencia",
+      "confiança",
+      "confianca",
+    ]),
+    organization: containsAny(base, [
+      "organização",
+      "organizacao",
+      "clareza",
+      "padronização",
+      "padronizacao",
+      "processo",
+      "processos",
+      "consistência",
+      "consistencia",
+      "estrutura",
+    ]),
+    leadership: containsAny(base, [
+      "liderança",
+      "lideranca",
+      "líder",
+      "lider",
+      "exemplo",
+      "referência",
+      "referencia",
+      "influência",
+      "influencia",
+    ]),
+  };
+}
+
+function buildValueSet(signals: ReturnType<typeof inferSignals>) {
+  const values: string[] = [];
+
+  if (signals.performance) values.push("Foco em resultados", "Excelência");
+  if (signals.collaboration) values.push("Colaboração", "Comunicação");
+  if (signals.development) values.push("Desenvolvimento", "Aprendizado contínuo");
+  if (signals.innovation) values.push("Inovação", "Adaptabilidade");
+  if (signals.client) values.push("Foco no cliente");
+  if (signals.ethics) values.push("Ética", "Integridade");
+  if (signals.organization) values.push("Clareza", "Consistência");
+  if (signals.leadership) values.push("Responsabilidade", "Exemplo");
+
+  if (values.length === 0) {
+    values.push("Clareza", "Responsabilidade", "Coerência", "Respeito");
   }
 
-  if (
-    /colaboração|colaboracao|equipe|pessoas|desenvolvimento|aprendizado|escuta|comunicação|comunicacao/.test(base)
-  ) {
-    sugestoes.push({
-      mission:
-        "Desenvolver pessoas e fortalecer relações de trabalho por meio de uma cultura colaborativa, ética e orientada ao crescimento.",
-      vision:
-        "Ser referência em ambiente de trabalho saudável, desenvolvimento humano e colaboração com propósito.",
-      values:
-        "Colaboração, Comunicação, Desenvolvimento, Respeito.",
-      explanation:
-        "Esta sugestão foi gerada porque suas respostas destacam interação entre pessoas, desenvolvimento, comunicação e fortalecimento do ambiente interno."
-    });
-  }
+  return [...new Set(values)].slice(0, 5);
+}
 
-  if (
-    /cliente|inovação|inovacao|adapt|mudança|mudanca|agilidade|mercado|diferencial/.test(base)
-  ) {
-    sugestoes.push({
-      mission:
-        "Gerar valor com agilidade, inovação e alinhamento cultural, promovendo evolução contínua e foco no cliente.",
-      vision:
-        "Ser uma empresa admirada pela capacidade de evoluir, se adaptar e manter coerência entre cultura e estratégia.",
-      values:
-        "Inovação, Agilidade, Adaptabilidade, Foco no cliente.",
-      explanation:
-        "Esta sugestão foi construída porque suas respostas mostram preocupação com evolução cultural, diferenciação e capacidade de adaptação ao contexto."
-    });
-  }
+function buildDynamicSuggestions(session: FitCulturalSession) {
+  const signals = inferSignals(session);
+  const values = buildValueSet(signals);
 
-  while (sugestoes.length < 3) {
-    const fallback = [
-      {
-        mission:
-          "Construir um ambiente organizacional coerente, sustentável e orientado por valores claros.",
-        vision:
-          "Ser reconhecida por uma cultura forte, consistente e alinhada à sua identidade organizacional.",
-        values:
-          "Coerência, Responsabilidade, Clareza, Integridade.",
-        explanation:
-          "Esta sugestão reforça a necessidade de coerência entre discurso, prática e identidade cultural."
-      },
-      {
-        mission:
-          "Promover resultados com equilíbrio entre pessoas, cultura e estratégia organizacional.",
-        vision:
-          "Ser uma empresa que cresce sem perder a essência cultural que sustenta suas decisões.",
-        values:
-          "Equilíbrio, Confiança, Comprometimento, Sustentabilidade.",
-        explanation:
-          "Esta sugestão foi incluída para representar uma direção cultural estável e sustentável no longo prazo."
-      },
-      {
-        mission:
-          "Fortalecer a cultura organizacional como base para decisões, relacionamentos e crescimento consistente.",
-        vision:
-          "Ser referência em clareza cultural, alinhamento interno e evolução organizacional.",
-        values:
-          "Clareza, Alinhamento, Evolução, Ética.",
-        explanation:
-          "Esta sugestão foi incluída para apoiar empresas que precisam consolidar identidade cultural e direcionamento interno."
-      }
-    ];
+  const suggestions = [];
 
-    for (const item of fallback) {
-      if (sugestoes.length < 3) {
-        sugestoes.push(item);
-      }
-    }
-  }
+  suggestions.push({
+    mission: normalizeSentence(
+      [
+        "Fortalecer uma cultura",
+        signals.collaboration ? "colaborativa" : "coerente",
+        signals.performance ? "orientada a resultados" : "orientada a consistência",
+        signals.client ? "e centrada na geração de valor para clientes" : "e alinhada à identidade da organização",
+        "por meio de pessoas, liderança e práticas que sustentem o crescimento do negócio",
+      ].join(" ")
+    ),
+    vision: normalizeSentence(
+      [
+        "Ser reconhecida como uma organização",
+        signals.performance ? "de alta performance" : "culturalmente consistente",
+        signals.organization ? "com clareza, estrutura e coerência nas decisões" : "com forte alinhamento entre discurso e prática",
+        signals.client ? "e referência na experiência entregue ao cliente" : "e referência em cultura e alinhamento interno",
+      ].join(" ")
+    ),
+    values: values.join(", "),
+    explanation: normalizeSentence(
+      [
+        "Esta sugestão foi construída com base no padrão predominante das respostas,",
+        signals.performance ? "que valorizam entrega, resultado e disciplina," : "que reforçam coerência e estabilidade cultural,",
+        signals.collaboration ? "além de destacar colaboração e comunicação," : "",
+        signals.organization ? "com necessidade de maior clareza e organização." : "com foco em alinhamento e consistência.",
+      ].join(" ")
+    ),
+  });
 
-  return sugestoes.slice(0, 3);
+  suggestions.push({
+    mission: normalizeSentence(
+      [
+        "Desenvolver um ambiente de trabalho",
+        signals.collaboration ? "humano, colaborativo e confiável" : "maduro, ético e sustentável",
+        signals.development ? "que estimule aprendizado, evolução e crescimento contínuo" : "que fortaleça vínculos, cultura e responsabilidade coletiva",
+        signals.client ? "sem perder o foco no impacto gerado ao cliente" : "",
+      ].join(" ")
+    ),
+    vision: normalizeSentence(
+      [
+        "Ser uma empresa lembrada por",
+        signals.collaboration ? "unir performance e relações saudáveis de trabalho" : "sua solidez cultural e confiança nas relações",
+        signals.development ? "com forte desenvolvimento das pessoas" : "com forte coerência entre valores e comportamento",
+      ].join(" ")
+    ),
+    values: [...new Set([
+      ...(signals.collaboration ? ["Colaboração", "Respeito", "Comunicação"] : ["Confiança", "Respeito"]),
+      ...(signals.development ? ["Desenvolvimento", "Aprendizado contínuo"] : ["Comprometimento"]),
+      ...(signals.ethics ? ["Ética"] : ["Responsabilidade"]),
+    ])].slice(0, 5).join(", "),
+    explanation: normalizeSentence(
+      [
+        "Esta sugestão enfatiza o lado relacional da cultura,",
+        signals.development ? "porque as respostas apontam para evolução, aprendizado e fortalecimento das pessoas," : "porque as respostas reforçam vínculo, respeito e confiança,",
+        signals.ethics ? "além de indicar preocupação com ética e integridade." : "mantendo coerência com a cultura desejada.",
+      ].join(" ")
+    ),
+  });
+
+  suggestions.push({
+    mission: normalizeSentence(
+      [
+        "Construir uma organização",
+        signals.innovation ? "adaptável, inovadora e preparada para evoluir continuamente" : "consistente, responsável e preparada para crescer com coerência",
+        signals.performance ? "sem perder disciplina na execução" : "sem perder a identidade cultural",
+        signals.client ? "e foco no valor percebido pelo cliente" : "",
+      ].join(" ")
+    ),
+    vision: normalizeSentence(
+      [
+        "Ser referência em",
+        signals.innovation ? "evolução cultural, capacidade de adaptação e alinhamento estratégico" : "cultura forte, clareza de propósito e alinhamento organizacional",
+        signals.leadership ? "com liderança que inspira pelo exemplo" : "",
+      ].join(" ")
+    ),
+    values: [...new Set([
+      ...(signals.innovation ? ["Inovação", "Adaptabilidade"] : ["Coerência", "Clareza"]),
+      ...(signals.leadership ? ["Exemplo", "Responsabilidade"] : ["Comprometimento"]),
+      ...(signals.client ? ["Foco no cliente"] : ["Consistência"]),
+    ])].slice(0, 5).join(", "),
+    explanation: normalizeSentence(
+      [
+        "Esta sugestão foi criada para traduzir respostas que apontam",
+        signals.innovation ? "necessidade de evolução, adaptação e movimento cultural," : "necessidade de consolidação e fortalecimento da identidade cultural,",
+        signals.leadership ? "com papel importante da liderança como referência prática." : "mantendo a coerência entre propósito e execução.",
+      ].join(" ")
+    ),
+  });
+
+  return suggestions;
 }
 
 export function buildFitCulturalReport(session: FitCulturalSession): string {
-  const suggestions = buildMissionVisionValues(session);
+  const suggestions = buildDynamicSuggestions(session);
 
   return `
 <section>
@@ -165,7 +307,7 @@ export function buildFitCulturalReport(session: FitCulturalSession): string {
 
   <h2 style="font-size:22px; font-weight:700; margin:20px 0 12px 0;">12. Sugestões de Missão, Visão e Valores</h2>
   <p style="margin:0 0 16px 0;">
-    Com base nas informações fornecidas, o sistema gerou três direções estratégicas possíveis para estruturar ou evoluir a identidade cultural da empresa.
+    Com base no padrão das respostas fornecidas, o sistema gerou três direções estratégicas possíveis para estruturar ou evoluir a identidade cultural da empresa.
   </p>
 
   ${suggestions.map((s, i) => `

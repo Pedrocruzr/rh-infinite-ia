@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { regenerateReportBySlug } from "@/lib/reports/regenerate";
+import { buildColetorSixBoxReport } from "@/lib/agents/coletor-dados-six-box/runner";
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await req.json().catch(() => ({}));
+    const bodySlug = String(body?.agentSlug ?? "");
+
+    const supabase = createAdminClient();
+
+    const { data, error } = await supabase
+      .from("profile_assessments")
+      .select("id, agent_slug, raw_answers")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json({ error: "Avaliação não encontrada." }, { status: 404 });
+    }
+
+    const slug = String(data.agent_slug || bodySlug || "").trim();
+    if (!slug) {
+      return NextResponse.json({ error: "Slug do agente não encontrado." }, { status: 400 });
+    }
+
+    const reportMarkdown = regenerateReportBySlug(slug, data.raw_answers ?? {});
+
+    const { error: updateError } = await supabase
+      .from("profile_assessments")
+      .update({
+        report_markdown: reportMarkdown,
+        report_status: "generated",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Erro interno ao gerar novamente o relatório.",
+      },
+      { status: 500 }
+    );
+  }
+}

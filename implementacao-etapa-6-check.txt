@@ -1,0 +1,114 @@
+
+--- server supabase helper ---
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll() {
+          // noop for now
+        },
+      },
+    }
+  );
+}
+
+--- client supabase helper ---
+
+--- admin supabase helper ---
+import { createClient } from "@supabase/supabase-js";
+
+export function createAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key =
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+--- page layout do app ---
+import Link from "next/link";
+import { ReactNode } from "react";
+
+export default function InternalAppLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-white text-black">
+      <div className="grid min-h-screen grid-cols-[240px_1fr]">
+        <aside className="border-r border-neutral-200 p-6">
+          <p className="text-sm text-neutral-500">Workspace</p>
+          <h1 className="mt-2 text-2xl font-semibold">RH Infinite IA</h1>
+
+          <nav className="mt-10 space-y-3 text-sm">
+            <Link href="/app/agentes" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+              Agentes
+            </Link>
+
+            <Link href="/app/tutorial" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+              Tutorial
+            </Link>
+
+            <Link href="/app/suporte" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+              Suporte
+            </Link>
+
+            <Link href="/app/configuracoes" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+              Configurações
+            </Link>
+
+            <Link href="/app/recrutador/assessments" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
+              Avaliações recebidas
+            </Link>
+          </nav>
+        </aside>
+
+        <section>{children}</section>
+      </div>
+    </div>
+  );
+}
+
+--- pagina atual do painel ---
+export default function PainelDeVagasPage() {
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      <section className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
+        <h1 className="text-4xl font-semibold tracking-tight">
+          Painel de Vagas
+        </h1>
+        <p className="text-muted-foreground">
+          Estrutura inicial do módulo de vagas.
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            Em aberto
+          </div>
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            Pausadas
+          </div>
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            Fechadas
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

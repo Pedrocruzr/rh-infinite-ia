@@ -1,0 +1,108 @@
+import { buildMasterAgentReport } from "@/lib/reports/build-master-agent-report";
+import {
+  initializeDiscSession,
+  runDiscStep,
+  type DiscField,
+  type DiscSession,
+} from "@/lib/disc-flow";
+
+export type { DiscField, DiscSession } from "@/lib/disc-flow";
+export { initializeDiscSession, runDiscStep } from "@/lib/disc-flow";
+
+type DiscReportSession = DiscSession &
+  Record<string, unknown> & {
+    objetivoAvaliacao?: string;
+    perfilPredominante?: string;
+    nivelAderencia?: string;
+    recomendacaoFinal?: string;
+    fatorD?: string;
+    fatorI?: string;
+    fatorS?: string;
+    fatorC?: string;
+    pontosFortes?: string[];
+    pontosAtencao?: string[];
+    ambienteIdeal?: string[];
+    recomendacoes?: string[];
+    resumoFinal?: string;
+    observacoesGerais?: string;
+  };
+
+export function generateDiscReport(session: DiscReportSession): string {
+  const pontosFortes =
+    Array.isArray(session.pontosFortes) && session.pontosFortes.length > 0
+      ? session.pontosFortes.map(String)
+      : ["Não informado"];
+
+  const pontosAtencao =
+    Array.isArray(session.pontosAtencao) && session.pontosAtencao.length > 0
+      ? session.pontosAtencao.map(String)
+      : ["Não informado"];
+
+  const ambienteIdeal =
+    Array.isArray(session.ambienteIdeal) && session.ambienteIdeal.length > 0
+      ? session.ambienteIdeal.map(String)
+      : ["Não informado"];
+
+  const recomendacoes =
+    Array.isArray(session.recomendacoes) && session.recomendacoes.length > 0
+      ? session.recomendacoes.map(String)
+      : ["Não informado"];
+
+  return buildMasterAgentReport({
+    tituloAgente: "Teste de Perfil DISC",
+    subtitulo: "Relatório comportamental para apoio à decisão",
+    contexto: `Avaliado: ${String(session.nome ?? "Não informado")}. Cargo: ${String(session.vaga ?? "Não informado")}. Objetivo da avaliação: ${String(session.objetivoAvaliacao ?? "Não informado")}.`,
+    resumoExecutivo: String(
+      session.resumoFinal ??
+        "A análise identificou o estilo comportamental predominante e os padrões mais relevantes de interação, ritmo, influência e conformidade."
+    ),
+    classificacaoFinal: String(session.perfilPredominante ?? "Não identificado"),
+    nivelRisco: String(session.nivelAderencia ?? "Não informado"),
+    recomendacaoFinal: String(
+      session.recomendacaoFinal ??
+        "Usar este relatório como apoio complementar à avaliação do perfil comportamental."
+    ),
+    secoes: [
+      {
+        titulo: "Leitura do fator Dominância (D)",
+        descricao: String(session.fatorD ?? "Não informado"),
+      },
+      {
+        titulo: "Leitura do fator Influência (I)",
+        descricao: String(session.fatorI ?? "Não informado"),
+      },
+      {
+        titulo: "Leitura do fator Estabilidade (S)",
+        descricao: String(session.fatorS ?? "Não informado"),
+      },
+      {
+        titulo: "Leitura do fator Conformidade (C)",
+        descricao: String(session.fatorC ?? "Não informado"),
+      },
+      {
+        titulo: "Pontos fortes observados",
+        itens: pontosFortes,
+      },
+      {
+        titulo: "Pontos de atenção",
+        itens: pontosAtencao,
+      },
+      {
+        titulo: "Ambiente ideal de trabalho",
+        itens: ambienteIdeal,
+      },
+      {
+        titulo: "Recomendações práticas",
+        passos: recomendacoes,
+      },
+    ],
+    observacoesGerais: String(
+      session.observacoesGerais ??
+        "Este relatório não deve ser usado de forma isolada. O ideal é combinar esta leitura com entrevista, contexto da função e avaliação da liderança."
+    ),
+  });
+}
+
+export { generateDiscReport as buildDiscReport };
+export { generateDiscReport as buildDiscRunnerReport };
+export default generateDiscReport;

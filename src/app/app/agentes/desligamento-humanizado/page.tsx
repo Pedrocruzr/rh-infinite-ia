@@ -5,6 +5,7 @@ import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
 
 type GenericSession = Record<string, string | undefined> & {
+  assessmentId?: string;
   status?: string;
   reportStatus?: string;
   reportMarkdown?: string | null;
@@ -15,6 +16,7 @@ type Message = {
   role: "assistant" | "user";
   content: string;
   sessionSnapshot?: GenericSession | null;
+  fieldSnapshot?: string | null;
 };
 
 function cloneSession<T>(value: T): T {
@@ -100,6 +102,7 @@ export default function DesligamentoHumanizadoPage() {
       if (target.role !== "user") return prev;
 
       setSession(target.sessionSnapshot ?? null);
+      setCurrentField(target.fieldSnapshot ?? null);
       setInput(target.content);
       setFinished(false);
 
@@ -117,6 +120,7 @@ export default function DesligamentoHumanizadoPage() {
       role: "user",
       content: answer,
       sessionSnapshot: cloneSession(session),
+      fieldSnapshot: currentField,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -145,16 +149,17 @@ export default function DesligamentoHumanizadoPage() {
 
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: data.done || data.completed
-            ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
-            : data.reply,
-        },
-      ]);
+
+      if (!(data.done || data.completed) && data.reply?.trim()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply,
+          },
+        ]);
+      }
 
       setFinished(Boolean(data.done || data.completed));
     } catch (error) {
@@ -186,7 +191,7 @@ export default function DesligamentoHumanizadoPage() {
       stackerName="Encerramento"
       title="Desligamento Humanizado"
       subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Avaliações recebidas."
-      messages={messages.map((message) => ({
+      messages={(finished ? [] : messages).map((message) => ({
         id: message.id,
         role: message.role,
         content: message.content,

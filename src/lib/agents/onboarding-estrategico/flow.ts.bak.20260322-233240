@@ -1,0 +1,402 @@
+export type OnboardingField =
+  | "quantidadeColaboradores"
+  | "nivelHierarquico"
+  | "departamentos"
+  | "missaoEmpresa"
+  | "visaoEmpresa"
+  | "valoresEmpresa"
+  | "temasDepartamentos"
+  | "facilitadoresDisponiveis"
+  | "sistemasApresentados"
+  | "tempoIntegracao"
+  | "temDinamicaPropria"
+  | "dinamicaPropria"
+  | "validacaoDinamicaSugerida"
+  | "documentosBase";
+
+export type OnboardingSession = {
+  assessmentId?: string;
+  quantidadeColaboradores?: string;
+  nivelHierarquico?: string;
+  departamentos?: string;
+  missaoEmpresa?: string;
+  visaoEmpresa?: string;
+  valoresEmpresa?: string;
+  temasDepartamentos?: string;
+  facilitadoresDisponiveis?: string;
+  sistemasApresentados?: string;
+  tempoIntegracao?: string;
+  temDinamicaPropria?: string;
+  dinamicaPropria?: string;
+  dinamicaOrigem?: "usuario" | "base";
+  dinamicaSugerida?: string;
+  documentosBase?: string;
+  status?: "in_progress" | "completed";
+  reportStatus?: "pending" | "generated";
+};
+
+type DynamicBase = {
+  titulo: string;
+  objetivo: string;
+  materiais: string;
+  tempo: string;
+  niveis: string[];
+  min: number;
+  max: number;
+};
+
+const DYNAMIC_BASE: DynamicBase[] = [
+  {
+    titulo: "Quebra-Gelo: Duas Verdades e Uma Mentira",
+    objetivo: "Promover integração inicial e descontração",
+    materiais: "Nenhum",
+    tempo: "15 a 20 minutos",
+    niveis: ["operacional", "técnico", "tecnico", "gestão", "gestao"],
+    min: 3,
+    max: 20,
+  },
+  {
+    titulo: "Mapeamento de Expectativas",
+    objetivo: "Alinhar expectativas e identificar objetivos comuns",
+    materiais: "Post-its, canetas e mural",
+    tempo: "30 a 40 minutos",
+    niveis: ["técnico", "tecnico", "gestão", "gestao"],
+    min: 4,
+    max: 15,
+  },
+  {
+    titulo: "Desafio da Torre",
+    objetivo: "Estimular trabalho em equipe e resolução de problemas",
+    materiais: "Macarrão cru, fita, barbante e marshmallow",
+    tempo: "45 minutos",
+    niveis: ["operacional", "técnico", "tecnico"],
+    min: 6,
+    max: 24,
+  },
+  {
+    titulo: "Simulação de Cenários",
+    objetivo: "Desenvolver pensamento crítico e tomada de decisão",
+    materiais: "Cartões com cenários impressos",
+    tempo: "60 minutos",
+    niveis: ["técnico", "tecnico", "gestão", "gestao"],
+    min: 4,
+    max: 16,
+  },
+  {
+    titulo: "Mapa de Jornada",
+    objetivo: "Desenvolver visão centrada no cliente",
+    materiais: "Papel grande, post-its e canetas coloridas",
+    tempo: "90 minutos",
+    niveis: ["gestão", "gestao"],
+    min: 3,
+    max: 12,
+  },
+];
+
+function hasVowel(token: string) {
+  return /[aeiouáàâãéêíóôõúü]/i.test(token);
+}
+
+function isComprehensible(value: string) {
+  const text = String(value ?? "").trim();
+  if (!text) return false;
+
+  const tokens = text
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-zA-ZÀ-ÿ0-9\-\/]/g, ""))
+    .filter(Boolean);
+
+  if (tokens.length === 0) return false;
+
+  const validTokens = tokens.filter((token) => {
+    if (token.length <= 2) return true;
+    if (/\d/.test(token)) return true;
+    return hasVowel(token);
+  });
+
+  return validTokens.length / tokens.length >= 0.6;
+}
+
+function isYes(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["sim", "s", "tenho", "já tenho", "ja tenho", "quero"].includes(text);
+}
+
+function isNo(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["não", "nao", "n", "não tenho", "nao tenho"].includes(text);
+}
+
+function isOk(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["ok", "sim", "certo", "validado", "pode seguir", "seguir"].includes(text);
+}
+
+function parseQuantity(value?: string) {
+  const m = String(value ?? "").match(/\d+/);
+  return m ? Number(m[0]) : 0;
+}
+
+function normalizeLevel(value?: string) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function suggestDynamics(level?: string, quantity?: string) {
+  const lvl = normalizeLevel(level);
+  const qty = parseQuantity(quantity);
+
+  return DYNAMIC_BASE.filter((item) => {
+    const levelOk = item.niveis.includes(lvl);
+    const qtyOk = qty >= item.min && qty <= item.max;
+    return levelOk && qtyOk;
+  }).slice(0, 3);
+}
+
+function formatDynamicSuggestions(items: DynamicBase[]) {
+  return items
+    .map((item, index) =>
+      [
+        `${index + 1}. ${item.titulo}`,
+        `Objetivo: ${item.objetivo}`,
+        `Materiais: ${item.materiais}`,
+        `Tempo estimado: ${item.tempo}`,
+        `Participantes: ${item.min} a ${item.max}`,
+      ].join("\n")
+    )
+    .join("\n\n");
+}
+
+function question(field: OnboardingField) {
+  switch (field) {
+    case "quantidadeColaboradores":
+      return "Quantos novos colaboradores participarão da integração?";
+    case "nivelHierarquico":
+      return "Qual é o nível hierárquico desses colaboradores? (Operacional, Técnico ou Gestão)";
+    case "departamentos":
+      return "Quais departamentos estarão envolvidos nessa integração?";
+    case "missaoEmpresa":
+      return "Qual é a missão da empresa?";
+    case "visaoEmpresa":
+      return "Qual é a visão da empresa?";
+    case "valoresEmpresa":
+      return "Quais são os valores da empresa?";
+    case "temasDepartamentos":
+      return "Quais temas específicos devem ser abordados em cada departamento?";
+    case "facilitadoresDisponiveis":
+      return "Quais facilitadores estarão disponíveis para conduzir a integração?";
+    case "sistemasApresentados":
+      return "Quais sistemas devem ser apresentados nessa integração?";
+    case "tempoIntegracao":
+      return "Quanto tempo total estará disponível para a integração?";
+    case "temDinamicaPropria":
+      return "Você já tem alguma dinâmica que queira inserir? Responda 'sim' ou 'não'.";
+    case "dinamicaPropria":
+      return "Perfeito. Escreva a dinâmica que você quer inserir. Se quiser, pode colocar mais de uma.";
+    case "validacaoDinamicaSugerida":
+      return "Sugeri dinâmicas com base apenas na base de conhecimento. Se estiver de acordo, responda 'ok'. Se quiser ajustar, escreva a dinâmica da base que deseja utilizar.";
+    case "documentosBase":
+      return "Quais documentos que você quer utilizar nessa integração? você pode escolher, por exemplo:\n\nManual do Colaborador\nGuia Rápido de Sistemas\nFluxogramas de Processos\nGlossário Técnico\nOu qualquer outro material, coloque a baixo o nome do documento.";
+    default:
+      return "";
+  }
+}
+
+function validate(field: OnboardingField, value: string) {
+  const text = String(value ?? "").trim();
+
+  if (!text) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  if (field === "temDinamicaPropria") {
+    if (!isYes(text) && !isNo(text)) {
+      return "Responda apenas com 'sim' ou 'não'.";
+    }
+    return null;
+  }
+
+  if (field === "validacaoDinamicaSugerida") {
+    if (isOk(text)) return null;
+    if (!isComprehensible(text)) {
+      return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+    }
+    return null;
+  }
+
+  if (!isComprehensible(text)) {
+    return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+  }
+
+  return null;
+}
+
+function nextField(field: OnboardingField): OnboardingField | null {
+  const order: OnboardingField[] = [
+    "quantidadeColaboradores",
+    "nivelHierarquico",
+    "departamentos",
+    "missaoEmpresa",
+    "visaoEmpresa",
+    "valoresEmpresa",
+    "temasDepartamentos",
+    "facilitadoresDisponiveis",
+    "sistemasApresentados",
+    "tempoIntegracao",
+    "temDinamicaPropria",
+    "documentosBase",
+  ];
+  const idx = order.indexOf(field);
+  return idx >= 0 && idx < order.length - 1 ? order[idx + 1] : null;
+}
+
+export function initializeOnboardingSession(): OnboardingSession {
+  return {
+    status: "in_progress",
+    reportStatus: "pending",
+  };
+}
+
+export function runOnboardingStep(
+  session: OnboardingSession,
+  answer?: string,
+  currentField?: OnboardingField
+) {
+  if (!currentField) {
+    const firstField: OnboardingField = "quantidadeColaboradores";
+    const q = question(firstField);
+    return {
+      session,
+      completed: false,
+      currentField: firstField,
+      nextField: firstField,
+      question: q,
+      reply: q,
+    };
+  }
+
+  const raw = String(answer ?? "").trim();
+  const error = validate(currentField, raw);
+
+  if (error) {
+    return {
+      session,
+      completed: false,
+      currentField,
+      nextField: currentField,
+      question: question(currentField),
+      reply: error,
+    };
+  }
+
+  if (currentField === "temDinamicaPropria") {
+    const updated: OnboardingSession = {
+      ...session,
+      temDinamicaPropria: raw,
+    };
+
+    if (isYes(raw)) {
+      const next: OnboardingField = "dinamicaPropria";
+      const q = question(next);
+      return {
+        session: updated,
+        completed: false,
+        currentField: next,
+        nextField: next,
+        question: q,
+        reply: q,
+      };
+    }
+
+    const suggestions = suggestDynamics(session.nivelHierarquico, session.quantidadeColaboradores);
+    const suggestionText = suggestions.length
+      ? formatDynamicSuggestions(suggestions)
+      : "Não encontrei dinâmica compatível exata com os critérios informados. Se quiser, escreva manualmente a dinâmica da base que deseja usar.";
+
+    const nextSession: OnboardingSession = {
+      ...updated,
+      dinamicaOrigem: "base",
+      dinamicaSugerida: suggestionText,
+      dinamicaPropria: suggestions.map((item) => item.titulo).join(", "),
+    };
+
+    const next: OnboardingField = "validacaoDinamicaSugerida";
+    return {
+      session: nextSession,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: question(next),
+      reply: `${suggestionText}\n\n${question(next)}`,
+    };
+  }
+
+  if (currentField === "dinamicaPropria") {
+    const updated: OnboardingSession = {
+      ...session,
+      dinamicaPropria: raw,
+      dinamicaOrigem: "usuario",
+    };
+
+    const next: OnboardingField = "documentosBase";
+    const q = question(next);
+    return {
+      session: updated,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: q,
+      reply: q,
+    };
+  }
+
+  if (currentField === "validacaoDinamicaSugerida") {
+    const updated: OnboardingSession = {
+      ...session,
+      dinamicaPropria: isOk(raw) ? session.dinamicaPropria : raw,
+      dinamicaOrigem: "base",
+    };
+
+    const next: OnboardingField = "documentosBase";
+    const q = question(next);
+    return {
+      session: updated,
+      completed: false,
+      currentField: next,
+      nextField: next,
+      question: q,
+      reply: q,
+    };
+  }
+
+  const updated: OnboardingSession = {
+    ...session,
+    [currentField]: raw,
+  };
+
+  const next = nextField(currentField);
+
+  if (!next) {
+    updated.status = "completed";
+    updated.reportStatus = "generated";
+
+    return {
+      session: updated,
+      completed: true,
+      currentField: null,
+      nextField: null,
+      question: null,
+      reply: null,
+    };
+  }
+
+  const q = question(next);
+
+  return {
+    session: updated,
+    completed: false,
+    currentField: next,
+    nextField: next,
+    question: q,
+    reply: q,
+  };
+}

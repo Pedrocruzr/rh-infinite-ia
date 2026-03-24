@@ -1,0 +1,16 @@
+import { NextResponse } from "next/server";
+import { runAgent } from "@/lib/agents/coletor-dados-six-box/runner";
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const result = await runAgent(body);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Erro no agente coletor-dados-six-box:", error);
+    return NextResponse.json(
+      { error: "Erro ao processar o agente." },
+      { status: 500 }
+    );
+  }
+}

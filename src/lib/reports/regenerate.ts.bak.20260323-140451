@@ -1,0 +1,41 @@
+// Arquivo gerado automaticamente para regeneração de relatórios.
+import { buildFitCulturalReport as reportBuilder_0 } from "@/lib/agents/analista-fit-cultural/runner";
+import { buildPdiReport as reportBuilder_1 } from "@/lib/agents/analista-pdi/runner";
+import { buildDescricaoCargoCompetenciaReport as reportBuilder_2 } from "@/lib/agents/descricao-cargo-competencia/runner";
+import { buildDesligamentoReport as reportBuilder_3 } from "@/lib/agents/desligamento-humanizado/runner";
+import { buildEntrevistadorAutomatizadoReport as reportBuilder_4 } from "@/lib/agents/entrevistador-automatizado/runner";
+import { buildMapeamentoCompetenciasReport as reportBuilder_5 } from "@/lib/agents/mapeamento-competencias/runner";
+import { buildMentorDinamicasReport as reportBuilder_6 } from "@/lib/agents/mentor-dinamicas/runner";
+import { buildOnboardingReport as reportBuilder_7 } from "@/lib/agents/onboarding-estrategico/runner";
+import { buildClimaReport as reportBuilder_8 } from "@/lib/agents/pesquisa-clima-organizacional/runner";
+import { generateTaxaAderenciaReport as reportBuilder_9 } from "@/lib/agents/taxa-de-aderencia-com-a-vaga/runner";
+
+import { generateDiscReport as reportBuilder_teste_perfil_disc } from "@/lib/agents/teste-perfil-disc/runner";
+export function regenerateReportBySlug(slug: string, rawAnswers: unknown): string {
+  switch (slug) {
+    case "analista-fit-cultural":
+      return reportBuilder_0(rawAnswers as any);
+    case "analista-pdi":
+      return reportBuilder_1(rawAnswers as any);
+    case "descricao-cargo-competencia":
+      return reportBuilder_2(rawAnswers as any);
+    case "desligamento-humanizado":
+      return reportBuilder_3(rawAnswers as any);
+    case "entrevistador-automatizado":
+      return reportBuilder_4(rawAnswers as any);
+    case "mapeamento-competencias":
+      return reportBuilder_5(rawAnswers as any);
+    case "mentor-dinamicas":
+      return reportBuilder_6(rawAnswers as any);
+    case "onboarding-estrategico":
+      return reportBuilder_7(rawAnswers as any);
+    case "pesquisa-clima-organizacional":
+      return reportBuilder_8(rawAnswers as any);
+    case "taxa-de-aderencia-com-a-vaga":
+      return reportBuilder_9(rawAnswers as any);
+    case "teste-perfil-disc":
+      return reportBuilder_teste_perfil_disc(rawAnswers as any);
+    default:
+      throw new Error(`Builder de relatório não cadastrado para o slug: ${slug}`);
+  }
+}

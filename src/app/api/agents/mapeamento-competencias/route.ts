@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const reportMarkdown = buildMapeamentoCompetenciasReport(step.session);
+    const reportMarkdown = buildMapeamentoCompetenciasReport(step.session as any);
 
     const supabase = createAdminClient();
     const now = new Date().toISOString();

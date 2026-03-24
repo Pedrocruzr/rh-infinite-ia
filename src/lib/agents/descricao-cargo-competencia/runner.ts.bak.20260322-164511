@@ -1,0 +1,342 @@
+import type { DescricaoCargoSession } from "./flow";
+
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function normalizeSentence(value: string): string {
+  let text = String(value ?? "").trim();
+
+  text = text
+    .replace(/\s+/g, " ")
+    .replace(/\s+,/g, ",")
+    .replace(/\s+\./g, ".")
+    .replace(/\s+:/g, ":")
+    .replace(/\s+;/g, ";")
+    .trim();
+
+  if (!text) return "";
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+
+  if (!/[.!?]$/.test(text)) {
+    text += ".";
+  }
+
+  return text;
+}
+
+function normalizeItem(value: string): string {
+  return normalizeSentence(value).replace(/[.!?]$/, "");
+}
+
+function splitList(text?: string) {
+  return String(text ?? "")
+    .split(/\n|;|,/)
+    .map((item) => item.replace(/^\d+[\).\-\s]*/, "").trim())
+    .filter(Boolean)
+    .map(normalizeItem);
+}
+
+function splitActivities(text?: string) {
+  return String(text ?? "")
+    .split(/\n|;|,/)
+    .map((item) => item.replace(/^\d+[\).\-\s]*/, "").trim())
+    .filter(Boolean)
+    .map(normalizeSentence);
+}
+
+function unique(items: string[]) {
+  return [...new Set(items)];
+}
+
+function detectCompetenciasComportamentais(
+  activity: string,
+  conhecimentos: string[],
+  habilidades: string[],
+  organizacionais: string[]
+) {
+  const lower = activity.toLowerCase();
+  const baseText = [...conhecimentos, ...habilidades, ...organizacionais].join(" ").toLowerCase();
+  const result: string[] = [];
+
+  if (/atendimento|cliente|fornecedor|visitante|telefone|ligaç|ligac|email|e-mail|recado|comunica/.test(lower)) {
+    result.push("Comunicação", "Clareza", "Escuta", "Cordialidade");
+  }
+
+  if (/agenda|organiza|arquivo|document|cadastro|controle|planilha|relat/.test(lower)) {
+    result.push("Organização", "Atenção", "Disciplina", "Responsabilidade");
+  }
+
+  if (/prazo|acompanh|entrega|demanda|rotina|processo|suporte/.test(lower)) {
+    result.push("Planejamento", "Foco em resultados", "Responsabilidade");
+  }
+
+  if (/análise|analise|confer|valida|chec/.test(lower)) {
+    result.push("Análise crítica", "Atenção", "Critério");
+  }
+
+  if (/atendimento|comunicação|comunicacao|redação|redacao/.test(baseText)) {
+    result.push("Comunicação", "Clareza");
+  }
+
+  if (/controle|processo|rotina|excel|planilha|office|sistema/.test(baseText)) {
+    result.push("Organização", "Atenção", "Disciplina");
+  }
+
+  if (result.length === 0) {
+    result.push("Organização", "Responsabilidade", "Planejamento");
+  }
+
+  return unique(result);
+}
+
+function countIncidence(
+  atividades: string[],
+  conhecimentos: string[],
+  habilidades: string[],
+  organizacionais: string[]
+) {
+  const map = new Map<string, number>();
+
+  for (const atividade of atividades) {
+    const competencias = detectCompetenciasComportamentais(
+      atividade,
+      conhecimentos,
+      habilidades,
+      organizacionais
+    );
+
+    for (const competencia of competencias) {
+      map.set(competencia, (map.get(competencia) ?? 0) + 1);
+    }
+  }
+
+  return [...map.entries()]
+    .map(([competencia, incidencia]) => ({
+      competencia,
+      incidencia,
+    }))
+    .sort((a, b) => b.incidencia - a.incidencia || a.competencia.localeCompare(b.competencia));
+}
+
+function computeGrade(incidencia: number, totalAtividades: number) {
+  const ratio = totalAtividades > 0 ? incidencia / totalAtividades : 0;
+
+  if (ratio >= 0.8) return "Grau 5";
+  if (ratio >= 0.6) return "Grau 4";
+  if (ratio >= 0.4) return "Grau 3";
+  if (ratio >= 0.2) return "Grau 2";
+  return "Grau 1";
+}
+
+function renderList(items: string[]) {
+  return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+}
+
+function buildMissao(cargo: string, atividades: string[]) {
+  if (atividades.length === 0) {
+    return `Executar com qualidade as responsabilidades do cargo de ${cargo}, contribuindo para a organização, continuidade e eficiência das rotinas da função.`;
+  }
+
+  const primeira = atividades[0].replace(/[.!?]$/, "").toLowerCase();
+  return `Executar o cargo de ${cargo} com qualidade, organização e responsabilidade, garantindo ${primeira} e apoiando a continuidade das entregas e dos processos da função.`;
+}
+
+export function buildDescricaoCargoCompetenciaReport(
+  session: DescricaoCargoSession
+): string {
+  const cargo = normalizeItem(session.cargo ?? "Não informado");
+  const atividades = splitActivities(session.atividadesCargo);
+  const conhecimentos = unique(splitList(session.conhecimentosTecnicos));
+  const habilidades = unique(splitList(session.habilidadesTecnicas));
+  const organizacionais = unique(splitList(session.competenciasOrganizacionais));
+  const observacoes =
+    String(session.observacoes ?? "").trim().toLowerCase() === "não" ||
+    String(session.observacoes ?? "").trim().toLowerCase() === "nao"
+      ? ""
+      : normalizeSentence(session.observacoes ?? "");
+
+  const competenciasPorAtividade = atividades.map((atividade, index) => ({
+    atividade: atividade,
+    indice: index + 1,
+    competencias: detectCompetenciasComportamentais(
+      atividade,
+      conhecimentos,
+      habilidades,
+      organizacionais
+    ),
+  }));
+
+  const incidencia = countIncidence(
+    atividades,
+    conhecimentos,
+    habilidades,
+    organizacionais
+  ).map((item) => ({
+    ...item,
+    grau: computeGrade(item.incidencia, atividades.length),
+  }));
+
+  const topComportamentais = incidencia.map((item) => item.competencia);
+  const missao = buildMissao(cargo, atividades);
+  const origemAtividades =
+    session.atividadesOrigem === "usuario"
+      ? "Atividades informadas pelo usuário."
+      : "Atividades sugeridas pelo agente e validadas no fluxo.";
+
+  const matrizFinal = [
+    ...conhecimentos.map((item) => ({
+      tipo: "Técnica — Conhecimento",
+      competencia: item,
+      grau: "Grau esperado conforme rotina do cargo",
+    })),
+    ...habilidades.map((item) => ({
+      tipo: "Técnica — Habilidade",
+      competencia: item,
+      grau: "Grau esperado conforme execução prática",
+    })),
+    ...organizacionais.map((item) => ({
+      tipo: "Organizacional",
+      competencia: item,
+      grau: "Grau esperado conforme cultura e padrão interno",
+    })),
+    ...incidencia.slice(0, 10).map((item) => ({
+      tipo: "Comportamental",
+      competencia: item.competencia,
+      grau: item.grau,
+    })),
+  ];
+
+  return `
+<section>
+  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">DESCRIÇÃO DE CARGO POR COMPETÊNCIA</h1>
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Identificação do cargo</h2>
+  <p style="margin:0 0 8px 0;"><strong>Cargo:</strong> ${escapeHtml(cargo)}</p>
+  <p style="margin:0 0 24px 0;"><strong>Origem das atividades:</strong> ${escapeHtml(origemAtividades)}</p>
+
+  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Missão do cargo</h2>
+  <p style="margin:0 0 24px 0;">${escapeHtml(missao)}</p>
+
+  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">3. Atividades principais do cargo</h2>
+  <p style="margin:0 0 16px 0;">As atividades abaixo foram tratadas como base principal para estruturar a descrição do cargo e derivar as competências esperadas.</p>
+  <ol style="margin:0 0 24px 22px; padding:0;">
+    ${atividades.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+  </ol>
+
+  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">4. Competências técnicas</h2>
+
+  <h3 style="font-size:18px; font-weight:700; margin:0 0 8px 0;">4.1 Conhecimentos técnicos</h3>
+  <p style="margin:0 0 16px 0;">Conhecimentos representam o que a pessoa precisa saber para compreender a rotina, os processos e os conteúdos técnicos do cargo.</p>
+  <ul style="margin:0 0 20px 22px; padding:0;">
+    ${renderList(conhecimentos)}
+  </ul>
+
+  <h3 style="font-size:18px; font-weight:700; margin:0 0 8px 0;">4.2 Habilidades técnicas</h3>
+  <p style="margin:0 0 16px 0;">Habilidades técnicas representam o que a pessoa precisa conseguir executar na prática para entregar resultado com consistência no cargo.</p>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${renderList(habilidades)}
+  </ul>
+
+  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">5. Competências comportamentais derivadas das atividades</h2>
+  <p style="margin:0 0 16px 0;">Nesta etapa, as competências comportamentais foram associadas às atividades reais do cargo. Isso ajuda a mostrar quais comportamentos sustentam a execução prática da função.</p>
+  ${competenciasPorAtividade
+    .map(
+      (item) => `
+        <div style="margin:0 0 22px 0;">
+          <p style="margin:0 0 8px 0;"><strong>Atividade ${item.indice}:</strong> ${escapeHtml(item.atividade)}</p>
+          <ul style="margin:0 0 0 22px; padding:0;">
+            ${renderList(item.competencias)}
+          </ul>
+        </div>
+      `
+    )
+    .join("")}
+
+  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">6. Competências organizacionais</h2>
+  <p style="margin:0 0 16px 0;">Competências organizacionais representam os comportamentos e padrões esperados para manter aderência à cultura, aos processos e à forma de operar da empresa.</p>
+  <ul style="margin:0 0 24px 22px; padding:0;">
+    ${renderList(organizacionais)}
+  </ul>
+
+  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">7. Grau esperado das competências prioritárias</h2>
+  <p style="margin:0 0 16px 0;">O grau abaixo resume o peso relativo de cada competência comportamental no cargo, considerando em quantas atividades ela aparece como necessária para a execução da função.</p>
+  <table style="width:100%; border-collapse:collapse; margin:0 0 24px 0;">
+    <thead>
+      <tr>
+        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Competência</th>
+        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Incidência</th>
+        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Grau</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${incidencia
+        .map(
+          (item) => `
+            <tr>
+              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(item.competencia)}</td>
+              <td style="border:1px solid #ddd; padding:8px;">${item.incidencia}</td>
+              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(item.grau)}</td>
+            </tr>
+          `
+        )
+        .join("")}
+    </tbody>
+  </table>
+
+  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+
+  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">8. Matriz consolidada final</h2>
+  <p style="margin:0 0 16px 0;">A matriz abaixo consolida os elementos centrais do cargo em um único quadro: competências técnicas, competências organizacionais e competências comportamentais prioritárias.</p>
+  <table style="width:100%; border-collapse:collapse; margin:0 0 24px 0;">
+    <thead>
+      <tr>
+        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Tipo</th>
+        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Competência</th>
+        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Grau esperado</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${matrizFinal
+        .map(
+          (item) => `
+            <tr>
+              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(item.tipo)}</td>
+              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(item.competencia)}</td>
+              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(item.grau)}</td>
+            </tr>
+          `
+        )
+        .join("")}
+    </tbody>
+  </table>
+
+  ${
+    observacoes
+      ? `
+        <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+        <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">9. Observações complementares</h2>
+        <p style="margin:0 0 24px 0;">${escapeHtml(observacoes)}</p>
+      `
+      : ""
+  }
+</section>
+`;
+}

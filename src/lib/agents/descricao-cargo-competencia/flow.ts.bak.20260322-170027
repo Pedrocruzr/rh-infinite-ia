@@ -1,0 +1,718 @@
+export type DescricaoCargoField = string;
+
+export type ResponsibilityItem = {
+  atividade: string;
+  oQue?: string;
+  como?: string;
+  paraQue?: string;
+  quando?: string;
+};
+
+export type DescricaoCargoSession = {
+  assessmentId?: string;
+  tituloCargo?: string;
+  area?: string;
+  nivelHierarquico?: string;
+  reportaSeA?: string;
+  interacoesPrincipais?: string;
+
+  temAtividadesMapeadas?: string;
+  atividadesCargo?: string;
+  atividadesOrigem?: "usuario" | "sugestao";
+
+  responsabilidades?: ResponsibilityItem[];
+
+  competenciasOrganizacionais?: string;
+  conhecimentosTecnicos?: string;
+  habilidadesTecnicas?: string;
+  competenciasComportamentais?: string;
+
+  escolaridadeMinima?: string;
+  formacaoDesejavel?: string;
+  experienciaDesejavel?: string;
+  conhecimentosDesejaveis?: string;
+
+  observacoes?: string;
+
+  status?: "in_progress" | "completed";
+  reportStatus?: "pending" | "generated";
+};
+
+function hasVowel(token: string) {
+  return /[aeiouáàâãéêíóôõúü]/i.test(token);
+}
+
+function isComprehensible(value: string) {
+  const text = String(value ?? "").trim();
+  if (!text) return false;
+
+  const tokens = text
+    .split(/\s+/)
+    .map((t) => t.replace(/[^a-zA-ZÀ-ÿ0-9-]/g, ""))
+    .filter(Boolean);
+
+  if (tokens.length === 0) return false;
+
+  const validTokens = tokens.filter((token) => {
+    if (token.length <= 2) return true;
+    if (/\d/.test(token)) return true;
+    return hasVowel(token);
+  });
+
+  return validTokens.length / tokens.length >= 0.6;
+}
+
+function looksStructuredList(value: string) {
+  return /[\n,;•\-]/.test(value) || /\d+\./.test(value);
+}
+
+function normalizeLine(value: string) {
+  const text = String(value ?? "").trim().replace(/\s+/g, " ");
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function splitList(text?: string) {
+  return String(text ?? "")
+    .split(/\n|;|,/)
+    .map((item) => item.replace(/^\d+[\).\-\s]*/, "").trim())
+    .filter(Boolean)
+    .map(normalizeLine);
+}
+
+function unique(items: string[]) {
+  return [...new Set(items)];
+}
+
+function isYes(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["sim", "s", "tenho", "já tenho", "ja tenho", "possuo"].includes(text);
+}
+
+function isNo(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["não", "nao", "n", "não tenho", "nao tenho"].includes(text);
+}
+
+function isValidationLike(value: string) {
+  const text = String(value ?? "").trim().toLowerCase();
+  return ["ok", "sim", "validado", "pode seguir", "seguir", "pode continuar", "certo"].includes(text);
+}
+
+function suggestActivitiesByCargo(cargo?: string) {
+  const lower = String(cargo ?? "").toLowerCase();
+
+  if (/assistente administrativo|auxiliar administrativo|administrativ/.test(lower)) {
+    return [
+      "Controlar rotinas administrativas e financeiras básicas",
+      "Organizar documentos, cadastros e informações do setor",
+      "Elaborar e atualizar planilhas, controles e relatórios",
+      "Apoiar atendimento administrativo a clientes, fornecedores e áreas internas",
+      "Dar suporte às demandas operacionais e ao funcionamento da rotina administrativa"
+    ];
+  }
+
+  if (/recepcion/.test(lower)) {
+    return [
+      "Recepcionar e direcionar clientes, visitantes e fornecedores",
+      "Atender ligações, registrar e encaminhar recados",
+      "Organizar agenda, compromissos e fluxo de atendimento",
+      "Controlar informações de entrada, saída e apoio administrativo da recepção"
+    ];
+  }
+
+  if (/rh|recursos humanos|dp|departamento pessoal/.test(lower)) {
+    return [
+      "Apoiar processos de recrutamento e seleção",
+      "Organizar documentos admissionais, cadastrais e trabalhistas",
+      "Atualizar controles, planilhas e indicadores de RH",
+      "Prestar suporte administrativo a colaboradores e gestores"
+    ];
+  }
+
+  return [
+    `Executar as rotinas principais do cargo de ${cargo ?? "forma estruturada"}`,
+    "Organizar documentos, informações e controles da função",
+    "Acompanhar demandas, prazos e entregas relacionadas ao cargo",
+    "Apoiar o funcionamento da rotina operacional e administrativa"
+  ];
+}
+
+function buildResponsibilitiesFromActivities(atividadesTexto?: string): ResponsibilityItem[] {
+  return unique(splitList(atividadesTexto)).map((atividade) => ({ atividade }));
+}
+
+function parseResponsibilityField(field: string) {
+  const parts = String(field).split(":");
+  if (parts.length !== 3) return null;
+  if (parts[0] !== "responsibility") return null;
+
+  const index = Number(parts[1]);
+  const part = parts[2] as "oQue" | "como" | "paraQue" | "quando";
+
+  if (Number.isNaN(index)) return null;
+  if (!["oQue", "como", "paraQue", "quando"].includes(part)) return null;
+
+  return { index, part };
+}
+
+function nextResponsibilityField(index: number, part: "oQue" | "como" | "paraQue" | "quando") {
+  return `responsibility:${index}:${part}`;
+}
+
+function getQuestion(
+  session: DescricaoCargoSession,
+  field: DescricaoCargoField
+): string {
+  const parsed = parseResponsibilityField(field);
+
+  if (parsed) {
+    const item = session.responsabilidades?.[parsed.index];
+    const atividade = item?.atividade ?? `Responsabilidade ${parsed.index + 1}`;
+
+    if (parsed.part === "oQue") {
+      return `Responsabilidade ${parsed.index + 1}: "${atividade}". O que exatamente é feito nessa responsabilidade?`;
+    }
+
+    if (parsed.part === "como") {
+      return `Responsabilidade ${parsed.index + 1}: "${atividade}". Como essa responsabilidade é executada na prática?`;
+    }
+
+    if (parsed.part === "paraQue") {
+      return `Responsabilidade ${parsed.index + 1}: "${atividade}". Para que essa responsabilidade existe? Qual é a finalidade dela?`;
+    }
+
+    return `Responsabilidade ${parsed.index + 1}: "${atividade}". Quando essa responsabilidade acontece? Ex.: diariamente, semanalmente, conforme demanda, por calendário, por fechamento, etc.`;
+  }
+
+  switch (field) {
+    case "tituloCargo":
+      return "Qual é o título do cargo?";
+    case "area":
+      return `Qual é a área desse cargo${session.tituloCargo ? ` (${session.tituloCargo})` : ""}? Ex.: Administrativo / Apoio à Gestão.`;
+    case "nivelHierarquico":
+      return "Qual é o nível hierárquico do cargo? Ex.: Operacional, Técnico-administrativo, Tático, Estratégico.";
+    case "reportaSeA":
+      return "Para quem esse cargo se reporta diretamente?";
+    case "interacoesPrincipais":
+      return "Quais são as interações principais desse cargo? Ex.: clientes, fornecedores, financeiro, áreas internas, prestadores de serviço.";
+    case "temAtividadesMapeadas":
+      return "Você já tem mapeadas as atividades principais desse cargo? Se sim, responda 'sim'. Se ainda não tiver, responda 'não' que eu vou sugerir com base no cargo.";
+    case "atividadesCargo":
+      return `Perfeito. Agora liste as atividades principais do cargo${session.tituloCargo ? ` (${session.tituloCargo})` : ""}. Pode escrever uma por linha ou separadas por vírgula.`;
+    case "validacaoAtividadesSugeridas":
+      return "Se as atividades sugeridas estiverem corretas, responda 'ok'. Se quiser ajustar, escreva as atividades corrigidas.";
+    case "competenciasOrganizacionais":
+      return "Agora liste as competências organizacionais esperadas para esse cargo, considerando a cultura da empresa. Pode escrever uma por linha ou separadas por vírgula.";
+    case "conhecimentosTecnicos":
+      return "Liste os conhecimentos técnicos necessários para esse cargo. Pode escrever uma por linha ou separadas por vírgula.";
+    case "habilidadesTecnicas":
+      return "Agora liste as habilidades técnicas necessárias para executar esse cargo na prática. Pode escrever uma por linha ou separadas por vírgula.";
+    case "competenciasComportamentais":
+      return "Agora liste as competências comportamentais mais importantes para esse cargo. Pode escrever uma por linha ou separadas por vírgula.";
+    case "escolaridadeMinima":
+      return "Qual é a escolaridade mínima exigida para esse cargo?";
+    case "formacaoDesejavel":
+      return "Qual é a formação desejável para esse cargo?";
+    case "experienciaDesejavel":
+      return "Qual é a experiência desejável para esse cargo?";
+    case "conhecimentosDesejaveis":
+      return "Quais conhecimentos desejáveis devem constar na seção de requisitos? Pode escrever uma por linha ou separadas por vírgula.";
+    case "observacoes":
+      return "Se houver alguma observação complementar importante para enquadramento do cargo, informe agora. Se não houver, responda: não.";
+    default:
+      return "";
+  }
+}
+
+function validateField(field: DescricaoCargoField, value: string) {
+  const text = String(value ?? "").trim();
+  const parsed = parseResponsibilityField(field);
+
+  if (!text) {
+    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+  }
+
+  if (field === "temAtividadesMapeadas") {
+    if (!isYes(text) && !isNo(text)) {
+      return "Responda apenas com 'sim' se já tiver as atividades mapeadas ou 'não' se quiser que eu sugira.";
+    }
+    return null;
+  }
+
+  if (!isComprehensible(text)) {
+    return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+  }
+
+  if (
+    [
+      "atividadesCargo",
+      "competenciasOrganizacionais",
+      "conhecimentosTecnicos",
+      "habilidadesTecnicas",
+      "competenciasComportamentais",
+      "conhecimentosDesejaveis"
+    ].includes(field) &&
+    !looksStructuredList(text)
+  ) {
+    return "Para estruturar corretamente o relatório, preciso dessa resposta em lista. Pode escrever uma por linha ou separadas por vírgula?";
+  }
+
+  if (field === "validacaoAtividadesSugeridas" && !isValidationLike(text) && !looksStructuredList(text)) {
+    return "Se quiser aprovar, responda 'ok'. Se quiser ajustar, escreva as atividades em lista.";
+  }
+
+  if (parsed && text.length < 5) {
+    return "Preciso dessa resposta com um pouco mais de clareza para montar a responsabilidade corretamente. Pode detalhar melhor?";
+  }
+
+  return null;
+}
+
+export function initializeDescricaoCargoSession(): DescricaoCargoSession {
+  return {
+    status: "in_progress",
+    reportStatus: "pending",
+    responsabilidades: []
+  };
+}
+
+function advanceAfterResponsibilities(session: DescricaoCargoSession) {
+  const nextField: DescricaoCargoField = "competenciasOrganizacionais";
+  const question = getQuestion(session, nextField);
+
+  return {
+    session,
+    completed: false,
+    currentField: nextField,
+    nextField,
+    question,
+    reply: question
+  };
+}
+
+export function runDescricaoCargoStep(
+  session: DescricaoCargoSession,
+  answer?: string,
+  currentField?: DescricaoCargoField
+) {
+  if (!currentField) {
+    const firstField: DescricaoCargoField = "tituloCargo";
+    const question = getQuestion(session, firstField);
+
+    return {
+      session,
+      completed: false,
+      currentField: firstField,
+      nextField: firstField,
+      question,
+      reply: question
+    };
+  }
+
+  const raw = String(answer ?? "").trim();
+  const validationError = validateField(currentField, raw);
+
+  if (validationError) {
+    return {
+      session,
+      completed: false,
+      currentField,
+      nextField: currentField,
+      question: getQuestion(session, currentField),
+      reply: validationError
+    };
+  }
+
+  const parsed = parseResponsibilityField(currentField);
+
+  if (parsed) {
+    const responsabilidades = [...(session.responsabilidades ?? [])];
+    const item = { ...(responsabilidades[parsed.index] ?? { atividade: `Responsabilidade ${parsed.index + 1}` }) };
+
+    item[parsed.part] = raw;
+    responsabilidades[parsed.index] = item;
+
+    const updated: DescricaoCargoSession = {
+      ...session,
+      responsabilidades
+    };
+
+    if (parsed.part === "oQue") {
+      const nextField = nextResponsibilityField(parsed.index, "como");
+      const question = getQuestion(updated, nextField);
+
+      return {
+        session: updated,
+        completed: false,
+        currentField: nextField,
+        nextField,
+        question,
+        reply: question
+      };
+    }
+
+    if (parsed.part === "como") {
+      const nextField = nextResponsibilityField(parsed.index, "paraQue");
+      const question = getQuestion(updated, nextField);
+
+      return {
+        session: updated,
+        completed: false,
+        currentField: nextField,
+        nextField,
+        question,
+        reply: question
+      };
+    }
+
+    if (parsed.part === "paraQue") {
+      const nextField = nextResponsibilityField(parsed.index, "quando");
+      const question = getQuestion(updated, nextField);
+
+      return {
+        session: updated,
+        completed: false,
+        currentField: nextField,
+        nextField,
+        question,
+        reply: question
+      };
+    }
+
+    const nextIndex = parsed.index + 1;
+    if (nextIndex < responsabilidades.length) {
+      const nextField = nextResponsibilityField(nextIndex, "oQue");
+      const question = getQuestion(updated, nextField);
+
+      return {
+        session: updated,
+        completed: false,
+        currentField: nextField,
+        nextField,
+        question,
+        reply: question
+      };
+    }
+
+    return advanceAfterResponsibilities(updated);
+  }
+
+  if (currentField === "tituloCargo") {
+    const updated = { ...session, tituloCargo: raw };
+    const nextField: DescricaoCargoField = "area";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "area") {
+    const updated = { ...session, area: raw };
+    const nextField: DescricaoCargoField = "nivelHierarquico";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "nivelHierarquico") {
+    const updated = { ...session, nivelHierarquico: raw };
+    const nextField: DescricaoCargoField = "reportaSeA";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "reportaSeA") {
+    const updated = { ...session, reportaSeA: raw };
+    const nextField: DescricaoCargoField = "interacoesPrincipais";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "interacoesPrincipais") {
+    const updated = { ...session, interacoesPrincipais: raw };
+    const nextField: DescricaoCargoField = "temAtividadesMapeadas";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "temAtividadesMapeadas") {
+    const updated = { ...session, temAtividadesMapeadas: raw };
+
+    if (isYes(raw)) {
+      const nextField: DescricaoCargoField = "atividadesCargo";
+      const question = getQuestion(updated, nextField);
+
+      return {
+        session: updated,
+        completed: false,
+        currentField: nextField,
+        nextField,
+        question,
+        reply: question
+      };
+    }
+
+    const sugestoes = suggestActivitiesByCargo(updated.tituloCargo);
+    const atividadesSugeridas = sugestoes.join("\n");
+
+    const nextSession: DescricaoCargoSession = {
+      ...updated,
+      atividadesCargo: atividadesSugeridas,
+      atividadesOrigem: "sugestao"
+    };
+
+    const nextField: DescricaoCargoField = "validacaoAtividadesSugeridas";
+
+    const reply = [
+      "Com base no cargo informado, estas são as atividades sugeridas:",
+      "",
+      ...sugestoes.map((item, index) => `${index + 1}. ${item}`),
+      "",
+      "Se estiver bom, responda 'ok'. Se quiser ajustar, escreva as atividades corrigidas."
+    ].join("\n");
+
+    return {
+      session: nextSession,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question: getQuestion(nextSession, nextField),
+      reply
+    };
+  }
+
+  if (currentField === "atividadesCargo") {
+    const responsabilidades = buildResponsibilitiesFromActivities(raw);
+    const updated: DescricaoCargoSession = {
+      ...session,
+      atividadesCargo: raw,
+      atividadesOrigem: "usuario",
+      responsabilidades
+    };
+
+    const nextField = nextResponsibilityField(0, "oQue");
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "validacaoAtividadesSugeridas") {
+    const atividadesFinal = isValidationLike(raw) ? session.atividadesCargo ?? "" : raw;
+    const responsabilidades = buildResponsibilitiesFromActivities(atividadesFinal);
+
+    const updated: DescricaoCargoSession = {
+      ...session,
+      atividadesCargo: atividadesFinal,
+      atividadesOrigem: isValidationLike(raw) ? "sugestao" : "usuario",
+      responsabilidades
+    };
+
+    const nextField = nextResponsibilityField(0, "oQue");
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "competenciasOrganizacionais") {
+    const updated = { ...session, competenciasOrganizacionais: raw };
+    const nextField: DescricaoCargoField = "conhecimentosTecnicos";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "conhecimentosTecnicos") {
+    const updated = { ...session, conhecimentosTecnicos: raw };
+    const nextField: DescricaoCargoField = "habilidadesTecnicas";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "habilidadesTecnicas") {
+    const updated = { ...session, habilidadesTecnicas: raw };
+    const nextField: DescricaoCargoField = "competenciasComportamentais";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "competenciasComportamentais") {
+    const updated = { ...session, competenciasComportamentais: raw };
+    const nextField: DescricaoCargoField = "escolaridadeMinima";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "escolaridadeMinima") {
+    const updated = { ...session, escolaridadeMinima: raw };
+    const nextField: DescricaoCargoField = "formacaoDesejavel";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "formacaoDesejavel") {
+    const updated = { ...session, formacaoDesejavel: raw };
+    const nextField: DescricaoCargoField = "experienciaDesejavel";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "experienciaDesejavel") {
+    const updated = { ...session, experienciaDesejavel: raw };
+    const nextField: DescricaoCargoField = "conhecimentosDesejaveis";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "conhecimentosDesejaveis") {
+    const updated = { ...session, conhecimentosDesejaveis: raw };
+    const nextField: DescricaoCargoField = "observacoes";
+    const question = getQuestion(updated, nextField);
+
+    return {
+      session: updated,
+      completed: false,
+      currentField: nextField,
+      nextField,
+      question,
+      reply: question
+    };
+  }
+
+  if (currentField === "observacoes") {
+    const updated: DescricaoCargoSession = {
+      ...session,
+      observacoes: raw,
+      status: "completed",
+      reportStatus: "generated"
+    };
+
+    return {
+      session: updated,
+      completed: true,
+      currentField: null,
+      nextField: null,
+      question: null,
+      reply: null
+    };
+  }
+
+  return {
+    session,
+    completed: false,
+    currentField,
+    nextField: currentField,
+    question: getQuestion(session, currentField),
+    reply: getQuestion(session, currentField)
+  };
+}
+
+export function splitSessionList(text?: string) {
+  return unique(splitList(text));
+}
