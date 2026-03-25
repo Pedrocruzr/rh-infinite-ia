@@ -1,0 +1,1 @@
+zsh: command not found: edroneto@MacBook-Air-de-Pedro

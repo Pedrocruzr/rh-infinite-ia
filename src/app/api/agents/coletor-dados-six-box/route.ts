@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runAgent } from "@/lib/agents/coletor-dados-six-box/runner";
+import { getSessionUser } from "@/lib/auth/session";
 
 type RequestBody = {
   session?: Record<string, any>;
@@ -11,6 +12,18 @@ type RequestBody = {
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getSessionUser();
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          completed: false,
+          reply: "Não autenticado.",
+        },
+        { status: 401 }
+      );
+    }
+
     const body = (await req.json().catch(() => ({}))) as RequestBody;
 
     const result = await runAgent({
@@ -56,7 +69,10 @@ export async function POST(req: NextRequest) {
           "Coletor de Dados Six Box",
         agent_name: "Coletor de Dados Six Box",
         agent_slug: "coletor-dados-six-box",
-        raw_answers: finalSession,
+        raw_answers: {
+          ...finalSession,
+          userId: user.id,
+        },
         report_markdown: reportMarkdown,
         status: "completed",
         report_status: "generated",

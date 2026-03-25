@@ -1,0 +1,30 @@
+
+> rh-infinite-ia@0.1.0 build
+> next build
+
+▲ Next.js 16.2.0 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.1s
+  Running TypeScript ...
+  Finished TypeScript in 2.3s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/55) ...
+  Generating static pages using 7 workers (13/55) 
+  Generating static pages using 7 workers (27/55) 
+  Generating static pages using 7 workers (41/55) 
+⨯ useSearchParams() should be wrapped in a suspense boundary at page "/login". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+    at S (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/server/chunks/ssr/_0sdqb7o._.js:2:2692)
+    at r (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/server/chunks/ssr/_0sdqb7o._.js:4:6760)
+    at /Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/.next/server/chunks/ssr/_0-cb5g6._.js:1:1441
+    at an (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:2:84267)
+    at ai (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:2:86086)
+    at al (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:2:107860)
+    at ao (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:2:105275)
+    at aa (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:2:84619)
+    at ai (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:2:86135)
+    at ai (/Users/pedroneto/Desktop/projetocodex/microsaas/rh-infinite-ia/node_modules/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js:2:104615)
+Error occurred prerendering page "/login". Read more: https://nextjs.org/docs/messages/prerender-error
+Export encountered an error on /login/page: /login, exiting the build.
+⨯ Next.js build worker exited with code: 1 and signal: null

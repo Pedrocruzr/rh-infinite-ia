@@ -1,11 +1,24 @@
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ReactNode } from "react";
 
-export default function InternalAppLayout({
+export default async function InternalAppLayout({
   children,
 }: {
   children: ReactNode;
 }) {
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   return (
     <div className="min-h-screen bg-white text-black">
       <div className="grid min-h-screen grid-cols-[240px_1fr]">
@@ -33,6 +46,11 @@ export default function InternalAppLayout({
               Configurações
             </Link>
           </nav>
+        
+          <div className="mt-8">
+            <SignOutButton />
+          </div>
+
         </aside>
 
         <section>{children}</section>

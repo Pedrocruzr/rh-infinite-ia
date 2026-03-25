@@ -1,10 +1,9 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type JobOpeningsAccess = {
   userId: string | null;
   db: any;
-  mode: "session" | "dev" | "none";
+  mode: "session" | "none";
   error: string | null;
 };
 
@@ -21,17 +20,6 @@ export async function resolveJobOpeningsAccess(): Promise<JobOpeningsAccess> {
       db: supabase,
       mode: "session",
       error: null,
-    };
-  }
-
-  const devUserId = process.env.DEV_USER_ID ?? null;
-
-  if (process.env.NODE_ENV === "development" && devUserId) {
-    return {
-      userId: devUserId,
-      db: createAdminClient(),
-      mode: "dev",
-      error: error?.message ?? null,
     };
   }
 

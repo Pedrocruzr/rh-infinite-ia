@@ -1,16 +1,40 @@
-insert into public.job_openings (
-  user_id,
-  nome_vaga,
-  data_abertura,
-  data_fechamento,
-  status,
-  dias_em_aberto
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+create policy "avatars public read"
+on storage.objects
+for select
+to public
+using (bucket_id = 'avatars');
+
+create policy "avatars authenticated upload own folder"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'avatars'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+create policy "avatars authenticated update own folder"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'avatars'
+  and auth.uid()::text = (storage.foldername(name))[1]
 )
-values (
-  '00000000-0000-0000-0000-000000000001',
-  'Analista de RH',
-  current_date,
-  null,
-  'em_aberto',
-  0
+with check (
+  bucket_id = 'avatars'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+create policy "avatars authenticated delete own folder"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'avatars'
+  and auth.uid()::text = (storage.foldername(name))[1]
 );

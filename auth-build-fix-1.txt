@@ -1,0 +1,92 @@
+
+> rh-infinite-ia@0.1.0 build
+> next build
+
+▲ Next.js 16.2.0 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 3 errors:
+./src/app/cadastro/page.tsx:8:1
+Module not found: Can't resolve '@/lib/auth/password'
+  [90m 6 |[0m
+  [90m 7 |[0m [36mimport[0m { [33mTurnstileWidget[0m } [36mfrom[0m [32m"@/components/auth/turnstile-widget"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { validatePasswordStrength } [36mfrom[0m [32m"@/lib/auth/password"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m"@/lib/supabase/client"[0m;
+  [90m10 |[0m
+  [90m11 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mCadastroPage[0m() {
+
+Import map: aliased to relative './src/lib/auth/password' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/cadastro/page.tsx [Client Component Browser]
+    ./src/app/cadastro/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/cadastro/page.tsx [Client Component SSR]
+    ./src/app/cadastro/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/cadastro/page.tsx:9:1
+Module not found: Can't resolve '@/lib/supabase/client'
+  [90m 7 |[0m [36mimport[0m { [33mTurnstileWidget[0m } [36mfrom[0m [32m"@/components/auth/turnstile-widget"[0m;
+  [90m 8 |[0m [36mimport[0m { validatePasswordStrength } [36mfrom[0m [32m"@/lib/auth/password"[0m;
+[31m[1m>[0m [90m 9 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m"@/lib/supabase/client"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m10 |[0m
+  [90m11 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mCadastroPage[0m() {
+  [90m12 |[0m   [36mconst[0m router = useRouter();
+
+Import map: aliased to relative './src/lib/supabase/client' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/cadastro/page.tsx [Client Component Browser]
+    ./src/app/cadastro/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/cadastro/page.tsx [Client Component SSR]
+    ./src/app/cadastro/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./src/app/login/page.tsx:8:1
+Module not found: Can't resolve '@/lib/supabase/client'
+  [90m 6 |[0m
+  [90m 7 |[0m [36mimport[0m { [33mTurnstileWidget[0m } [36mfrom[0m [32m"@/components/auth/turnstile-widget"[0m;
+[31m[1m>[0m [90m 8 |[0m [36mimport[0m { createClient } [36mfrom[0m [32m"@/lib/supabase/client"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m
+  [90m10 |[0m [36mexport[0m [36mdefault[0m [36mfunction[0m [33mLoginPage[0m() {
+  [90m11 |[0m   [36mconst[0m router = useRouter();
+
+Import map: aliased to relative './src/lib/supabase/client' inside of [project]/
+
+
+Import traces:
+  Client Component Browser:
+    ./src/app/login/page.tsx [Client Component Browser]
+    ./src/app/login/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/login/page.tsx [Client Component SSR]
+    ./src/app/login/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./src/app/cadastro/page.tsx:8:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/cadastro/page.tsx:9:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/app/login/page.tsx:8:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

@@ -1,0 +1,90 @@
+
+> rh-infinite-ia@0.1.0 build
+> next build
+
+▲ Next.js 16.2.0 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.3s
+  Running TypeScript ...
+  Finished TypeScript in 2.5s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/58) ...
+  Generating static pages using 7 workers (14/58) 
+  Generating static pages using 7 workers (28/58) 
+  Generating static pages using 7 workers (43/58) 
+✓ Generating static pages using 7 workers (58/58) in 329ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/agents/analista-custo-contratacao
+├ ƒ /api/agents/analista-diagnostico-six-box
+├ ƒ /api/agents/analista-fit-cultural
+├ ƒ /api/agents/analista-pdi
+├ ƒ /api/agents/coletor-dados-six-box
+├ ƒ /api/agents/custo-contratacao
+├ ƒ /api/agents/descricao-cargo-competencia
+├ ƒ /api/agents/desligamento-humanizado
+├ ƒ /api/agents/entrevistador-automatizado
+├ ƒ /api/agents/execute
+├ ƒ /api/agents/mapeamento-competencias
+├ ƒ /api/agents/mentor-dinamicas
+├ ƒ /api/agents/onboarding-estrategico
+├ ƒ /api/agents/parecer-tecnico-entrevista
+├ ƒ /api/agents/pesquisa-clima-organizacional
+├ ƒ /api/agents/taxa-aderencia-vaga
+├ ƒ /api/agents/taxa-de-aderencia-com-a-vaga
+├ ƒ /api/agents/taxa-produtividade-colaborador
+├ ƒ /api/agents/teste-perfil-comportamental
+├ ƒ /api/agents/teste-perfil-disc
+├ ƒ /api/assessments/[id]/regenerate
+├ ƒ /api/auth/precheck
+├ ƒ /api/debug-auth
+├ ƒ /api/job-openings
+├ ƒ /api/job-openings/[id]
+├ ƒ /api/recrutador/assessments/[id]/regenerate-parecer
+├ ƒ /api/recrutador/relatorio
+├ ƒ /api/support-tickets
+├ ƒ /api/tutorial-videos
+├ ƒ /api/tutorial-videos/[id]
+├ ○ /app/agentes
+├ ƒ /app/agentes/[slug]
+├ ○ /app/agentes/analista-diagnostico-six-box
+├ ○ /app/agentes/analista-fit-cultural
+├ ○ /app/agentes/analista-pdi
+├ ○ /app/agentes/coletor-dados-six-box
+├ ○ /app/agentes/custo-contratacao
+├ ○ /app/agentes/descricao-cargo-competencia
+├ ○ /app/agentes/desligamento-humanizado
+├ ○ /app/agentes/entrevistador-automatizado
+├ ○ /app/agentes/mapeamento-competencias
+├ ○ /app/agentes/mentor-dinamicas
+├ ○ /app/agentes/onboarding-estrategico
+├ ○ /app/agentes/parecer-tecnico-entrevista
+├ ○ /app/agentes/pesquisa-clima-organizacional
+├ ○ /app/agentes/taxa-aderencia-vaga
+├ ○ /app/agentes/taxa-produtividade-colaborador
+├ ○ /app/agentes/teste-perfil-comportamental
+├ ○ /app/agentes/teste-perfil-disc
+├ ○ /app/configuracoes
+├ ○ /app/configuracoes/assinatura
+├ ○ /app/configuracoes/perfil
+├ ○ /app/configuracoes/seguranca
+├ ƒ /app/painel-de-vagas
+├ ○ /app/recrutador/assessments
+├ ƒ /app/recrutador/assessments/[id]
+├ ƒ /app/suporte
+├ ƒ /app/tutorial
+├ ○ /cadastro
+├ ○ /esqueci-senha
+├ ○ /login
+├ ○ /resetar-senha
+└ ○ /verificar-email
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

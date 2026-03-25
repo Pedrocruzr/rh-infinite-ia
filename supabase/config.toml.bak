@@ -151,14 +151,9 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://localhost:3000"
+site_url = "http://127.0.0.1:3000"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = [
-  "http://localhost:3000/auth/callback",
-  "http://localhost:3000/auth/confirm",
-  "http://localhost:3000/resetar-senha",
-  "http://localhost:3000/app/agentes"
-]
+additional_redirect_urls = ["https://127.0.0.1:3000"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to the local API URL (http://127.0.0.1:<port>/auth/v1).
@@ -202,7 +197,7 @@ web3 = 30
 # [auth.captcha]
 # enabled = true
 # provider = "hcaptcha"
-# secret = "xxx"
+# secret = ""
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
@@ -211,7 +206,7 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = true
+enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -246,7 +241,7 @@ otp_expiry = 3600
 # Allow/disallow new user signups via SMS to your project.
 enable_signup = false
 # If enabled, users need to confirm their phone number before signing in.
-enable_confirmations = true
+enable_confirmations = false
 # Template for sending OTP to users
 template = "Your code is {{ .Code }}"
 # Controls the minimum amount of time that must pass before sending another sms otp.
@@ -309,7 +304,7 @@ max_frequency = "5s"
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
 [auth.external.apple]
 enabled = false
-client_id = "xxx"
+client_id = ""
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 # Overrides the default auth redirectUrl.
@@ -322,16 +317,6 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
-[auth.external.google]
-enabled = true
-client_id = "xxx"
-secret = "xxx"
-redirect_uri = ""
-url = ""
-skip_nonce_check = false
-email_optional = false
-
-# Allow Solana wallet holders
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.
 [auth.web3.solana]
