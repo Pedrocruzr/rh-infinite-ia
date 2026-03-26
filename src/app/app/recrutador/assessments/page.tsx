@@ -4,11 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export default async function RecruiterAssessmentsPage() {
   const supabase = createAdminClient();
 
-  await supabase
-    .from("profile_assessments")
-    .delete()
-    .lt("expires_at", new Date().toISOString());
-
   const { data: assessments } = await supabase
     .from("profile_assessments")
     .select("*")
@@ -18,14 +13,13 @@ export default async function RecruiterAssessmentsPage() {
   return (
     <main className="min-h-screen bg-white px-8 py-10 text-black">
       <div className="mx-auto max-w-7xl">
-        <p className="text-sm text-neutral-500">Recrutador</p>
         <h1 className="mt-3 text-5xl font-semibold tracking-tight">
-          Avaliações recebidas
+          Relatórios Stackers
         </h1>
 
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-7 text-amber-900">
           <strong>Aviso:</strong> este relatório ficará disponível por <strong>3 dias</strong> a partir da data de criação.
-          Para evitar perda de informações, recomendamos que o recrutador <strong>copie ou salve o conteúdo</strong> para consulta posterior antes do prazo de expiração.
+          Para evitar perda de informações, recomendamos que o recrutador <strong>copie, salve ou baixe o conteúdo</strong> para consulta posterior antes do prazo de expiração.
         </div>
 
         <div className="mt-8 overflow-hidden rounded-3xl border border-neutral-200">
@@ -48,19 +42,27 @@ export default async function RecruiterAssessmentsPage() {
                         : "—"}
                     </td>
                     <td className="px-6 py-5">
-                      <Link
-                        href={`/app/recrutador/assessments/${assessment.id}`}
-                        className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
-                      >
-                        Abrir
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/app/recrutador/assessments/${assessment.id}`}
+                          className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
+                        >
+                          Abrir
+                        </Link>
+                        <a
+                          href={`/api/recrutador/assessments/${assessment.id}/download`}
+                          className="rounded-xl border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
+                        >
+                          Baixar
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td colSpan={3} className="px-6 py-8 text-neutral-500">
-                    Nenhuma avaliação encontrada.
+                    Nenhum relatório encontrado.
                   </td>
                 </tr>
               )}

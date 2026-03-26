@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import RegenerateReportDialog from "@/components/assessments/regenerate-report-dialog";
+import AssessmentReportContent from "@/components/assessments/assessment-report-content";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -26,7 +27,6 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm text-neutral-500">Recrutador</p>
             <h1 className="mt-3 text-5xl font-semibold tracking-tight">
               Detalhe da avaliação
             </h1>
@@ -37,6 +37,12 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
 
           <div className="flex items-center gap-3">
             {assessment?.id ? <RegenerateReportDialog assessmentId={assessment.id} /> : null}
+            <a
+              href={`/api/recrutador/assessments/${assessment.id}/download`}
+              className="rounded-2xl border border-neutral-300 px-5 py-3 text-sm hover:bg-neutral-50"
+            >
+              Baixar
+            </a>
             <Link
               href="/app/recrutador/assessments"
               className="rounded-2xl border border-neutral-300 px-5 py-3 text-sm hover:bg-neutral-50"
@@ -64,26 +70,7 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white p-10">
-          {assessment.report_markdown ? (
-            <div
-              className="
-                text-black
-                [&_h1]:mb-8 [&_h1]:text-5xl [&_h1]:font-semibold [&_h1]:tracking-tight
-                [&_h2]:mt-12 [&_h2]:mb-6 [&_h2]:text-3xl [&_h2]:font-semibold
-                [&_p]:mb-4 [&_p]:text-[18px] [&_p]:leading-10
-                [&_ul]:mb-6 [&_ul]:list-disc [&_ul]:pl-8
-                [&_li]:mb-2 [&_li]:text-[18px] [&_li]:leading-10
-                [&_table]:mb-8 [&_table]:w-full [&_table]:border-collapse
-                [&_thead_th]:border-b [&_thead_th]:border-neutral-300 [&_thead_th]:px-4 [&_thead_th]:py-4 [&_thead_th]:text-left [&_thead_th]:text-[18px] [&_thead_th]:font-semibold
-                [&_tbody_td]:border-b [&_tbody_td]:border-neutral-200 [&_tbody_td]:px-4 [&_tbody_td]:py-5 [&_tbody_td]:align-top [&_tbody_td]:text-[18px] [&_tbody_td]:leading-10
-                [&_.meta-grid]:mb-10 [&_.meta-grid]:grid [&_.meta-grid]:gap-3
-                [&_.meta-grid>div]:text-[18px] [&_.meta-grid>div]:leading-9
-              "
-              dangerouslySetInnerHTML={{ __html: assessment.report_markdown }}
-            />
-          ) : (
-            <p className="text-neutral-500">Nenhum relatório disponível.</p>
-          )}
+          <AssessmentReportContent assessment={assessment} />
         </div>
       </div>
     </main>
