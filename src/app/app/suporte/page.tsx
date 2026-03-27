@@ -18,7 +18,7 @@ export default async function SuportePage() {
 
     initialTickets = data ?? [];
     accountIdentifier =
-      access.mode === "dev"
+      process.env.NODE_ENV === "development"
         ? `DEV_USER_ID: ${access.userId}`
         : access.userId;
   }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type ProfileFormProps = {
@@ -8,6 +9,7 @@ type ProfileFormProps = {
   email: string;
   initialFullName: string;
   initialAvatarUrl: string;
+  initialCompanyName: string;
 };
 
 export function ProfileForm({
@@ -15,177 +17,227 @@ export function ProfileForm({
   email,
   initialFullName,
   initialAvatarUrl,
+  initialCompanyName,
 }: ProfileFormProps) {
   const supabase = useMemo(() => createClient(), []);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 
   const [fullName, setFullName] = useState(initialFullName);
+  const [companyName, setCompanyName] = useState(initialCompanyName);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  async function uploadAvatarIfNeeded() {
-    if (!selectedFile) {
-      return avatarUrl.trim() || null;
+  function getInitials() {
+    const source = (fullName || email || "U").trim();
+    const parts = source.split(/\s+/).filter(Boolean);
+
+    if (parts.length >= 2) {
+      return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
     }
 
-    const extension = selectedFile.name.split(".").pop()?.toLowerCase() || "jpg";
+    return source.slice(0, 2).toUpperCase();
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setAvatarFile(file);
+
+    if (file) {
+      setAvatarUrl(URL.createObjectURL(file));
+    }
+  }
+
+  async function uploadAvatar(file: File) {
+    const extension = file.name.split(".").pop()?.toLowerCase() || "png";
     const filePath = `${userId}/avatar-${Date.now()}.${extension}`;
 
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(filePath, selectedFile, {
+      .upload(filePath, file, {
         cacheControl: "3600",
         upsert: true,
       });
 
     if (uploadError) {
-      throw uploadError;
+      throw new Error(uploadError.message);
     }
 
     const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
     return data.publicUrl;
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
-    setSuccess("");
-    setError("");
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
 
     try {
-      const finalAvatarUrl = await uploadAvatarIfNeeded();
+      let finalAvatarUrl =
+        initialAvatarUrl && initialAvatarUrl.trim()
+          ? initialAvatarUrl.trim()
+          : null;
 
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          full_name: fullName.trim() || null,
-          avatar_url: finalAvatarUrl,
-        })
-        .eq("id", userId);
-
-      if (profileError) {
-        throw profileError;
+      if (avatarFile) {
+        finalAvatarUrl = await uploadAvatar(avatarFile);
+      } else if (avatarUrl?.trim()) {
+        finalAvatarUrl = avatarUrl.trim();
+      } else {
+        finalAvatarUrl = null;
       }
 
-      if (finalAvatarUrl) {
-        setAvatarUrl(finalAvatarUrl);
-      }
+      const response = await fetch("/api/account/profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: fullName.trim() || null,
+          companyName: companyName.trim() || null,
+          avatarUrl: finalAvatarUrl,
+        }),
+      });
 
-      setSelectedFile(null);
+      const result = await response.json().catch(() => null);
 
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      if (!response.ok) {
+        throw new Error(result?.error || "Erro ao atualizar perfil.");
       }
 
       setSuccess("Perfil atualizado com sucesso.");
+      setAvatarUrl(finalAvatarUrl ?? "");
+      setAvatarFile(null);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao atualizar perfil.");
+      const message =
+        err instanceof Error ? err.message : "Erro ao atualizar perfil.";
+      setError(message);
+      console.error("PROFILE_UPDATE_ERROR:", err);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="rounded-2xl border bg-card p-5 shadow-sm">
-        <h2 className="text-xl font-semibold tracking-tight">Dados do perfil</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Atualize os dados básicos da sua conta.
-        </p>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-3xl border bg-card p-8 shadow-sm"
+    >
+      <div className="space-y-8">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Dados do perfil</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Atualize os dados básicos da sua conta.
+          </p>
+        </div>
 
-        <div className="mt-6 grid gap-4">
-          <label className="flex flex-col gap-2 text-sm">
-            <span className="font-medium">Nome</span>
+        <div className="grid gap-6">
+          <div>
+            <label htmlFor="full_name" className="text-sm font-medium">
+              Nome
+            </label>
             <input
+              id="full_name"
+              type="text"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
+              className="mt-2 h-12 w-full rounded-xl border px-4 text-sm outline-none transition focus:border-neutral-400"
               placeholder="Seu nome"
-              className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
             />
-          </label>
+          </div>
 
-          <label className="flex flex-col gap-2 text-sm">
-            <span className="font-medium">E-mail</span>
+          <div>
+            <label htmlFor="company_name" className="text-sm font-medium">
+              Nome da empresa
+            </label>
             <input
+              id="company_name"
+              type="text"
+              value={companyName}
+              onChange={(event) => setCompanyName(event.target.value)}
+              className="mt-2 h-12 w-full rounded-xl border px-4 text-sm outline-none transition focus:border-neutral-400"
+              placeholder="Nome da empresa"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="email" className="text-sm font-medium">
+              E-mail
+            </label>
+            <input
+              id="email"
+              type="email"
               value={email}
               disabled
-              className="h-11 rounded-xl border bg-muted px-3 text-muted-foreground outline-none"
+              className="mt-2 h-12 w-full rounded-xl border bg-neutral-50 px-4 text-sm text-neutral-500 outline-none"
             />
-          </label>
+          </div>
 
-          <div className="rounded-2xl border bg-background p-4">
+          <div>
             <p className="mb-3 text-sm font-medium">Foto do perfil</p>
 
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt="Avatar"
-                className="mb-4 h-20 w-20 rounded-full border object-cover"
-              />
-            ) : (
-              <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border bg-muted text-xs text-muted-foreground">
-                Sem foto
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Avatar"
+                  className="h-20 w-20 rounded-full border object-cover"
+                />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border bg-neutral-100 text-lg font-semibold text-neutral-700">
+                  {getInitials()}
+                </div>
+              )}
 
-            <div className="flex flex-col gap-3 text-sm">
-              <span className="font-medium">Enviar nova foto</span>
-
-              <input
-                ref={fileInputRef}
-                id="avatar-upload"
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
-                  setSelectedFile(file);
-                }}
-                className="hidden"
-              />
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Avatar</p>
                 <label
                   htmlFor="avatar-upload"
-                  className="inline-flex h-11 cursor-pointer items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted"
+                  className="inline-flex cursor-pointer items-center justify-center rounded-xl border px-4 py-2 text-sm font-medium transition hover:bg-neutral-50"
                 >
                   Escolher foto
                 </label>
-
-                <span className="text-sm text-muted-foreground">
-                  {selectedFile ? selectedFile.name : "Nenhum arquivo selecionado"}
-                </span>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Formatos aceitos: PNG, JPG, JPEG e WEBP.
+                </p>
+                <p className="text-xs text-neutral-500">
+                  {avatarFile ? avatarFile.name : "Nenhum arquivo selecionado"}
+                </p>
               </div>
-
-              <span className="text-xs text-muted-foreground">
-                Formatos aceitos: PNG, JPG, JPEG e WEBP.
-              </span>
             </div>
           </div>
+        </div>
 
-          {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          ) : null}
-
-          {success ? (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-              {success}
-            </div>
-          ) : null}
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-11 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? "Salvando..." : "Salvar alterações"}
-            </button>
+        {error ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
           </div>
+        ) : null}
+
+        {success ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {success}
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex h-11 items-center justify-center rounded-xl bg-black px-5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+          >
+            {saving ? "Salvando..." : "Salvar alterações"}
+          </button>
         </div>
       </div>
     </form>

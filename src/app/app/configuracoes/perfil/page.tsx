@@ -17,11 +17,24 @@ export default async function PerfilPage() {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
+  const { data: rawProfile } = await supabase
     .from("profiles")
     .select("id, full_name, avatar_url")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  const profile = (rawProfile ?? {}) as any;
+
+  const initialCompanyName =
+    typeof user.user_metadata?.company_name === "string"
+      ? user.user_metadata.company_name
+      : "";
+
+  const initialAvatarUrl =
+    profile?.avatar_url ||
+    (typeof user.user_metadata?.avatar_url === "string"
+      ? user.user_metadata.avatar_url
+      : "");
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -46,7 +59,8 @@ export default async function PerfilPage() {
           userId={user.id}
           email={user.email ?? ""}
           initialFullName={profile?.full_name ?? ""}
-          initialAvatarUrl={profile?.avatar_url ?? ""}
+          initialAvatarUrl={initialAvatarUrl}
+          initialCompanyName={initialCompanyName}
         />
       </section>
     </main>
