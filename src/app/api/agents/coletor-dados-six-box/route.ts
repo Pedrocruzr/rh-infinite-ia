@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
         assessmentId: data.id,
       },
       completed: true,
-      reply: "Relatório gerado com sucesso e disponível em Avaliações recebidas.",
+      reply: "Relatório gerado com sucesso e disponível em Relatórios Stackers.",
       reportMarkdown,
       assessmentId: data.id,
     });

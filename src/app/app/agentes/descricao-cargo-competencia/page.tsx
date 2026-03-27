@@ -190,7 +190,7 @@ export default function DescricaoCargoCompetenciaPage() {
     <StandardAgentLayout
       stackerName="Critérios"
       title="Descrição de Cargo por Competência"
-      subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Relatórios Stackers."
       messages={(finished ? [] : messages).map((message) => ({
         id: message.id,
         role: message.role,
@@ -205,7 +205,7 @@ export default function DescricaoCargoCompetenciaPage() {
       }))}
       loading={loading}
       finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+      finishedMessage="Relatório gerado com sucesso e disponível em Relatórios Stackers."
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}

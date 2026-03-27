@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
           completed: true,
           session: finalSession,
           agent: MENTOR_DINAMICAS_AGENT,
-          reply: `O material foi gerado, mas ocorreu um erro ao salvar em Avaliações recebidas. ${error.message}`,
+          reply: `O material foi gerado, mas ocorreu um erro ao salvar em Relatórios Stackers. ${error.message}`,
           reportHtml: null,
         },
         { status: 500 }

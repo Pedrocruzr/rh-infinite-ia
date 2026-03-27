@@ -35,17 +35,11 @@ export async function GET(_request: Request, context: Context) {
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json(
-      { error: "Erro ao carregar relatório" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erro ao carregar relatório" }, { status: 500 });
   }
 
   if (!assessment) {
-    return NextResponse.json(
-      { error: "Relatório não encontrado" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Relatório não encontrado" }, { status: 404 });
   }
 
   const title = `Relatório Stacker - ${assessment.candidate_name || assessment.agent_name || assessment.id}`;
@@ -55,63 +49,48 @@ export async function GET(_request: Request, context: Context) {
 
   const reportHtml = assessment.report_markdown || "<p>Nenhum relatório disponível.</p>";
 
-  const html = `<!DOCTYPE html>
-<html lang="pt-BR">
+  const docHtml = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40"
+      lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(title)}</title>
+    <!--[if gte mso 9]>
+    <xml>
+      <w:WordDocument>
+        <w:View>Print</w:View>
+        <w:Zoom>100</w:Zoom>
+        <w:DoNotOptimizeForBrowser/>
+      </w:WordDocument>
+    </xml>
+    <![endif]-->
     <style>
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; background: #fff; color: #0f172a; }
-      body {
-        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        padding: 32px;
-      }
-      .report-shell {
-        max-width: 1100px;
-        margin: 0 auto;
-      }
-      h1 { margin: 0 0 32px; font-size: 42px; line-height: 1.1; font-weight: 600; }
-      h2 { margin: 48px 0 20px; font-size: 30px; line-height: 1.2; font-weight: 600; }
-      h3 { margin: 40px 0 16px; font-size: 24px; line-height: 1.2; font-weight: 600; }
-      h4 { margin: 28px 0 12px; font-size: 20px; line-height: 1.25; font-weight: 600; }
-      p, li { font-size: 18px; line-height: 1.8; margin: 0 0 14px; }
-      ul, ol { margin: 0 0 24px; padding-left: 28px; }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-        margin: 20px 0 28px;
-      }
+      body { font-family: Arial, Helvetica, sans-serif; padding: 32px; }
+      .report-shell { max-width: 1100px; margin: 0 auto; }
+      h1 { margin: 0 0 32px; font-size: 28pt; line-height: 1.15; font-weight: 700; }
+      h2 { margin: 28px 0 14px; font-size: 20pt; line-height: 1.2; font-weight: 700; }
+      h3 { margin: 22px 0 12px; font-size: 16pt; line-height: 1.2; font-weight: 700; }
+      h4 { margin: 18px 0 10px; font-size: 13pt; line-height: 1.2; font-weight: 700; }
+      p, li { font-size: 11pt; line-height: 1.7; margin: 0 0 10pt; }
+      ul, ol { margin: 0 0 14pt; padding-left: 24pt; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 14pt 0 18pt; }
       th, td {
-        border: 1px solid #e5e7eb;
-        padding: 12px 14px;
+        border: 1px solid #cbd5e1;
+        padding: 8pt 10pt;
         text-align: left;
         vertical-align: top;
-        font-size: 16px;
-        line-height: 1.7;
-        overflow-wrap: anywhere;
+        font-size: 10.5pt;
+        line-height: 1.5;
+        word-wrap: break-word;
       }
-      thead th {
-        background: #f8fafc;
-        font-weight: 600;
-      }
-      img, table, pre, blockquote, section, article, .card, .block {
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-      pre, code {
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-      @page {
-        size: A4;
-        margin: 16mm;
-      }
-      @media print {
-        body { padding: 0; }
-      }
+      thead th { background: #f8fafc; font-weight: 700; }
+      img, table, pre, blockquote, section, article, .card, .block { page-break-inside: avoid; }
+      pre, code { white-space: pre-wrap; word-break: break-word; }
+      @page { size: A4; margin: 16mm; }
     </style>
   </head>
   <body>
@@ -121,12 +100,14 @@ export async function GET(_request: Request, context: Context) {
   </body>
 </html>`;
 
-  return new NextResponse(html, {
+  return new NextResponse(docHtml, {
     status: 200,
     headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": `attachment; filename="relatorio-stacker-${filenameBase}.html"`,
-      "Cache-Control": "private, no-store, max-age=0",
+      "Content-Type": "application/msword; charset=utf-8",
+      "Content-Disposition": `attachment; filename="relatorio-stacker-${filenameBase}.doc"`,
+      "Cache-Control": "no-store, max-age=0",
+      "Pragma": "no-cache",
+      "Expires": "0"
     },
   });
 }

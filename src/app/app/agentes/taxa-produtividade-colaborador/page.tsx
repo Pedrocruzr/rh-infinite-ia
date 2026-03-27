@@ -196,7 +196,7 @@ export default function TaxaProdutividadeColaboradorPage() {
     <StandardAgentLayout
       stackerName="Diagnóstico"
       title="Taxa de Produtividade por Colaborador"
-      subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Relatórios Stackers."
       messages={
         finished
           ? []
@@ -217,7 +217,7 @@ export default function TaxaProdutividadeColaboradorPage() {
       }
       loading={loading}
       finished={finished}
-      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Avaliações recebidas." : ""}
+      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Relatórios Stackers." : ""}
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}

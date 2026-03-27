@@ -37,7 +37,7 @@ export default async function InternalAppLayout({
               Suporte
             </Link>
 <Link href="/app/recrutador/assessments" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
-              Avaliações recebidas
+              Relatórios Stackers
             </Link>
 <Link href="/app/painel-de-vagas" className="block rounded-lg px-3 py-2 hover:bg-neutral-100">
               Painel de Vagas

@@ -186,7 +186,7 @@ export default function AnalistaDiagnosticoSixBoxPage() {
     <StandardAgentLayout
       stackerName="Diagnóstico"
       title="Analista Diagnóstico Six Box"
-      subtitle="Responda uma pergunta por vez. Ao final, o diagnóstico ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, o diagnóstico ficará disponível em Relatórios Stackers."
       messages={
         finished
           ? []
@@ -194,7 +194,7 @@ export default function AnalistaDiagnosticoSixBoxPage() {
       }
       loading={loading}
       finished={finished}
-      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Avaliações recebidas." : ""}
+      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Relatórios Stackers." : ""}
       inputValue={input}
       onInputChange={setInput}
       onSend={() => {

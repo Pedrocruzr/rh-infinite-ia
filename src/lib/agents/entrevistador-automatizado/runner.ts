@@ -317,6 +317,6 @@ export function buildEntrevistadorAutomatizadoReport(
 </table>
 
 <h2>Encerramento técnico</h2>
-<p>Este material foi estruturado para apoiar a condução da entrevista e o registro final da avaliação em Avaliações recebidas.</p>
+<p>Este material foi estruturado para apoiar a condução da entrevista e o registro final da avaliação em Relatórios Stackers.</p>
 `.trim();
 }

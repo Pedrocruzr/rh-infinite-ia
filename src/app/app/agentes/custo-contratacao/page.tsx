@@ -196,7 +196,7 @@ export default function CustoContratacaoPage() {
     <StandardAgentLayout
       stackerName="Diagnóstico"
       title="Custo de Contratação"
-      subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Relatórios Stackers."
       messages={
         finished
           ? []
@@ -217,7 +217,7 @@ export default function CustoContratacaoPage() {
       }
       loading={loading}
       finished={finished}
-      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Avaliações recebidas." : ""}
+      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Relatórios Stackers." : ""}
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}

@@ -231,7 +231,7 @@ export default function ColetorDadosSixBoxPage() {
       }))}
       loading={loading}
       finished={finished}
-      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Avaliações recebidas." : ""}
+      finishedMessage={finished ? "Relatório gerado com sucesso e disponível em Relatórios Stackers." : ""}
       inputValue={input}
       onInputChange={setInput}
       onSend={() => {

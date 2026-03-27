@@ -150,7 +150,7 @@ export function generateProfileReport(session: ProfileSession): string {
   <p>Com base nas respostas registradas, o participante apresentou evidências comportamentais alinhadas ao contexto da vaga informada, com base em motivação declarada, tendência de tomada de decisão e exemplos práticos de competência.</p>
 
   <h2>6. Encerramento</h2>
-  <p>As respostas foram concluídas com sucesso e este relatório foi salvo para consulta do recrutador em Avaliações recebidas.</p>
+  <p>As respostas foram concluídas com sucesso e este relatório foi salvo para consulta do recrutador em Relatórios Stackers.</p>
 </section>
 `.trim();
 }

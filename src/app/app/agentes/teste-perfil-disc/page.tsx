@@ -12,7 +12,7 @@ type GenericSession = Record<string, string | undefined> & {
 
 
 const FINAL_SUCCESS_MESSAGE =
-  "Relatório gerado com sucesso e disponível em Avaliações recebidas.";
+  "Relatório gerado com sucesso e disponível em Relatórios Stackers.";
 
 function removeFirstDuplicateFinalMessage(messages: Message[]): Message[] {
   const duplicatedIndexes = messages
@@ -205,7 +205,7 @@ export default function TestePerfilDiscPage() {
     <StandardAgentLayout
       stackerName="Comportamento"
       title="Teste de Perfil DISC"
-      subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Relatórios Stackers."
       messages={(finished ? [] : removeFirstDuplicateFinalMessage(messages)).map((message) => ({
         id: message.id,
         role: message.role,
@@ -220,7 +220,7 @@ export default function TestePerfilDiscPage() {
       }))}
       loading={loading}
       finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+      finishedMessage="Relatório gerado com sucesso e disponível em Relatórios Stackers."
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}

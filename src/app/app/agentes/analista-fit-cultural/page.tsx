@@ -189,7 +189,7 @@ export default function AnalistaFitCulturalPage() {
     <StandardAgentLayout
       stackerName="Critérios"
       title="Analista Fit Cultural"
-      subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Relatórios Stackers."
       messages={(finished ? [] : messages).map((message) => ({
         id: message.id,
         role: message.role,
@@ -204,7 +204,7 @@ export default function AnalistaFitCulturalPage() {
       }))}
       loading={loading}
       finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+      finishedMessage="Relatório gerado com sucesso e disponível em Relatórios Stackers."
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}

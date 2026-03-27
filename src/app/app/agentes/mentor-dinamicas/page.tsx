@@ -174,7 +174,7 @@ export default function MentorDinamicasPage() {
     <StandardAgentLayout
       stackerName="Recrutamento & Seleção"
       title="Mentor de Dinâmicas"
-      subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Relatórios Stackers."
       messages={finished ? [] : messages.map((message) => (
         {
         id: message.id,
@@ -190,7 +190,7 @@ export default function MentorDinamicasPage() {
       }))}
       loading={loading}
       finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+      finishedMessage="Relatório gerado com sucesso e disponível em Relatórios Stackers."
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}

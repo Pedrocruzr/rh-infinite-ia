@@ -103,7 +103,7 @@ function buildModeloBaseSixBoxHtml() {
   return `
 <section>
   <h1>Questionário Base Six Box</h1>
-  <p>Este material foi estruturado para apoiar a aplicação do questionário Six Box na empresa, com organização visual adequada para leitura, uso interno e salvamento em Avaliações recebidas.</p>
+  <p>Este material foi estruturado para apoiar a aplicação do questionário Six Box na empresa, com organização visual adequada para leitura, uso interno e salvamento em Relatórios Stackers.</p>
 
   <h2>1. Orientação de uso</h2>
   <p>Você pode utilizar este questionário no Google Forms ou no respondi.app.</p>

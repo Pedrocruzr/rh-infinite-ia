@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         session: finalSession,
         agent: ENTREVISTADOR_AUTOMATIZADO_AGENT,
         reply:
-          "Roteiro e relatório gerados com sucesso. O salvamento em Avaliações recebidas não foi realizado porque as variáveis do Supabase não estão configuradas.",
+          "Roteiro e relatório gerados com sucesso. O salvamento em Relatórios Stackers não foi realizado porque as variáveis do Supabase não estão configuradas.",
         reportHtml,
         retentionNotice:
           "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",

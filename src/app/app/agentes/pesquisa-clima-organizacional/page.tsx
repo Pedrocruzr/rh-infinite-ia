@@ -238,7 +238,7 @@ export default function PesquisaClimaOrganizacionalPage() {
       <StandardAgentLayout
         stackerName="Diagnóstico"
         title="Pesquisa de Clima Organizacional"
-        subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Avaliações recebidas."
+        subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Relatórios Stackers."
         messages={(finished ? [] : messages).map((message) => ({
           id: message.id,
           role: message.role,
@@ -253,7 +253,7 @@ export default function PesquisaClimaOrganizacionalPage() {
         }))}
         loading={loading}
         finished={finished}
-        finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+        finishedMessage="Relatório gerado com sucesso e disponível em Relatórios Stackers."
         inputValue={input}
         onInputChange={setInput}
         onSend={() => void sendAnswer()}

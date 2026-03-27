@@ -42,7 +42,7 @@ export default function StandardAgentLayout({
   messages,
   loading = false,
   finished = false,
-  finishedMessage = "Relatório gerado com sucesso e disponível em Avaliações recebidas.",
+  finishedMessage = "Relatório gerado com sucesso e disponível em Relatórios Stackers.",
   inputValue,
   inputPlaceholder = "Digite sua resposta aqui...",
   onInputChange,

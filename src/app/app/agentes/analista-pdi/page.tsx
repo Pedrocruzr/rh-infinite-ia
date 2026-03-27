@@ -151,7 +151,7 @@ export default function AnalistaPDIPage() {
           id: crypto.randomUUID(),
           role: "assistant",
           content: data.done || data.completed
-            ? "Relatório gerado com sucesso e disponível em Avaliações recebidas."
+            ? "Relatório gerado com sucesso e disponível em Relatórios Stackers."
             : data.reply,
         },
       ]);
@@ -185,7 +185,7 @@ export default function AnalistaPDIPage() {
     <StandardAgentLayout
       stackerName="Desenvolvimento"
       title="Analista de PDI"
-      subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Avaliações recebidas."
+      subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Relatórios Stackers."
       messages={(finished ? [] : messages).map((message) => ({
         id: message.id,
         role: message.role,
@@ -200,7 +200,7 @@ export default function AnalistaPDIPage() {
       }))}
       loading={loading}
       finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Avaliações recebidas."
+      finishedMessage="Relatório gerado com sucesso e disponível em Relatórios Stackers."
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}
