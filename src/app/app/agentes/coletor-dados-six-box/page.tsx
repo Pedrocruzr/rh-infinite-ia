@@ -2,6 +2,7 @@
 
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
+import UserMessageActions from "@/components/agents/user-message-actions";
 
 type GenericSession = Record<string, any> & {
   status?: string;
@@ -15,6 +16,7 @@ type Message = {
   role: "assistant" | "user";
   content: string;
   sessionSnapshot?: GenericSession | null;
+  fieldSnapshot?: string | null;
 };
 
 export default function ColetorDadosSixBoxPage() {
@@ -102,6 +104,7 @@ export default function ColetorDadosSixBoxPage() {
       role: "user",
       content: answer,
       sessionSnapshot: session,
+      fieldSnapshot: currentField,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -211,22 +214,10 @@ export default function ColetorDadosSixBoxPage() {
         role: message.role,
         content: message.content,
         actions: message.role === "user" ? (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => editMessage(message.id)}
-              className="rounded-full border px-3 py-1 text-xs"
-            >
-              Editar
-            </button>
-            <button
-              type="button"
-              onClick={() => void copyMessage(message.content)}
-              className="rounded-full border px-3 py-1 text-xs"
-            >
-              Copiar
-            </button>
-          </div>
+          <UserMessageActions
+            onCopy={() => void copyMessage(message.content)}
+            onEdit={() => editMessage(message.id)}
+          />
         ) : undefined,
       }))}
       loading={loading}

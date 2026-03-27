@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ReactNode } from "react";
 import { UserAccountMenu } from "@/components/auth/user-account-menu";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { GlobalWorkspaceSearch } from "@/components/search/global-workspace-search";
 
 export const dynamic = "force-dynamic";
 
@@ -101,27 +102,30 @@ export default async function InternalAppLayout({
     "block rounded-lg px-3 py-2 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100";
 
   return (
-    <div className="min-h-screen bg-card text-foreground dark:bg-neutral-950 dark:text-neutral-100">
+    <div className="min-h-screen bg-white text-black dark:bg-neutral-950 dark:text-neutral-100">
       <div className="grid min-h-screen grid-cols-[240px_1fr]">
-        <aside className="border-r border-border bg-card p-6 dark:border-neutral-800 dark:bg-neutral-950">
-          <p className="text-sm text-muted-foreground dark:text-neutral-400">Workspace</p>
+        <aside className="border-r border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Workspace</p>
           <h1 className="mt-2 text-2xl font-semibold">RH Infinite IA</h1>
 
           <nav className="mt-10 space-y-3">
             <Link href="/app/agentes" className={navLinkClass}>
               Agentes
             </Link>
-            <Link href="/app/tutorial" className={navLinkClass}>
-              Tutorial
-            </Link>
-            <Link href="/app/suporte" className={navLinkClass}>
-              Suporte
-            </Link>
             <Link href="/app/recrutador/assessments" className={navLinkClass}>
               Relatórios Stackers
             </Link>
             <Link href="/app/painel-de-vagas" className={navLinkClass}>
               Painel de Vagas
+            </Link>
+            <Link href="/app/agentes/clt-ia" className={navLinkClass}>
+              CLT IA
+            </Link>
+            <Link href="/app/tutorial" className={navLinkClass}>
+              Tutorial
+            </Link>
+            <Link href="/app/suporte" className={navLinkClass}>
+              Suporte
             </Link>
             <Link href="/app/configuracoes" className={navLinkClass}>
               Configurações
@@ -130,7 +134,9 @@ export default async function InternalAppLayout({
         </aside>
 
         <section className="min-w-0">
-          <div className="flex items-center justify-end border-b border-border bg-card px-6 py-4 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="flex items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-4 dark:border-neutral-800 dark:bg-neutral-950">
+            <GlobalWorkspaceSearch />
+
             <div className="flex items-center gap-3">
               <ThemeToggle />
               <UserAccountMenu

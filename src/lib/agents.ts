@@ -20,6 +20,27 @@ export const agents = [
     shortDescription: "Analisa clima organizacional e sinais do ambiente interno.",
     active: true,
   },
+{
+    name: "CLT IA",
+    slug: "coletor-dados-six-box",
+    category: "Pesquisa",
+    shortDescription: "Busca artigos da CLT em base local e responde com resumo fiel e artigo na íntegra.",
+    active: true,
+  },
+  {
+    name: "Analista de Diagnóstico Six Box",
+    slug: "analista-diagnostico-six-box",
+    category: "Diagnóstico",
+    shortDescription: "Analisa os dados do Six Box para identificar gaps e prioridades.",
+    active: true,
+  },
+  {
+    name: "Analista de Pesquisa de Clima",
+    slug: "clt-ia",
+    category: "Diagnóstico",
+    shortDescription: "Analisa clima organizacional e sinais do ambiente interno.",
+    active: true,
+  },
   {
     name: "Analista de Taxa de Produtividade por Colaborador",
     slug: "taxa-produtividade-colaborador",
@@ -49,10 +70,10 @@ export const agents = [
     active: true,
   },
   {
-    name: "Criador de Descrição de Vagas por Competência",
+    name: "Criador de Descrição de Cargo por Competência",
     slug: "descricao-cargo-competencia",
     category: "Critérios",
-    shortDescription: "Cria descrições de vaga orientadas por competências.",
+    shortDescription: "Cria descrições de cargo orientadas por competências.",
     active: true,
   },
   {

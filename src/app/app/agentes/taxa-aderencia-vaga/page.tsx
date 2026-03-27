@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
+import { validateClientAgentInput } from "@/lib/agents/client-input-guards";
 
 type GenericSession = Record<string, string | undefined> & {
   status?: string;
@@ -111,6 +112,20 @@ export default function TaxaAderenciaVagaPage() {
     if (!input.trim() || !session || loading || finished) return;
 
     const answer = input.trim();
+
+    const validationError = validateClientAgentInput("taxa-aderencia-vaga", currentField ?? null, answer);
+    if (validationError) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: validationError,
+        },
+      ]);
+      setTimeout(() => inputRef.current?.focus(), 0);
+      return;
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),

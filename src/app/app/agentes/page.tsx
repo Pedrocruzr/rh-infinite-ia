@@ -59,7 +59,7 @@ const TITLE_OVERRIDES: Record<string, string> = {
   "custo-contratacao": "Analista de Custo por Contratação",
   "mapeamento-competencias": "Agente de Mapeamento de Competências",
   "analista-fit-cultural": "Analista de Fit Cultural",
-  "descricao-cargo-competencia": "Criador de Descrição de Vagas por Competência",
+  "descricao-cargo-competencia": "Criador de Descrição de Cargo por Competência",
   "entrevistador-automatizado": "Entrevistador Automatizado",
   "mentor-dinamicas": "Mentor de Dinâmicas",
   "teste-perfil-comportamental": "Teste de Perfil Comportamental",

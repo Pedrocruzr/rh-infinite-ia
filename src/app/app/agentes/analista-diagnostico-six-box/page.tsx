@@ -2,6 +2,7 @@
 
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
+import UserMessageActions from "@/components/agents/user-message-actions";
 
 type GenericSession = Record<string, any> & {
   status?: string;
@@ -15,6 +16,7 @@ type Message = {
   role: "assistant" | "user";
   content: string;
   sessionSnapshot?: GenericSession | null;
+  fieldSnapshot?: string | null;
 };
 
 export default function AnalistaDiagnosticoSixBoxPage() {
@@ -75,6 +77,8 @@ export default function AnalistaDiagnosticoSixBoxPage() {
             role: "assistant",
             content,
             sessionSnapshot: data.session ?? null,
+          fieldSnapshot: data.currentField ?? data.nextField ?? null,
+          fieldSnapshot: data.currentField ?? data.nextField ?? null,
           },
         ]);
       } else {
@@ -107,6 +111,7 @@ export default function AnalistaDiagnosticoSixBoxPage() {
       role: "user",
       content: answer,
       sessionSnapshot: session,
+      fieldSnapshot: currentField,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -152,6 +157,8 @@ export default function AnalistaDiagnosticoSixBoxPage() {
             role: "assistant",
             content: reply,
             sessionSnapshot: data.session ?? null,
+          fieldSnapshot: data.currentField ?? data.nextField ?? null,
+          fieldSnapshot: data.currentField ?? data.nextField ?? null,
           },
         ]);
       }
@@ -166,6 +173,8 @@ export default function AnalistaDiagnosticoSixBoxPage() {
               ? error.message
               : "Erro ao processar a resposta.",
           sessionSnapshot: session,
+          fieldSnapshot: currentField,
+          fieldSnapshot: currentField,
         },
       ]);
       setFinished(false);
@@ -182,15 +191,53 @@ export default function AnalistaDiagnosticoSixBoxPage() {
     }
   }
 
+  async function copyMessage(content: string) {
+    try {
+      await navigator.clipboard.writeText(content);
+    } catch {}
+  }
+
+  function editMessage(id: string) {
+    setMessages((prev) => {
+      const index = prev.findIndex((message) => message.id === id);
+      if (index === -1) return prev;
+
+      const target = prev[index];
+      if (target.role !== "user") return prev;
+
+      setInput(target.content);
+      setSession(target.sessionSnapshot ?? session ?? null);
+      setCurrentField(target.fieldSnapshot ?? currentField ?? null);
+
+      return prev.filter((_, i) => i < index);
+    });
+
+    setFinished(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+
   return (
     <StandardAgentLayout
       stackerName="Diagnóstico"
       title="Analista Diagnóstico Six Box"
       subtitle="Responda uma pergunta por vez. Ao final, o diagnóstico ficará disponível em Relatórios Stackers."
       messages={
-        finished
+        (finished
           ? []
           : messages.filter((message) => String(message.content || "").trim() !== "")
+        ).map((message) => ({
+          id: message.id,
+          role: message.role,
+          content: message.content,
+          actions:
+            message.role === "user" ? (
+              <UserMessageActions
+                onCopy={() => void copyMessage(message.content)}
+                onEdit={() => editMessage(message.id)}
+              />
+            ) : undefined,
+        }))
       }
       loading={loading}
       finished={finished}

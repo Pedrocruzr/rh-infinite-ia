@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
+import { validateClientAgentInput } from "@/lib/agents/client-input-guards";
 
 type GenericSession = Record<string, string | undefined> & {
   assessmentId?: string;
@@ -115,6 +116,20 @@ export default function OnboardingEstrategicoPage() {
 
     const answer = input.trim();
 
+    const validationError = validateClientAgentInput("onboarding-estrategico", currentField ?? null, answer);
+    if (validationError) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: validationError,
+        },
+      ]);
+      setTimeout(() => inputRef.current?.focus(), 0);
+      return;
+    }
+
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
@@ -191,7 +206,7 @@ export default function OnboardingEstrategicoPage() {
       stackerName="Desenvolvimento"
       title="Onboarding Estratégico"
       subtitle="Responda uma pergunta por vez. Ao final, o material ficará disponível em Relatórios Stackers."
-      messages={(finished ? [] : messages).map((message) => ({
+      messages={messages.map((message) => ({
         id: message.id,
         role: message.role,
         content: message.content,
