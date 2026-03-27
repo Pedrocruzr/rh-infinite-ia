@@ -17,6 +17,10 @@ function getInitials(fullName: string) {
   return (fullName.slice(0, 2) || "U").toUpperCase();
 }
 
+function formatCredits(value: number) {
+  return new Intl.NumberFormat("pt-BR").format(value);
+}
+
 export function UserAccountMenu({
   fullName,
   companyName,
@@ -29,7 +33,7 @@ export function UserAccountMenu({
 
   return (
     <details className="group relative">
-      <summary className="flex h-12 w-12 cursor-pointer list-none items-center justify-center overflow-hidden rounded-full border border-neutral-300 bg-white text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-neutral-50">
+      <summary className="flex h-12 w-12 cursor-pointer list-none items-center justify-center overflow-hidden rounded-full border border-neutral-300 bg-white text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900">
         {avatarUrl ? (
           <img
             src={avatarUrl}
@@ -41,59 +45,61 @@ export function UserAccountMenu({
         )}
       </summary>
 
-      <div className="absolute right-0 top-14 z-50 w-80 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl">
-        <div className="border-b border-neutral-200 px-5 py-4">
-          <p className="text-base font-semibold text-neutral-900">Minha conta</p>
+      <div className="absolute right-0 top-14 z-50 w-80 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="border-b border-neutral-200 px-5 py-4 dark:border-neutral-800">
+          <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+            Minha conta
+          </p>
         </div>
 
         <div className="space-y-4 px-5 py-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Status da conta
             </p>
-            <p className="mt-1 text-sm font-medium text-neutral-900">
+            <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
               {accountStatus}
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Nome da empresa
             </p>
-            <p className="mt-1 text-sm font-medium text-neutral-900">
+            <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
               {companyName || "Empresa não informada"}
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Perfil
             </p>
-            <p className="mt-1 text-sm font-medium text-neutral-900">
+            <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
               {fullName}
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Assinatura
             </p>
-            <p className="mt-1 text-sm font-medium text-neutral-900">
+            <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
               {planName}
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Saldo de crédito
             </p>
-            <p className="mt-1 text-sm font-medium text-neutral-900">
-              {creditBalance}
+            <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              {formatCredits(creditBalance)}
             </p>
           </div>
         </div>
 
-        <div className="border-t border-neutral-200 px-5 py-4">
+        <div className="border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
           <SignOutButton />
         </div>
       </div>

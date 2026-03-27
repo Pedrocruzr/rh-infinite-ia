@@ -79,13 +79,13 @@ function getAgentsBySlugs(slugs: readonly string[]) {
 
 export default function AgentesPage() {
   return (
-    <main className="min-h-screen bg-white px-8 py-10 text-black">
+    <main className="min-h-screen bg-background px-8 py-10 text-foreground">
       <div className="mx-auto max-w-7xl">
-        <p className="text-sm text-neutral-500">Workspace</p>
+        <p className="text-sm text-muted-foreground">Workspace</p>
         <h1 className="mt-2 text-5xl font-semibold tracking-tight">
           Stackers Agents
         </h1>
-        <p className="mt-4 max-w-3xl text-lg text-neutral-600">
+        <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
           Agentes organizados por stack de decisão para estruturar, selecionar, desenvolver e encerrar com mais clareza.
         </p>
 
@@ -101,7 +101,7 @@ export default function AgentesPage() {
                   <h2 className="text-3xl font-semibold tracking-tight">
                     {section.title}
                   </h2>
-                  <p className="mt-2 text-base text-neutral-600">
+                  <p className="mt-2 text-base text-muted-foreground">
                     {section.subtitle}
                   </p>
                 </div>
@@ -111,9 +111,9 @@ export default function AgentesPage() {
                     <Link
                       key={agent!.slug}
                       href={`/app/agentes/${agent!.slug}`}
-                      className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      className="rounded-[28px] border border-border bg-card p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                     >
-                      <p className="text-sm text-neutral-500">
+                      <p className="text-sm text-muted-foreground">
                         {agent!.category}
                       </p>
 
@@ -121,15 +121,15 @@ export default function AgentesPage() {
                         {TITLE_OVERRIDES[agent!.slug] ?? agent!.name}
                       </h3>
 
-                      <p className="mt-3 text-base leading-7 text-neutral-600">
+                      <p className="mt-3 text-base leading-7 text-muted-foreground">
                         {agent!.shortDescription}
                       </p>
 
                       <div className="mt-6 flex items-center justify-between">
-                        <span className="text-sm text-neutral-500">
+                        <span className="text-sm text-muted-foreground">
                           {agent!.active ? "Ativo" : "Indisponível"}
                         </span>
-                        <span className="text-sm font-medium text-black">
+                        <span className="text-sm font-medium text-foreground">
                           Abrir
                         </span>
                       </div>

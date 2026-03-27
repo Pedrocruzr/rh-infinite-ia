@@ -266,12 +266,12 @@ export default function PesquisaClimaOrganizacionalPage() {
 
       {finished ? (
         <div className="mx-auto mt-4 w-full max-w-5xl px-4 pb-6">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="rounded-2xl border border-white/10 bg-card/5 p-4">
             <button
               type="button"
               onClick={() => void regenerateReport()}
               disabled={loading}
-              className="rounded-xl px-4 py-2 text-sm font-medium border border-white/15 bg-white/10 hover:bg-white/15 disabled:opacity-50"
+              className="rounded-xl px-4 py-2 text-sm font-medium border border-white/15 bg-card/10 hover:bg-card/15 disabled:opacity-50"
             >
               {loading ? "Gerando novamente..." : "Gerar novamente o relatório"}
             </button>
