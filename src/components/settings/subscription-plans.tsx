@@ -12,26 +12,15 @@ type Plan = {
   monthly_credits: number;
 };
 
-type ManualPixInfo = {
-  beneficiary: string;
-  key: string;
-  city: string;
-  instructions: string;
-};
-
-type RequestResult = {
-  plan: {
-    code: string;
-    name: string;
-    price_cents: number;
-    monthly_credits: number;
+type CheckoutResult = {
+  checkout: {
+    customerId: string;
+    paymentId: string;
+    status?: string;
+    invoiceUrl?: string | null;
+    pixQrCode?: string | null;
+    pixCopyPaste?: string | null;
   };
-  ticket: {
-    id: string;
-    subject: string;
-    status: string;
-  };
-  pix: ManualPixInfo;
 };
 
 type Props = {
@@ -54,38 +43,44 @@ export function SubscriptionPlans({
   currentPlanCode,
   currentStatus,
 }: Props) {
-  const [loadingCode, setLoadingCode] = useState<string | null>(null);
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<RequestResult | null>(null);
+  const [result, setResult] = useState<CheckoutResult | null>(null);
 
   const sortedPlans = [...plans].sort(
     (a, b) => order.indexOf(a.code) - order.indexOf(b.code)
   );
 
-  async function handleRequest(planCode: string) {
+  async function startCheckout(planCode: string, method: "PIX" | "CREDIT_CARD") {
     try {
-      setLoadingCode(planCode);
+      const key = `${planCode}:${method}`;
+      setLoadingKey(key);
       setError(null);
 
-      const response = await fetch("/api/account/subscription/request-manual-payment", {
+      const response = await fetch("/api/account/subscription/create-checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ planCode }),
+        body: JSON.stringify({ planCode, method }),
       });
 
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Erro ao solicitar pagamento.");
+        throw new Error(payload?.error || "Erro ao iniciar cobrança.");
       }
 
-      setResult(payload as RequestResult);
+      setResult(payload as CheckoutResult);
+
+      const invoiceUrl = payload?.checkout?.invoiceUrl;
+      if (invoiceUrl) {
+        window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao solicitar pagamento.");
+      setError(err instanceof Error ? err.message : "Erro ao iniciar cobrança.");
     } finally {
-      setLoadingCode(null);
+      setLoadingKey(null);
     }
   }
 
@@ -162,69 +157,59 @@ export function SubscriptionPlans({
                 <p>Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos</p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => void handleRequest(plan.code)}
-                disabled={loadingCode === plan.code || isCurrent}
-                className={`mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium transition ${
-                  isPopular
-                    ? "bg-white text-black hover:opacity-90 disabled:opacity-60 dark:bg-neutral-950 dark:text-neutral-100"
-                    : "border hover:bg-muted disabled:opacity-60"
-                }`}
-              >
-                {isCurrent
-                  ? "Plano atual"
-                  : loadingCode === plan.code
-                    ? "Solicitando..."
-                    : "Solicitar via PIX"}
-              </button>
+              <div className="mt-6 grid gap-2">
+                <button
+                  type="button"
+                  onClick={() => void startCheckout(plan.code, "PIX")}
+                  disabled={loadingKey !== null || isCurrent}
+                  className={`inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium transition ${
+                    isPopular
+                      ? "bg-white text-black hover:opacity-90 disabled:opacity-60 dark:bg-neutral-950 dark:text-neutral-100"
+                      : "border hover:bg-muted disabled:opacity-60"
+                  }`}
+                >
+                  {isCurrent
+                    ? "Plano atual"
+                    : loadingKey === `${plan.code}:PIX`
+                      ? "Gerando PIX..."
+                      : "Pagar com PIX"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void startCheckout(plan.code, "CREDIT_CARD")}
+                  disabled={loadingKey !== null || isCurrent}
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-60"
+                >
+                  {loadingKey === `${plan.code}:CREDIT_CARD`
+                    ? "Abrindo cartão..."
+                    : "Pagar com cartão"}
+                </button>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {result ? (
+      {result?.checkout?.pixCopyPaste ? (
         <div className="mt-6 rounded-2xl border bg-background p-5">
-          <h3 className="text-lg font-semibold">Pagamento manual via PIX</h3>
+          <h3 className="text-lg font-semibold">PIX gerado</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Solicitação registrada com sucesso. Após o pagamento, a liberação da assinatura será feita manualmente.
+            Use o código abaixo no seu banco ou aplicativo de pagamento.
           </p>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border p-4">
-              <p className="text-sm text-muted-foreground">Plano</p>
-              <p className="mt-1 font-semibold">{result.plan.name}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Valor</p>
-              <p className="mt-1 font-semibold">{formatCurrency(result.plan.price_cents)}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Créditos mensais</p>
-              <p className="mt-1 font-semibold">{result.plan.monthly_credits}</p>
-            </div>
-
-            <div className="rounded-2xl border p-4">
-              <p className="text-sm text-muted-foreground">Favorecido</p>
-              <p className="mt-1 font-semibold">{result.pix.beneficiary}</p>
-              <p className="mt-2 text-sm text-muted-foreground">Chave PIX</p>
-              <div className="mt-1 flex items-center gap-2">
-                <p className="font-semibold break-all">{result.pix.key}</p>
-                <button
-                  type="button"
-                  onClick={() => void copy(result.pix.key)}
-                  className="rounded-lg border px-2 py-1 text-xs hover:bg-muted"
-                >
-                  Copiar
-                </button>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">Cidade</p>
-              <p className="mt-1 font-semibold">{result.pix.city}</p>
-            </div>
-          </div>
-
           <div className="mt-4 rounded-2xl border p-4">
-            <p className="text-sm text-muted-foreground">Instruções</p>
-            <p className="mt-2 text-sm leading-6">{result.pix.instructions}</p>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Protocolo da solicitação: {result.ticket.id}
+            <p className="break-all text-sm leading-6">
+              {result.checkout.pixCopyPaste}
             </p>
+
+            <button
+              type="button"
+              onClick={() => void copy(result.checkout.pixCopyPaste || "")}
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border px-4 text-sm hover:bg-muted"
+            >
+              Copiar PIX
+            </button>
           </div>
         </div>
       ) : null}

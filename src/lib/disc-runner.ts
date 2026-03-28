@@ -217,10 +217,10 @@ export function generateDiscReport(session: DiscReportSession): string {
   const analysisText = `${nome}, ${PROFILE_ANALYSIS[dominant]} Combinado a isso, seu perfil secundário de ${PROFILE_SHORT_NAMES[secondary]} reforça características complementares importantes no seu modo de agir e trabalhar.`;
 
   const evidences = [
-    `🔹 ${dominantName} – Predominante`,
+    ` ${dominantName} – Predominante`,
     ...PROFILE_EVIDENCES[dominant],
     "",
-    `🔹 ${secondaryName} – Secundário`,
+    ` ${secondaryName} – Secundário`,
     ...PROFILE_EVIDENCES[secondary],
   ];
 
@@ -250,7 +250,7 @@ export function generateDiscReport(session: DiscReportSession): string {
     tituloAgente: " Relatório de Perfil Comportamental DISC",
     subtitulo: ` Nome: ${nome}`,
     contexto: " Resultado Geral",
-    resumoExecutivo: `Com base nas suas respostas, você apresenta um perfil:\n\n🔹 Dominante: ${dominantName}\n🔹 Secundário: ${secondaryName}`,
+    resumoExecutivo: `Com base nas suas respostas, você apresenta um perfil:\n\n Dominante: ${dominantName}\n Secundário: ${secondaryName}`,
     classificacaoFinal: "",
     nivelRisco: "",
     recomendacaoFinal: "",
@@ -264,7 +264,7 @@ export function generateDiscReport(session: DiscReportSession): string {
         itens: evidences,
       },
       {
-        titulo: "💪 Pontos Fortes",
+        titulo: " Pontos Fortes",
         itens: strengths,
       },
       {
@@ -272,15 +272,15 @@ export function generateDiscReport(session: DiscReportSession): string {
         itens: attention,
       },
       {
-        titulo: "🚀 Estilo de Trabalho",
+        titulo: " Estilo de Trabalho",
         itens: workstyle,
       },
       {
-        titulo: "🧩 Sugestões de Desenvolvimento",
+        titulo: " Sugestões de Desenvolvimento",
         itens: development,
       },
       {
-        titulo: "🏁 Resumo Final",
+        titulo: " Resumo Final",
         descricao: finalSummary,
       },
     ],
