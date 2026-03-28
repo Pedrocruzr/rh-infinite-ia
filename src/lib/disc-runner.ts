@@ -247,20 +247,20 @@ export function generateDiscReport(session: DiscReportSession): string {
   const finalSummary = `${nome}, você apresenta um perfil ${PROFILE_SHORT_NAMES[dominant].toLowerCase()} com apoio secundário de ${PROFILE_SHORT_NAMES[secondary].toLowerCase()}. Essa combinação indica potencial para gerar impacto de forma coerente com seu estilo predominante, especialmente quando inserido em contextos compatíveis com suas forças naturais.`;
 
   return buildMasterAgentReport({
-    tituloAgente: "📊 Relatório de Perfil Comportamental DISC",
-    subtitulo: `👤 Nome: ${nome}`,
-    contexto: "🔎 Resultado Geral",
+    tituloAgente: " Relatório de Perfil Comportamental DISC",
+    subtitulo: ` Nome: ${nome}`,
+    contexto: " Resultado Geral",
     resumoExecutivo: `Com base nas suas respostas, você apresenta um perfil:\n\n🔹 Dominante: ${dominantName}\n🔹 Secundário: ${secondaryName}`,
     classificacaoFinal: "",
     nivelRisco: "",
     recomendacaoFinal: "",
     secoes: [
       {
-        titulo: "🧠 Análise do Perfil",
+        titulo: " Análise do Perfil",
         descricao: analysisText,
       },
       {
-        titulo: "📌 Evidências Comportamentais",
+        titulo: " Evidências Comportamentais",
         itens: evidences,
       },
       {
@@ -268,7 +268,7 @@ export function generateDiscReport(session: DiscReportSession): string {
         itens: strengths,
       },
       {
-        titulo: "⚠️ Pontos de Atenção",
+        titulo: " Pontos de Atenção",
         itens: attention,
       },
       {

@@ -78,7 +78,6 @@ export default function AnalistaDiagnosticoSixBoxPage() {
             content,
             sessionSnapshot: data.session ?? null,
           fieldSnapshot: data.currentField ?? data.nextField ?? null,
-          fieldSnapshot: data.currentField ?? data.nextField ?? null,
           },
         ]);
       } else {
@@ -158,7 +157,6 @@ export default function AnalistaDiagnosticoSixBoxPage() {
             content: reply,
             sessionSnapshot: data.session ?? null,
           fieldSnapshot: data.currentField ?? data.nextField ?? null,
-          fieldSnapshot: data.currentField ?? data.nextField ?? null,
           },
         ]);
       }
@@ -173,7 +171,6 @@ export default function AnalistaDiagnosticoSixBoxPage() {
               ? error.message
               : "Erro ao processar a resposta.",
           sessionSnapshot: session,
-          fieldSnapshot: currentField,
           fieldSnapshot: currentField,
         },
       ]);

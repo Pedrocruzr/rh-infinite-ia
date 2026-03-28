@@ -164,7 +164,7 @@ function buildProfileReport(data: any) {
   const nivel2 = detectEvidenceLevel(resposta2);
   const nivel3 = detectEvidenceLevel(resposta3);
 
-  return `📄 RELATÓRIO DE PERFIL PROFISSIONAL
+  return ` RELATÓRIO DE PERFIL PROFISSIONAL
 
 Candidato: ${nome}
 Vaga de Referência: ${vaga}

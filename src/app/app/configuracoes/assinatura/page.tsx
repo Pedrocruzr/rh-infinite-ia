@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { SubscriptionPlans } from "@/components/settings/subscription-plans";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ function statusClass(status?: string | null) {
       return "border-emerald-200 bg-emerald-50 text-emerald-700";
     case "trialing":
       return "border-sky-200 bg-sky-50 text-sky-700";
+    case "pending_payment":
     case "past_due":
     case "incomplete":
       return "border-amber-200 bg-amber-50 text-amber-700";
@@ -91,6 +93,11 @@ export default async function AssinaturaPage() {
     .order("created_at", { ascending: false })
     .limit(8);
 
+  const { data: plans } = await supabase
+    .from("plans")
+    .select("*")
+    .eq("active", true);
+
   let plan: any = null;
 
   if (subscription?.plan_id) {
@@ -122,6 +129,12 @@ export default async function AssinaturaPage() {
           </Link>
         </div>
 
+        <SubscriptionPlans
+          plans={(plans ?? []) as any[]}
+          currentPlanCode={plan?.code ?? null}
+          currentStatus={subscription?.status ?? null}
+        />
+
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border bg-card p-5 shadow-sm">
             <p className="text-sm text-muted-foreground">Plano atual</p>
@@ -129,7 +142,7 @@ export default async function AssinaturaPage() {
               {plan?.name ?? "Sem plano ativo"}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              {plan ? formatCurrency(plan.price_cents) : "Ative um plano para liberar recursos pagos"}
+              {plan ? formatCurrency(plan.price_cents) : "Escolha um plano para começar"}
             </p>
           </div>
 
@@ -155,9 +168,11 @@ export default async function AssinaturaPage() {
               </span>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              {subscription?.cancel_at_period_end
-                ? "Cancelamento agendado ao fim do período"
-                : "Assinatura em acompanhamento"}
+              {subscription?.status === "pending_payment"
+                ? "Aguardando pagamento manual por PIX"
+                : subscription?.cancel_at_period_end
+                  ? "Cancelamento agendado ao fim do período"
+                  : "Assinatura em acompanhamento"}
             </p>
           </div>
 
@@ -226,10 +241,10 @@ export default async function AssinaturaPage() {
             </div>
 
             <div className="mt-6 rounded-2xl border bg-background p-4">
-              <p className="text-sm text-muted-foreground">Observação</p>
+              <p className="text-sm text-muted-foreground">Consumo estimado</p>
               <p className="mt-2 text-sm leading-6 text-foreground/90">
-                A cobrança e o cancelamento real entram na próxima fase, junto com a integração de billing.
-                Esta tela já mostra os dados reais disponíveis no banco.
+                Tarefa simples consome 1 crédito. Tarefa média consome 2 créditos.
+                Tarefa mais robusta consome de 3 a 4 créditos.
               </p>
             </div>
           </section>
