@@ -3,53 +3,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
-import { WORKSPACE_SEARCH_ITEMS } from "@/lib/workspace-search";
-
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
+import {
+  getDefaultWorkspaceSearchItems,
+  type WorkspaceSearchItem,
+} from "@/lib/workspace-search";
 
 export function GlobalWorkspaceSearch() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const defaultItems = useMemo(() => getDefaultWorkspaceSearchItems(8), []);
 
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-
-  const results = useMemo(() => {
-    const q = normalize(query.trim());
-
-    if (!q) {
-      return WORKSPACE_SEARCH_ITEMS.slice(0, 8);
-    }
-
-    return WORKSPACE_SEARCH_ITEMS
-      .map((item) => {
-        const haystack = normalize(
-          [item.title, item.category, ...(item.keywords ?? [])].join(" ")
-        );
-
-        let score = 0;
-        if (normalize(item.title).includes(q)) score += 8;
-        if (haystack.includes(q)) score += 4;
-
-        const tokens = q.split(/\s+/).filter(Boolean);
-        for (const token of tokens) {
-          if (haystack.includes(token)) score += 2;
-        }
-
-        return { item, score };
-      })
-      .filter((entry) => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map((entry) => entry.item);
-  }, [query]);
+  const [results, setResults] = useState<WorkspaceSearchItem[]>(defaultItems);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -81,11 +50,57 @@ export function GlobalWorkspaceSearch() {
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [query]);
+  }, [query, results]);
+
+  useEffect(() => {
+    const q = query.trim();
+
+    if (!q) {
+      setResults(defaultItems);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(
+          `/api/workspace-search?q=${encodeURIComponent(q)}`,
+          {
+            method: "GET",
+            signal: controller.signal,
+            cache: "no-store",
+          }
+        );
+
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(payload?.error || "Erro ao buscar.");
+        }
+
+        setResults(Array.isArray(payload?.items) ? payload.items : []);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          setResults([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }, 180);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [query, defaultItems]);
 
   function goTo(href: string) {
     setOpen(false);
     setQuery("");
+    setResults(defaultItems);
     router.push(href);
   }
 
@@ -136,10 +151,14 @@ export function GlobalWorkspaceSearch() {
       {open ? (
         <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-50 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
           <div className="max-h-[380px] overflow-y-auto p-2">
-            {results.length ? (
+            {loading ? (
+              <div className="px-3 py-6 text-sm text-neutral-500 dark:text-neutral-400">
+                Buscando...
+              </div>
+            ) : results.length ? (
               results.map((item, index) => (
                 <button
-                  key={`${item.href}-${item.title}`}
+                  key={`${item.href}-${item.title}-${index}`}
                   type="button"
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => goTo(item.href)}

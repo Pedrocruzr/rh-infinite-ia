@@ -3,9 +3,12 @@ export type WorkspaceSearchItem = {
   href: string;
   category: string;
   keywords?: string[];
+  description?: string;
+  source?: "static" | "report" | "job";
+  score?: number;
 };
 
-export const WORKSPACE_SEARCH_ITEMS: WorkspaceSearchItem[] = [
+export const STATIC_WORKSPACE_SEARCH_ITEMS: WorkspaceSearchItem[] = [
   { title: "Agentes", href: "/app/agentes", category: "Navegação", keywords: ["hub", "stackers", "agents"] },
   { title: "Relatórios Stackers", href: "/app/recrutador/assessments", category: "Navegação", keywords: ["relatorios", "assessments", "downloads"] },
   { title: "Painel de Vagas", href: "/app/painel-de-vagas", category: "Navegação", keywords: ["vagas", "jobs"] },
@@ -20,7 +23,7 @@ export const WORKSPACE_SEARCH_ITEMS: WorkspaceSearchItem[] = [
   { title: "Coletor de Dados Six Box", href: "/app/agentes/coletor-dados-six-box", category: "Agente", keywords: ["diagnostico", "six box"] },
   { title: "Analista de Diagnóstico Six Box", href: "/app/agentes/analista-diagnostico-six-box", category: "Agente", keywords: ["diagnostico", "six box"] },
   { title: "Analista de Pesquisa de Clima", href: "/app/agentes/pesquisa-clima-organizacional", category: "Agente", keywords: ["clima", "organizacional"] },
-  { title: "Descrição de Cargo por Competência", href: "/app/agentes/descricao-cargo-competencia", category: "Agente", keywords: ["cargo", "competencias"] },
+  { title: "Criador de Descrição de Cargo por Competência", href: "/app/agentes/descricao-cargo-competencia", category: "Agente", keywords: ["cargo", "competencias"] },
   { title: "Custo de Contratação", href: "/app/agentes/custo-contratacao", category: "Agente", keywords: ["contratacao", "custo"] },
   { title: "Taxa de Produtividade do Colaborador", href: "/app/agentes/taxa-produtividade-colaborador", category: "Agente", keywords: ["produtividade"] },
   { title: "Taxa de Aderência com a Vaga", href: "/app/agentes/taxa-aderencia-vaga", category: "Agente", keywords: ["aderencia", "vaga"] },
@@ -35,3 +38,65 @@ export const WORKSPACE_SEARCH_ITEMS: WorkspaceSearchItem[] = [
   { title: "Analista Fit Cultural", href: "/app/agentes/analista-fit-cultural", category: "Agente", keywords: ["fit", "cultural"] },
   { title: "Desligamento Humanizado", href: "/app/agentes/desligamento-humanizado", category: "Agente", keywords: ["desligamento"] },
 ];
+
+function normalize(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+export function getDefaultWorkspaceSearchItems(limit = 8) {
+  return STATIC_WORKSPACE_SEARCH_ITEMS.slice(0, limit).map((item) => ({
+    ...item,
+    source: item.source ?? "static",
+  }));
+}
+
+export function rankWorkspaceSearchItems(
+  items: WorkspaceSearchItem[],
+  query: string,
+  limit = 10
+) {
+  const q = normalize(query);
+
+  if (!q) {
+    return items.slice(0, limit).map((item) => ({
+      ...item,
+      source: item.source ?? "static",
+      score: item.score ?? 0,
+    }));
+  }
+
+  return items
+    .map((item) => {
+      const haystack = normalize(
+        [
+          item.title,
+          item.category,
+          item.description ?? "",
+          ...(item.keywords ?? []),
+        ].join(" ")
+      );
+
+      let score = 0;
+
+      if (normalize(item.title).includes(q)) score += 12;
+      if (haystack.includes(q)) score += 6;
+
+      const tokens = q.split(/\s+/).filter(Boolean);
+      for (const token of tokens) {
+        if (haystack.includes(token)) score += 2;
+      }
+
+      return {
+        ...item,
+        source: item.source ?? "static",
+        score,
+      };
+    })
+    .filter((item) => (item.score ?? 0) > 0)
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, limit);
+}
