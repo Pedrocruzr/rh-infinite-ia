@@ -51,9 +51,9 @@ export function SubscriptionPlans({
     (a, b) => order.indexOf(a.code) - order.indexOf(b.code)
   );
 
-  async function startCheckout(planCode: string, method: "PIX" | "CREDIT_CARD") {
+  async function startCheckout(planCode: string) {
     try {
-      const key = `${planCode}:${method}`;
+      const key = `${planCode}:SELECT`;
       setLoadingKey(key);
       setError(null);
 
@@ -62,13 +62,13 @@ export function SubscriptionPlans({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ planCode, method }),
+        body: JSON.stringify({ planCode, method: "PIX" }),
       });
 
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Erro ao iniciar cobrança.");
+        throw new Error(payload?.error || "Erro ao escolher plano.");
       }
 
       setResult(payload as CheckoutResult);
@@ -78,7 +78,7 @@ export function SubscriptionPlans({
         window.open(invoiceUrl, "_blank", "noopener,noreferrer");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao iniciar cobrança.");
+      setError(err instanceof Error ? err.message : "Erro ao escolher plano.");
     } finally {
       setLoadingKey(null);
     }
@@ -160,7 +160,7 @@ export function SubscriptionPlans({
               <div className="mt-6 grid gap-2">
                 <button
                   type="button"
-                  onClick={() => void startCheckout(plan.code, "PIX")}
+                  onClick={() => void startCheckout(plan.code)}
                   disabled={loadingKey !== null || isCurrent}
                   className={`inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium transition ${
                     isPopular
@@ -170,20 +170,9 @@ export function SubscriptionPlans({
                 >
                   {isCurrent
                     ? "Plano atual"
-                    : loadingKey === `${plan.code}:PIX`
-                      ? "Gerando PIX..."
-                      : "Pagar com PIX"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => void startCheckout(plan.code, "CREDIT_CARD")}
-                  disabled={loadingKey !== null || isCurrent}
-                  className="inline-flex h-11 w-full items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-60"
-                >
-                  {loadingKey === `${plan.code}:CREDIT_CARD`
-                    ? "Abrindo cartão..."
-                    : "Pagar com cartão"}
+                    : loadingKey === `${plan.code}:SELECT`
+                      ? "Selecionando..."
+                      : "Escolher plano"}
                 </button>
               </div>
             </div>
@@ -193,9 +182,9 @@ export function SubscriptionPlans({
 
       {result?.checkout?.pixCopyPaste ? (
         <div className="mt-6 rounded-2xl border bg-background p-5">
-          <h3 className="text-lg font-semibold">PIX gerado</h3>
+          <h3 className="text-lg font-semibold">Plano selecionado</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Use o código abaixo no seu banco ou aplicativo de pagamento.
+            O próximo passo de pagamento será conectado na etapa final da assinatura.
           </p>
 
           <div className="mt-4 rounded-2xl border p-4">
@@ -208,7 +197,7 @@ export function SubscriptionPlans({
               onClick={() => void copy(result.checkout.pixCopyPaste || "")}
               className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border px-4 text-sm hover:bg-muted"
             >
-              Copiar PIX
+              Copiar
             </button>
           </div>
         </div>
