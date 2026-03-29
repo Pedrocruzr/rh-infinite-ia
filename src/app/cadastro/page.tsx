@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Chrome, LockKeyhole } from "lucide-react";
 
 import { TurnstileWidget } from "@/components/auth/turnstile-widget";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { validatePasswordStrength } from "@/lib/auth/password";
 import { createClient } from "@/lib/supabase/client";
 
@@ -137,126 +140,137 @@ export default function CadastroPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto flex min-h-screen max-w-md items-center px-6 py-10">
-        <div className="w-full rounded-3xl border bg-card p-6 shadow-sm">
-          <div className="mb-6">
-            <h1 className="text-3xl font-semibold tracking-tight">Criar conta</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_24%),linear-gradient(180deg,#020817_0%,#07111f_100%)] text-foreground">
+      <div className="pointer-events-none absolute inset-0 opacity-50 [background-image:linear-gradient(rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.06)_1px,transparent_1px)] [background-size:88px_88px]" />
+      <section className="relative mx-auto flex min-h-screen max-w-7xl items-center justify-center px-6 py-10 lg:px-8">
+        <div className="w-full max-w-3xl rounded-[2rem] border border-white/10 bg-slate-950/70 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.32)] backdrop-blur-xl md:p-10">
+          <div className="w-full max-w-xl">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-400/10 text-sky-200">
+              <LockKeyhole className="h-5 w-5" />
+            </div>
+
+            <h1 className="mt-8 text-3xl font-semibold tracking-[-0.04em] text-white">
+              Criar conta
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
               Use Gmail ou cadastre-se com e-mail e senha.
             </p>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => void handleGoogle()}
-            disabled={loading}
-            className="mb-4 inline-flex h-11 w-full items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
-            title="Continuar com Google"
-          >
-            {loading ? "Abrindo Google..." : "Continuar com Google"}
-          </button>
-
-          <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            <span>ou</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <form onSubmit={handleSignup} className="space-y-4">
-            <label className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">Nome</span>
-              <input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Seu nome"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-                required
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">E-mail</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="voce@empresa.com"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-                required
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">Senha</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Crie uma senha forte"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-                required
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">Confirmar senha</span>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Repita sua senha"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-                required
-              />
-            </label>
-
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={acceptedTerms}
-                onChange={(event) => setAcceptedTerms(event.target.checked)}
-                className="mt-1"
-              />
-              <span>
-                Aceito os{" "}
-                <Link href="/termos" className="text-primary hover:underline">
-                  termos
-                </Link>{" "}
-                e a{" "}
-                <Link href="/privacidade" className="text-primary hover:underline">
-                  política de privacidade
-                </Link>
-                .
-              </span>
-            </label>
-
-            <TurnstileWidget
-              onTokenChange={setTurnstileToken}
-              resetKey={turnstileResetKey}
-            />
-
-            {error ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {error}
-              </div>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+            <Button
+              type="button"
+              onClick={() => void handleGoogle()}
+              disabled={loading || !googleOAuthEnabled}
+              variant="outline"
+              size="lg"
+              className="mt-8 h-12 w-full justify-center rounded-2xl border-white/10 bg-white/6 text-slate-100 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Continuar com Google"
             >
-              {loading ? "Criando..." : "Criar conta"}
-            </button>
-          </form>
+              <Chrome className="h-4 w-4" />
+              {loading ? "Abrindo Google..." : "Continuar com Google"}
+            </Button>
 
-          <p className="mt-4 text-sm text-muted-foreground">
-            Já tem conta?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Entrar
-            </Link>
-          </p>
+            <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-slate-500">
+              <div className="h-px flex-1 bg-white/10" />
+              <span>ou</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+
+            <form onSubmit={handleSignup} className="space-y-5">
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-slate-100">Nome</span>
+                <Input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Seu nome"
+                  className="h-12 rounded-2xl border-white/12 bg-white/8 px-4 text-slate-100 placeholder:text-slate-400"
+                  required
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-slate-100">E-mail</span>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="voce@empresa.com"
+                  className="h-12 rounded-2xl border-white/12 bg-white/8 px-4 text-slate-100 placeholder:text-slate-400"
+                  required
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-slate-100">Senha</span>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Crie uma senha forte"
+                  className="h-12 rounded-2xl border-white/12 bg-white/8 px-4 text-slate-100 placeholder:text-slate-400"
+                  required
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-slate-100">Confirmar senha</span>
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Repita sua senha"
+                  className="h-12 rounded-2xl border-white/12 bg-white/8 px-4 text-slate-100 placeholder:text-slate-400"
+                  required
+                />
+              </label>
+
+              <label className="flex items-start gap-3 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(event) => setAcceptedTerms(event.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-white/20 bg-white/8"
+                />
+                <span>
+                  Aceito os{" "}
+                  <Link href="/termos" className="text-white underline-offset-4 hover:underline">
+                    termos
+                  </Link>{" "}
+                  e a{" "}
+                  <Link href="/privacidade" className="text-white underline-offset-4 hover:underline">
+                    política de privacidade
+                  </Link>
+                  .
+                </span>
+              </label>
+
+              <TurnstileWidget
+                onTokenChange={setTurnstileToken}
+                resetKey={turnstileResetKey}
+              />
+
+              {error ? (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {error}
+                </div>
+              ) : null}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                size="lg"
+                className="h-12 w-full rounded-2xl bg-white text-slate-950 hover:bg-slate-100"
+              >
+                {loading ? "Criando..." : "Criar conta"}
+              </Button>
+            </form>
+
+            <p className="mt-6 text-sm text-slate-400">
+              Já tem conta?{" "}
+              <Link href="/login" className="font-medium text-white underline-offset-4 hover:underline">
+                Entrar
+              </Link>
+            </p>
+          </div>
         </div>
       </section>
     </main>
