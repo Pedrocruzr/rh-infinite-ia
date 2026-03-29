@@ -49,3 +49,4 @@ diagnostico-*.txt
 supabase-status.txt
 *build*.txt
 *.bak.*
+.env*.local

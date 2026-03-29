@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type Body = {
   fullName?: string | null;
   companyName?: string | null;
+  documentNumber?: string | null;
   avatarUrl?: string | null;
 };
+
+function normalizeDocument(value: string | null | undefined) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  return digits;
+}
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -28,20 +34,28 @@ export async function POST(request: Request) {
     typeof body.companyName === "string" ? body.companyName.trim() : "";
   const avatarUrl =
     typeof body.avatarUrl === "string" ? body.avatarUrl.trim() : "";
+  const documentNumber = normalizeDocument(body.documentNumber);
 
-  const admin = createAdminClient();
+  if (
+    documentNumber &&
+    documentNumber.length !== 11 &&
+    documentNumber.length !== 14
+  ) {
+    return NextResponse.json(
+      { error: "Informe um CPF ou CNPJ válido." },
+      { status: 400 }
+    );
+  }
 
-  const profilePayload = {
-    id: user.id,
-    email: user.email ?? null,
-    full_name: fullName || null,
-    avatar_url: avatarUrl || null,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { error: profileError } = await admin
-    .from("profiles")
-    .upsert(profilePayload, { onConflict: "id" });
+  const { data: profileData, error: profileError } = await supabase.rpc(
+    "upsert_my_profile",
+    {
+      p_email: user.email ?? null,
+      p_full_name: fullName || null,
+      p_avatar_url: avatarUrl || null,
+      p_document_number: documentNumber,
+    }
+  );
 
   if (profileError) {
     return NextResponse.json(
@@ -70,7 +84,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    profile: profilePayload,
+    profile: profileData,
     userMetadata: nextUserMetadata,
   });
 }

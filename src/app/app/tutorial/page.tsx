@@ -1,15 +1,12 @@
 import { TutorialPageClient } from "@/components/tutorial/tutorial-page-client";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { isTutorialAdmin } from "@/lib/auth/tutorial-admin";
+import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-function isTutorialAdminEnabled() {
-  return process.env.NODE_ENV === "development" || process.env.TUTORIAL_ADMIN_ENABLED === "true";
-}
-
 export default async function TutorialPage() {
-  const supabase = createAdminClient();
-  const adminEnabled = isTutorialAdminEnabled();
+  const supabase = await createClient();
+  const adminEnabled = await isTutorialAdmin();
 
   let query = supabase
     .from("tutorial_videos")

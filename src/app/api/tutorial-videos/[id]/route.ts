@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
-
-function isTutorialAdminEnabled() {
-  return process.env.NODE_ENV === "development" || process.env.TUTORIAL_ADMIN_ENABLED === "true";
-}
+import { isTutorialAdmin } from "@/lib/auth/tutorial-admin";
+import { createClient } from "@/lib/supabase/server";
 
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isTutorialAdminEnabled()) {
+  if (!(await isTutorialAdmin())) {
     return NextResponse.json(
       { error: "Área de admin do tutorial indisponível." },
       { status: 403 }
@@ -18,7 +15,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const { error } = await supabase
     .from("tutorial_videos")

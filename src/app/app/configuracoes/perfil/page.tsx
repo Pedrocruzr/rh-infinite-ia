@@ -19,7 +19,7 @@ export default async function PerfilPage() {
 
   const { data: rawProfile } = await supabase
     .from("profiles")
-    .select("id, full_name, avatar_url")
+    .select("id, full_name, avatar_url, document_number")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -61,6 +61,7 @@ export default async function PerfilPage() {
           initialFullName={profile?.full_name ?? ""}
           initialAvatarUrl={initialAvatarUrl}
           initialCompanyName={initialCompanyName}
+          initialDocumentNumber={profile?.document_number ?? ""}
         />
       </section>
     </main>

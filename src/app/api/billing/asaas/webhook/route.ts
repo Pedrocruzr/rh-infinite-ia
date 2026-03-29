@@ -15,9 +15,9 @@ export async function POST(request: Request) {
     }
 
     const payload = await request.json().catch(() => null);
-    await handleAsaasWebhook(payload);
+    const result = await handleAsaasWebhook(payload);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, result });
   } catch (error) {
     return NextResponse.json(
       {

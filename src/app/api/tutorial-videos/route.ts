@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { isTutorialAdmin } from "@/lib/auth/tutorial-admin";
+import { createClient } from "@/lib/supabase/server";
 import { extractYouTubeVideoId } from "@/lib/tutorial/utils";
 
-function isTutorialAdminEnabled() {
-  return process.env.NODE_ENV === "development" || process.env.TUTORIAL_ADMIN_ENABLED === "true";
-}
-
 export async function GET() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
+  const adminEnabled = await isTutorialAdmin();
 
   let query = supabase
     .from("tutorial_videos")
@@ -16,7 +14,7 @@ export async function GET() {
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
-  if (!isTutorialAdminEnabled()) {
+  if (!adminEnabled) {
     query = query.eq("is_published", true);
   }
 
@@ -33,14 +31,14 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isTutorialAdminEnabled()) {
+  if (!(await isTutorialAdmin())) {
     return NextResponse.json(
       { error: "Área de admin do tutorial indisponível." },
       { status: 403 }
     );
   }
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const body = await request.json();
 
   const title = String(body?.title ?? "").trim();

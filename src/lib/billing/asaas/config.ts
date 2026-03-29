@@ -1,14 +1,43 @@
+function clean(value?: string) {
+  return value?.trim() || "";
+}
+
+function resolveEnvValue(primary?: string, previewOverride?: string) {
+  const main = clean(primary);
+  const preview = clean(previewOverride);
+  const isPreview = clean(process.env.VERCEL_ENV) === "preview";
+
+  if (isPreview && preview) {
+    return preview;
+  }
+
+  return main;
+}
+
 export function getAsaasConfig() {
   return {
-    apiKey: process.env.ASAAS_API_KEY?.trim() || "",
-    baseUrl: process.env.ASAAS_BASE_URL?.trim() || "",
-    webhookToken: process.env.ASAAS_WEBHOOK_TOKEN?.trim() || "",
+    apiKey: resolveEnvValue(
+      process.env.ASAAS_API_KEY,
+      process.env.ASAAS_PREVIEW_API_KEY
+    ),
+    baseUrl: resolveEnvValue(
+      process.env.ASAAS_BASE_URL,
+      process.env.ASAAS_PREVIEW_BASE_URL
+    ),
+    webhookToken: resolveEnvValue(
+      process.env.ASAAS_WEBHOOK_TOKEN,
+      process.env.ASAAS_PREVIEW_WEBHOOK_TOKEN
+    ),
     successUrl:
-      process.env.NEXT_PUBLIC_BILLING_SUCCESS_URL?.trim() ||
-      "/app/configuracoes/assinatura",
+      resolveEnvValue(
+        process.env.NEXT_PUBLIC_BILLING_SUCCESS_URL,
+        process.env.NEXT_PUBLIC_BILLING_PREVIEW_SUCCESS_URL
+      ) || "/app/configuracoes/assinatura",
     cancelUrl:
-      process.env.NEXT_PUBLIC_BILLING_CANCEL_URL?.trim() ||
-      "/app/configuracoes/assinatura",
+      resolveEnvValue(
+        process.env.NEXT_PUBLIC_BILLING_CANCEL_URL,
+        process.env.NEXT_PUBLIC_BILLING_PREVIEW_CANCEL_URL
+      ) || "/app/configuracoes/assinatura",
   };
 }
 

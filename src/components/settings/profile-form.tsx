@@ -10,7 +10,31 @@ type ProfileFormProps = {
   initialFullName: string;
   initialAvatarUrl: string;
   initialCompanyName: string;
+  initialDocumentNumber: string;
 };
+
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function formatDocument(value: string) {
+  const digits = onlyDigits(value);
+
+  if (digits.length <= 11) {
+    return digits
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2")
+      .slice(0, 14);
+  }
+
+  return digits
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2")
+    .slice(0, 18);
+}
 
 export function ProfileForm({
   userId,
@@ -18,12 +42,16 @@ export function ProfileForm({
   initialFullName,
   initialAvatarUrl,
   initialCompanyName,
+  initialDocumentNumber,
 }: ProfileFormProps) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
 
   const [fullName, setFullName] = useState(initialFullName);
   const [companyName, setCompanyName] = useState(initialCompanyName);
+  const [documentNumber, setDocumentNumber] = useState(
+    formatDocument(initialDocumentNumber)
+  );
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -76,6 +104,15 @@ export function ProfileForm({
     setSuccess(null);
 
     try {
+      const normalizedDocument = onlyDigits(documentNumber);
+      if (
+        normalizedDocument &&
+        normalizedDocument.length !== 11 &&
+        normalizedDocument.length !== 14
+      ) {
+        throw new Error("Informe um CPF ou CNPJ válido.");
+      }
+
       let finalAvatarUrl =
         initialAvatarUrl && initialAvatarUrl.trim()
           ? initialAvatarUrl.trim()
@@ -97,6 +134,7 @@ export function ProfileForm({
         body: JSON.stringify({
           fullName: fullName.trim() || null,
           companyName: companyName.trim() || null,
+          documentNumber: normalizedDocument || null,
           avatarUrl: finalAvatarUrl,
         }),
       });
@@ -110,6 +148,7 @@ export function ProfileForm({
       setSuccess("Perfil atualizado com sucesso.");
       setAvatarUrl(finalAvatarUrl ?? "");
       setAvatarFile(null);
+      setDocumentNumber(formatDocument(normalizedDocument));
       router.refresh();
     } catch (err) {
       const message =
@@ -161,6 +200,24 @@ export function ProfileForm({
               className="mt-2 h-12 w-full rounded-xl border px-4 text-sm outline-none transition focus:border-neutral-400"
               placeholder="Nome da empresa"
             />
+          </div>
+
+          <div>
+            <label htmlFor="document_number" className="text-sm font-medium">
+              CPF ou CNPJ
+            </label>
+            <input
+              id="document_number"
+              type="text"
+              inputMode="numeric"
+              value={documentNumber}
+              onChange={(event) => setDocumentNumber(formatDocument(event.target.value))}
+              className="mt-2 h-12 w-full rounded-xl border px-4 text-sm outline-none transition focus:border-neutral-400"
+              placeholder="Digite seu CPF ou CNPJ"
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Esse dado é necessário para gerar cobranças no Asaas.
+            </p>
           </div>
 
           <div>

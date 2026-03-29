@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createAsaasCheckout } from "@/lib/billing/asaas/service";
 import type { BillingCheckoutMethod } from "@/lib/billing/asaas/types";
 
@@ -9,10 +8,14 @@ type Body = {
   method?: BillingCheckoutMethod;
 };
 
+function normalizeDocument(value: unknown) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return digits || null;
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
-    const admin = createAdminClient();
 
     const {
       data: { user },
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Plano não informado." }, { status: 400 });
     }
 
-    const { data: plan, error: planError } = await admin
+    const { data: plan, error: planError } = await supabase
       .from("plans")
       .select("*")
       .eq("code", planCode)
@@ -45,11 +48,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Plano não encontrado." }, { status: 404 });
     }
 
-    const { data: profile } = await admin
+    const { data: profile } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
       .maybeSingle();
+
+    const documentNumber = normalizeDocument((profile as any)?.document_number);
+
+    if (!documentNumber || ![11, 14].includes(documentNumber.length)) {
+      return NextResponse.json(
+        {
+          error:
+            "Preencha CPF ou CNPJ no Perfil antes de continuar com a assinatura.",
+        },
+        { status: 400 }
+      );
+    }
+
 
     const result = await createAsaasCheckout({
       userId: user.id,
@@ -63,6 +79,7 @@ export async function POST(request: Request) {
         typeof user.user_metadata?.company_name === "string"
           ? user.user_metadata.company_name
           : null,
+      cpfCnpj: documentNumber,
       planCode: plan.code,
       planName: plan.name,
       planId: plan.id,

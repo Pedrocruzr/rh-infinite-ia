@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type Plan = {
   id: string;
@@ -29,6 +29,8 @@ type Props = {
   currentStatus?: string | null;
 };
 
+type BillingMethod = "PIX" | "CREDIT_CARD";
+
 function formatCurrency(cents: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -46,14 +48,26 @@ export function SubscriptionPlans({
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CheckoutResult | null>(null);
+  const [selectedPlanCode, setSelectedPlanCode] = useState<string | null>(null);
 
   const sortedPlans = [...plans].sort(
     (a, b) => order.indexOf(a.code) - order.indexOf(b.code)
   );
 
-  async function startCheckout(planCode: string) {
+  const selectedPlan = useMemo(
+    () => sortedPlans.find((plan) => plan.code === selectedPlanCode) ?? null,
+    [sortedPlans, selectedPlanCode]
+  );
+
+  function selectPlan(planCode: string) {
+    setSelectedPlanCode(planCode);
+    setError(null);
+    setResult(null);
+  }
+
+  async function startCheckout(planCode: string, method: BillingMethod) {
     try {
-      const key = `${planCode}:SELECT`;
+      const key = `${planCode}:${method}`;
       setLoadingKey(key);
       setError(null);
 
@@ -62,7 +76,7 @@ export function SubscriptionPlans({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ planCode, method: "PIX" }),
+        body: JSON.stringify({ planCode, method }),
       });
 
       const payload = await response.json().catch(() => null);
@@ -109,6 +123,7 @@ export function SubscriptionPlans({
             ["active", "trialing", "ativo"].includes(
               (currentStatus || "").toLowerCase()
             );
+          const isSelected = selectedPlanCode === plan.code;
 
           return (
             <div
@@ -117,7 +132,7 @@ export function SubscriptionPlans({
                 isPopular
                   ? "border-neutral-900 bg-neutral-950 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-950"
                   : "bg-background"
-              }`}
+              } ${isSelected ? "ring-2 ring-neutral-400" : ""}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -160,7 +175,7 @@ export function SubscriptionPlans({
               <div className="mt-6 grid gap-2">
                 <button
                   type="button"
-                  onClick={() => void startCheckout(plan.code)}
+                  onClick={() => selectPlan(plan.code)}
                   disabled={loadingKey !== null || isCurrent}
                   className={`inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium transition ${
                     isPopular
@@ -170,8 +185,8 @@ export function SubscriptionPlans({
                 >
                   {isCurrent
                     ? "Plano atual"
-                    : loadingKey === `${plan.code}:SELECT`
-                      ? "Selecionando..."
+                    : isSelected
+                      ? "Plano selecionado"
                       : "Escolher plano"}
                 </button>
               </div>
@@ -180,11 +195,63 @@ export function SubscriptionPlans({
         })}
       </div>
 
-      {result?.checkout?.pixCopyPaste ? (
+      {selectedPlan ? (
         <div className="mt-6 rounded-2xl border bg-background p-5">
           <h3 className="text-lg font-semibold">Plano selecionado</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            O próximo passo de pagamento será conectado na etapa final da assinatura.
+            Agora escolha a forma de pagamento.
+          </p>
+
+          <div className="mt-4 rounded-2xl border p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium">{selectedPlan.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedPlan.monthly_credits} créditos mensais
+                </p>
+              </div>
+              <p className="text-lg font-semibold">
+                {formatCurrency(selectedPlan.price_cents)}
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => void startCheckout(selectedPlan.code, "PIX")}
+                disabled={loadingKey !== null}
+                className="inline-flex h-11 items-center justify-center rounded-xl border bg-black px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+              >
+                {loadingKey === `${selectedPlan.code}:PIX`
+                  ? "Gerando PIX..."
+                  : "Pagar com PIX"}
+              </button>
+
+
+              <button
+                type="button"
+                onClick={() => void startCheckout(selectedPlan.code, "CREDIT_CARD")}
+                disabled={loadingKey !== null}
+                className="inline-flex h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-60"
+              >
+                {loadingKey === `${selectedPlan.code}:CREDIT_CARD`
+                  ? "Abrindo cartão..."
+                  : "Cartão de crédito"}
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs text-muted-foreground">
+              PIX e cartão de crédito disponíveis. A cobrança abre em nova aba quando o Asaas retornar invoiceUrl.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {result?.checkout?.pixCopyPaste ? (
+        <div className="mt-6 rounded-2xl border bg-background p-5">
+          <h3 className="text-lg font-semibold">PIX gerado</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Se a janela da cobrança abriu, você também pode concluir por lá.
           </p>
 
           <div className="mt-4 rounded-2xl border p-4">
@@ -197,7 +264,7 @@ export function SubscriptionPlans({
               onClick={() => void copy(result.checkout.pixCopyPaste || "")}
               className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border px-4 text-sm hover:bg-muted"
             >
-              Copiar
+              Copiar código PIX
             </button>
           </div>
         </div>

@@ -13,6 +13,7 @@ export default function CadastroPage() {
   const supabase = useMemo(() => createClient(), []);
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const googleOAuthEnabled = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === "true";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -67,6 +68,7 @@ export default function CadastroPage() {
           : "Não foi possível continuar com o Google."
       );
       setTurnstileResetKey((current) => current + 1);
+    } finally {
       setLoading(false);
     }
   }
@@ -147,11 +149,12 @@ export default function CadastroPage() {
 
           <button
             type="button"
-            onClick={handleGoogle}
+            onClick={() => void handleGoogle()}
             disabled={loading}
             className="mb-4 inline-flex h-11 w-full items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
+            title="Continuar com Google"
           >
-            Continuar com Gmail
+            {loading ? "Abrindo Google..." : "Continuar com Google"}
           </button>
 
           <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
