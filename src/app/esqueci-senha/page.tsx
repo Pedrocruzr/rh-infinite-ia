@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { LockKeyhole } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
 export default function EsqueciSenhaPage() {
@@ -65,56 +68,64 @@ export default function EsqueciSenhaPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto flex min-h-screen max-w-md items-center px-6 py-10">
-        <div className="w-full rounded-3xl border bg-card p-6 shadow-sm">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Esqueci minha senha
-          </h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Informe seu e-mail para receber o link seguro de redefinição.
-          </p>
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_24%),linear-gradient(180deg,#020817_0%,#07111f_100%)] text-foreground">
+      <div className="pointer-events-none absolute inset-0 opacity-50 [background-image:linear-gradient(rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.06)_1px,transparent_1px)] [background-size:88px_88px]" />
+      <section className="relative mx-auto flex min-h-screen max-w-7xl items-center justify-center px-6 py-10 lg:px-8">
+        <div className="w-full max-w-3xl rounded-[2rem] border border-white/10 bg-slate-950/70 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.32)] backdrop-blur-xl md:p-10">
+          <div className="w-full max-w-xl">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-400/10 text-sky-200">
+              <LockKeyhole className="h-5 w-5" />
+            </div>
 
-          <form onSubmit={handleReset} className="mt-6 space-y-4">
-            <label className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">E-mail</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="voce@empresa.com"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-                required
-              />
-            </label>
+            <h1 className="mt-8 text-3xl font-semibold tracking-[-0.04em] text-white">
+              Esqueci minha senha
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              Informe seu e-mail para receber o link seguro de redefinição.
+            </p>
 
-            {error ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {error}
-              </div>
-            ) : null}
+            <form onSubmit={handleReset} className="mt-8 space-y-5">
+              <label className="grid gap-2 text-sm">
+                <span className="font-medium text-slate-100">E-mail</span>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="voce@empresa.com"
+                  className="h-12 rounded-2xl border-white/12 bg-white/8 px-4 text-slate-100 placeholder:text-slate-400"
+                  required
+                />
+              </label>
 
-            {success ? (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {success}
-              </div>
-            ) : null}
+              {error ? (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  {error}
+                </div>
+              ) : null}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+              {success ? (
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                  {success}
+                </div>
+              ) : null}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                size="lg"
+                className="h-12 w-full rounded-2xl bg-white text-slate-950 hover:bg-slate-100"
+              >
+                {loading ? "Enviando..." : "Enviar link"}
+              </Button>
+            </form>
+
+            <Link
+              href="/login"
+              className="mt-6 inline-flex text-sm text-slate-300 hover:text-white hover:underline"
             >
-              {loading ? "Enviando..." : "Enviar link"}
-            </button>
-          </form>
-
-          <Link
-            href="/login"
-            className="mt-4 inline-flex text-sm text-primary hover:underline"
-          >
-            Voltar para login
-          </Link>
+              Voltar para login
+            </Link>
+          </div>
         </div>
       </section>
     </main>
