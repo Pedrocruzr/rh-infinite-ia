@@ -3,8 +3,19 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ArrowUpRight,
+  Bot,
+  BriefcaseBusiness,
+  Chrome,
+  LockKeyhole,
+  ShieldCheck
+} from "lucide-react";
 
 import { TurnstileWidget } from "@/components/auth/turnstile-widget";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -172,105 +183,166 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto flex min-h-screen max-w-md items-center px-6 py-10">
-        <div className="w-full rounded-3xl border bg-card p-6 shadow-sm">
-          <div className="mb-6">
-            <h1 className="text-3xl font-semibold tracking-tight">Entrar</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Acesse sua conta para entrar na plataforma.
-            </p>
-          </div>
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_26%),linear-gradient(180deg,#f8fbff_0%,#eef4fb_48%,#f5f8fc_100%)] text-foreground dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(30,41,59,0.65),transparent_32%),linear-gradient(180deg,#020817_0%,#07111f_100%)]">
+      <div className="pointer-events-none absolute inset-0 opacity-50 [background-image:linear-gradient(rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.06)_1px,transparent_1px)] [background-size:88px_88px]" />
+      <section className="relative mx-auto flex min-h-screen max-w-7xl items-center px-6 py-10 lg:px-8">
+        <div className="grid w-full gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+          <section className="relative overflow-hidden rounded-[2rem] border border-white/60 bg-white/70 px-6 py-8 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 md:px-8 md:py-10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.28),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.18),transparent_24%)]" />
+            <div className="relative">
+              <Badge variant="outline" className="border-sky-200/80 bg-white/70 px-3 py-1 text-[0.7rem] uppercase tracking-[0.16em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                Etapa 1 • Login Codex
+              </Badge>
+              <h1 className="mt-6 max-w-xl text-4xl font-semibold tracking-[-0.05em] text-slate-950 dark:text-white md:text-5xl">
+                Entrar na operação RH Infinite IA
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300 md:text-lg">
+                Acesse sua conta para voltar direto para a central de agentes, revisar vagas abertas e seguir com a operação comercial já funcional.
+              </p>
 
-          <button
-            type="button"
-            onClick={() => void handleGoogle()}
-            disabled={loading}
-            className="mb-4 inline-flex h-11 w-full items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
-            title="Continuar com Google"
-          >
-            {loading ? "Abrindo Google..." : "Continuar com Google"}
-          </button>
-
-          <div className="mb-4 flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-border" />
-            <span>ou</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <label className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">E-mail</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="voce@empresa.com"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-                required
-              />
-            </label>
-
-            <label className="flex flex-col gap-2 text-sm">
-              <span className="font-medium">Senha</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Digite sua senha"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-                required
-              />
-            </label>
-
-            <TurnstileWidget
-              onTokenChange={setTurnstileToken}
-              resetKey={turnstileResetKey}
-            />
-
-            {error ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {error}
+              <div className="mt-10 space-y-3">
+                {[
+                  { icon: Bot, label: "Catálogo de agentes já conectado ao produto funcional" },
+                  { icon: BriefcaseBusiness, label: "Fluxo de vagas, suporte e configurações preservado" },
+                  { icon: ShieldCheck, label: "Auth, billing e proteções mantidos sem alteração de lógica" }
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-3 rounded-[1.35rem] border border-white/60 bg-white/70 px-4 py-4 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/6 dark:text-slate-200"
+                  >
+                    <item.icon className="h-4 w-4 text-sky-600 dark:text-sky-300" />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
               </div>
-            ) : null}
 
-            {success ? (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                {success}
+              <div className="mt-10 inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/70 px-4 py-2 text-sm text-slate-600 shadow-sm dark:border-white/10 dark:bg-white/6 dark:text-slate-300">
+                Visual Codex aplicado sem trocar o motor funcional
+                <ArrowUpRight className="h-4 w-4 text-sky-600 dark:text-sky-300" />
               </div>
-            ) : null}
+            </div>
+          </section>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-11 w-full rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? "Entrando..." : "Entrar"}
-            </button>
-          </form>
+          <section className="flex min-h-[680px] items-center justify-center">
+            <div className="w-full max-w-xl rounded-[2rem] border border-white/60 bg-white/75 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/65 md:p-10">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                <LockKeyhole className="h-5 w-5" />
+              </div>
 
-          <div className="mt-4 flex flex-col gap-3 text-sm">
-            <Link href="/esqueci-senha" className="text-primary hover:underline">
-              Esqueci minha senha
-            </Link>
+              <h2 className="mt-8 text-3xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+                Entrar
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Entre com e-mail e senha ou siga pelo Google, mantendo a validação de segurança, mensagens e redirects já existentes.
+              </p>
 
-            {showResend ? (
-              <button
-                type="button"
-                onClick={handleResendVerification}
-                className="text-left text-primary hover:underline"
-              >
-                Reenviar verificação
-              </button>
-            ) : null}
+              {googleOAuthEnabled ? (
+                <>
+                  <Button
+                    type="button"
+                    onClick={() => void handleGoogle()}
+                    disabled={loading}
+                    variant="outline"
+                    size="lg"
+                    className="mt-8 h-12 w-full justify-center rounded-2xl border-slate-200 bg-white/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:bg-white/10"
+                    title="Continuar com Google"
+                  >
+                    <Chrome className="h-4 w-4" />
+                    {loading ? "Abrindo Google..." : "Continuar com Google"}
+                  </Button>
 
-            <p className="text-muted-foreground">
-              Ainda não tem conta?{" "}
-              <Link href="/cadastro" className="text-primary hover:underline">
-                Criar conta
-              </Link>
-            </p>
-          </div>
+                  <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+                    <span>ou</span>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+                  </div>
+                </>
+              ) : null}
+
+              <form onSubmit={handleLogin} className="space-y-5">
+                <label className="grid gap-2 text-sm">
+                  <span className="font-medium text-slate-800 dark:text-slate-100">E-mail</span>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="voce@empresa.com"
+                    className="h-12 rounded-2xl border-slate-200 bg-white/80 px-4 dark:border-white/10 dark:bg-white/6"
+                    required
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm">
+                  <span className="font-medium text-slate-800 dark:text-slate-100">Senha</span>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Digite sua senha"
+                    className="h-12 rounded-2xl border-slate-200 bg-white/80 px-4 dark:border-white/10 dark:bg-white/6"
+                    required
+                  />
+                </label>
+
+                <div className="rounded-[1.4rem] border border-slate-200/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/4">
+                  <TurnstileWidget
+                    onTokenChange={setTurnstileToken}
+                    resetKey={turnstileResetKey}
+                  />
+                </div>
+
+                {error ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
+                    {error}
+                  </div>
+                ) : null}
+
+                {success ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+                    {success}
+                  </div>
+                ) : null}
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  size="lg"
+                  className="h-12 w-full rounded-2xl bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                >
+                  {loading ? "Entrando..." : "Entrar"}
+                </Button>
+              </form>
+
+              <div className="mt-6 flex flex-col gap-3 text-sm">
+                <Link
+                  href="/esqueci-senha"
+                  className="text-slate-600 transition hover:text-slate-950 hover:underline dark:text-slate-300 dark:hover:text-white"
+                >
+                  Esqueci minha senha
+                </Link>
+
+                {showResend ? (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    className="text-left text-slate-600 transition hover:text-slate-950 hover:underline dark:text-slate-300 dark:hover:text-white"
+                  >
+                    Reenviar verificação
+                  </button>
+                ) : null}
+
+                <p className="text-slate-500 dark:text-slate-400">
+                  Ainda não tem conta?{" "}
+                  <Link
+                    href="/cadastro"
+                    className="font-medium text-slate-950 underline-offset-4 hover:underline dark:text-white"
+                  >
+                    Criar conta
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </section>
         </div>
       </section>
     </main>
