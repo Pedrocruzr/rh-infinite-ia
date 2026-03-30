@@ -10,6 +10,7 @@ import {
 
 import { createClient } from "@/lib/supabase/server";
 import { SubscriptionPlans } from "@/components/settings/subscription-plans";
+import { CancelSubscriptionButton } from "@/components/settings/cancel-subscription-button";
 
 export const dynamic = "force-dynamic";
 
@@ -298,13 +299,7 @@ export default async function AssinaturaPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                disabled
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/80 px-4 text-sm font-medium text-slate-400 opacity-70 dark:border-white/10 dark:bg-white/5 dark:text-slate-400"
-              >
-                Cancelar assinatura
-              </button>
+              <CancelSubscriptionButton disabled={!subscription?.id} />
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">

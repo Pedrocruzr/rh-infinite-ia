@@ -229,6 +229,12 @@ export async function createAsaasTopupCheckout(
   };
 }
 
+export async function cancelAsaasSubscription(subscriptionId: string) {
+  await asaasFetch(`/subscriptions/${subscriptionId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function handleAsaasWebhook(payload: AsaasWebhookPayload) {
   const supabase = await createServerClient();
   const eventId = getWebhookEventId(payload);
