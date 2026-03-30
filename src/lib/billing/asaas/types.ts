@@ -15,6 +15,22 @@ export type CreateCheckoutInput = {
   method: BillingCheckoutMethod;
 };
 
+export type CreateTopupCheckoutInput = {
+  userId: string;
+  email: string;
+  name: string;
+  cpfCnpj?: string | null;
+  phone?: string | null;
+  company?: string | null;
+  topupCode: string;
+  topupName: string;
+  topupId: string;
+  priceCents: number;
+  credits: number;
+  expiresInDays: number;
+  method: BillingCheckoutMethod;
+};
+
 export type AsaasCustomer = {
   id: string;
   name?: string;
@@ -23,6 +39,7 @@ export type AsaasCustomer = {
 
 export type AsaasPayment = {
   id: string;
+  subscription?: string;
   status?: string;
   invoiceUrl?: string;
   bankSlipUrl?: string;
@@ -32,9 +49,24 @@ export type AsaasPayment = {
   billingType?: string;
 };
 
+export type AsaasSubscription = {
+  id: string;
+  status?: string;
+  customer?: string;
+  billingType?: string;
+  value?: number;
+  cycle?: string;
+  nextDueDate?: string;
+};
+
+export type AsaasListResponse<T> = {
+  data?: T[];
+};
+
 export type CreateCheckoutResult = {
   customerId: string;
-  paymentId: string;
+  paymentId?: string;
+  subscriptionId?: string;
   status?: string;
   invoiceUrl?: string | null;
   pixQrCode?: string | null;
@@ -45,6 +77,7 @@ export type AsaasWebhookPayload = {
   event?: string;
   payment?: {
     id?: string;
+    subscription?: string;
     customer?: string;
     value?: number;
     status?: string;

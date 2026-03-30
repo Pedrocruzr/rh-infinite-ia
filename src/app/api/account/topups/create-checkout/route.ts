@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
+
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { createAsaasSubscriptionCheckout } from "@/lib/billing/asaas/service";
+import { createAsaasTopupCheckout } from "@/lib/billing/asaas/service";
 import type { BillingCheckoutMethod } from "@/lib/billing/asaas/types";
 
 type Body = {
-  planCode?: string;
+  topupCode?: string;
   method?: BillingCheckoutMethod;
 };
 
@@ -28,26 +28,32 @@ export async function POST(request: Request) {
     }
 
     const body = (await request.json().catch(() => ({}))) as Body;
-    const requestedPlanCode =
-      typeof body.planCode === "string" ? body.planCode.trim() : "start";
+    const topupCode =
+      typeof body.topupCode === "string" ? body.topupCode.trim() : "";
     const method =
       body.method === "PIX" || body.method === "CREDIT_CARD"
         ? body.method
         : "PIX";
 
-    if (!requestedPlanCode) {
-      return NextResponse.json({ error: "Plano não informado." }, { status: 400 });
+    if (!topupCode) {
+      return NextResponse.json(
+        { error: "Pacote de créditos não informado." },
+        { status: 400 }
+      );
     }
 
-    const { data: plan, error: planError } = await supabase
-      .from("plans")
+    const { data: topup, error: topupError } = await supabase
+      .from("topup_products")
       .select("*")
-      .eq("code", "start")
+      .eq("code", topupCode)
       .eq("active", true)
       .maybeSingle();
 
-    if (planError || !plan) {
-      return NextResponse.json({ error: "Plano não encontrado." }, { status: 404 });
+    if (topupError || !topup) {
+      return NextResponse.json(
+        { error: "Pacote de créditos não encontrado." },
+        { status: 404 }
+      );
     }
 
     const { data: profile } = await supabase
@@ -62,21 +68,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Preencha CPF ou CNPJ no Perfil antes de continuar com a assinatura.",
+            "Preencha CPF ou CNPJ no Perfil antes de continuar com a compra de créditos extras.",
         },
         { status: 400 }
       );
     }
 
-
-    if (plan.code !== "start") {
-      return NextResponse.json(
-        { error: "Apenas o plano Start está disponível no momento." },
-        { status: 400 }
-      );
-    }
-
-    const result = await createAsaasSubscriptionCheckout({
+    const result = await createAsaasTopupCheckout({
       userId: user.id,
       email: user.email ?? "",
       name:
@@ -89,29 +87,14 @@ export async function POST(request: Request) {
           ? user.user_metadata.company_name
           : null,
       cpfCnpj: documentNumber,
-      planCode: plan.code,
-      planName: plan.name,
-      planId: plan.id,
-      priceCents: Number(plan.price_cents),
-      monthlyCredits: Number(plan.monthly_credits),
+      topupCode: topup.code,
+      topupName: topup.name,
+      topupId: topup.id,
+      priceCents: Number(topup.price_cents),
+      credits: Number(topup.credits),
+      expiresInDays: Number((topup as any).expires_in_days ?? 30),
       method,
     });
-
-    const admin = createAdminClient();
-
-    await admin
-      .from("subscriptions")
-      .upsert(
-        {
-          user_id: user.id,
-          plan_id: plan.id,
-          status: "pending_payment",
-          asaas_customer_id: result.customerId,
-          asaas_subscription_id: result.subscriptionId ?? null,
-          cancel_at_period_end: false,
-        },
-        { onConflict: "user_id" }
-      );
 
     return NextResponse.json({
       ok: true,
@@ -123,7 +106,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Erro ao criar checkout de assinatura.",
+            : "Erro ao criar checkout de créditos extras.",
       },
       { status: 500 }
     );

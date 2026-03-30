@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 type Plan = {
   id: string;
@@ -12,10 +12,20 @@ type Plan = {
   monthly_credits: number;
 };
 
+type TopupProduct = {
+  id: string;
+  code: string;
+  name: string;
+  credits: number;
+  price_cents: number;
+  expires_in_days: number;
+};
+
 type CheckoutResult = {
   checkout: {
     customerId: string;
-    paymentId: string;
+    paymentId?: string;
+    subscriptionId?: string;
     status?: string;
     invoiceUrl?: string | null;
     pixQrCode?: string | null;
@@ -24,7 +34,8 @@ type CheckoutResult = {
 };
 
 type Props = {
-  plans: Plan[];
+  startPlan: Plan | null;
+  topupProducts: TopupProduct[];
   currentPlanCode?: string | null;
   currentStatus?: string | null;
 };
@@ -38,36 +49,27 @@ function formatCurrency(cents: number) {
   }).format(cents / 100);
 }
 
-const order = ["essencial", "profissional", "intensivo"];
-
 export function SubscriptionPlans({
-  plans,
+  startPlan,
+  topupProducts,
   currentPlanCode,
   currentStatus,
 }: Props) {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CheckoutResult | null>(null);
-  const [selectedPlanCode, setSelectedPlanCode] = useState<string | null>(null);
 
-  const sortedPlans = [...plans].sort(
-    (a, b) => order.indexOf(a.code) - order.indexOf(b.code)
-  );
+  const isStartActive =
+    currentPlanCode === "start" &&
+    ["active", "trialing", "ativo", "pending_payment"].includes(
+      (currentStatus || "").toLowerCase()
+    );
 
-  const selectedPlan = useMemo(
-    () => sortedPlans.find((plan) => plan.code === selectedPlanCode) ?? null,
-    [sortedPlans, selectedPlanCode]
-  );
+  async function startSubscription(method: BillingMethod) {
+    if (!startPlan) return;
 
-  function selectPlan(planCode: string) {
-    setSelectedPlanCode(planCode);
-    setError(null);
-    setResult(null);
-  }
-
-  async function startCheckout(planCode: string, method: BillingMethod) {
     try {
-      const key = `${planCode}:${method}`;
+      const key = `subscription:${method}`;
       setLoadingKey(key);
       setError(null);
 
@@ -76,13 +78,13 @@ export function SubscriptionPlans({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ planCode, method }),
+        body: JSON.stringify({ planCode: startPlan.code, method }),
       });
 
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(payload?.error || "Erro ao escolher plano.");
+        throw new Error(payload?.error || "Erro ao iniciar assinatura.");
       }
 
       setResult(payload as CheckoutResult);
@@ -92,7 +94,45 @@ export function SubscriptionPlans({
         window.open(invoiceUrl, "_blank", "noopener,noreferrer");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao escolher plano.");
+      setError(err instanceof Error ? err.message : "Erro ao iniciar assinatura.");
+    } finally {
+      setLoadingKey(null);
+    }
+  }
+
+  async function startTopupCheckout(
+    topupCode: string,
+    method: BillingMethod
+  ) {
+    try {
+      const key = `${topupCode}:${method}`;
+      setLoadingKey(key);
+      setError(null);
+
+      const response = await fetch("/api/account/topups/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topupCode, method }),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(payload?.error || "Erro ao comprar créditos extras.");
+      }
+
+      setResult(payload as CheckoutResult);
+
+      const invoiceUrl = payload?.checkout?.invoiceUrl;
+      if (invoiceUrl) {
+        window.open(invoiceUrl, "_blank", "noopener,noreferrer");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erro ao comprar créditos extras."
+      );
     } finally {
       setLoadingKey(null);
     }
@@ -106,148 +146,143 @@ export function SubscriptionPlans({
 
   return (
     <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
-      <div className="max-w-3xl">
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Créditos Extras
-        </h2>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-          Todos os agentes liberados. Você escolhe apenas o volume de uso.
-        </p>
-      </div>
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-slate-50/70 p-5 dark:border-white/10 dark:bg-white/5">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Plano Start
+            </h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              Assinatura mensal recorrente com acesso ao produto e 120 créditos por ciclo.
+            </p>
+          </div>
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-3">
-        {sortedPlans.map((plan) => {
-          const isPopular = plan.code === "profissional";
-          const isCurrent =
-            currentPlanCode === plan.code &&
-            ["active", "trialing", "ativo"].includes(
-              (currentStatus || "").toLowerCase()
-            );
-          const isSelected = selectedPlanCode === plan.code;
-
-          return (
-            <div
-              key={plan.id}
-              className={`rounded-2xl border p-5 shadow-sm ${
-                isPopular
-                  ? "border-slate-950 bg-slate-950 text-white dark:border-sky-200/20 dark:bg-white dark:text-slate-950"
-                  : "border-slate-200/80 bg-slate-50/80 dark:border-white/10 dark:bg-white/5"
-              } ${isSelected ? "ring-2 ring-sky-400/40" : ""}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p
-                    className={`text-sm ${
-                      isPopular ? "text-white/70 dark:text-slate-500" : "text-slate-500 dark:text-slate-400"
-                    }`}
-                  >
-                    {plan.description || "Plano"}
-                  </p>
-                  <h3 className="mt-2 text-2xl font-semibold">{plan.name}</h3>
-                </div>
-
-                {isPopular ? (
-                  <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-medium dark:border-neutral-300">
-                    Mais popular
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="mt-6">
-                <p className="text-3xl font-semibold">
-                  {formatCurrency(plan.price_cents)}
-                </p>
-                {plan.billing_interval === "month" ? null : (
-                  <p
-                    className={`mt-1 text-sm ${
-                      isPopular ? "text-white/70 dark:text-slate-500" : "text-slate-500 dark:text-slate-400"
-                    }`}
-                  >
-                    {plan.billing_interval}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-6 space-y-2 text-sm">
-                <p>{plan.monthly_credits} créditos</p>
-                <p>Todos os agentes liberados</p>
-                <p>Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos</p>
-              </div>
-
-              <div className="mt-6 grid gap-2">
-                <button
-                  type="button"
-                  onClick={() => selectPlan(plan.code)}
-                  disabled={loadingKey !== null || isCurrent}
-                  className={`inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium transition ${
-                    isPopular
-                      ? "bg-white text-black hover:opacity-90 disabled:opacity-60 dark:bg-slate-950 dark:text-white"
-                      : "border border-slate-200 bg-white/80 text-slate-800 hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-                  }`}
-                >
-                  {isCurrent
-                    ? "Plano atual"
-                    : isSelected
-                      ? "Créditos extras"
-                      : "Créditos extras"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {selectedPlan ? (
-        <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5">
-          <h3 className="text-lg font-semibold">Plano selecionado</h3>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Agora escolha a forma de pagamento.
-          </p>
-
-          <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-center justify-between gap-4">
+          <div className="mt-6 rounded-[1.5rem] border border-slate-200/80 bg-white/80 p-5 dark:border-white/10 dark:bg-[#0d1726]">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-medium">{selectedPlan.name}</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {selectedPlan.monthly_credits} créditos
+                  Assinatura principal
+                </p>
+                <h3 className="mt-2 text-3xl font-semibold">
+                  {startPlan?.name ?? "Start"}
+                </h3>
+                <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+                  120 créditos por mês. Os créditos mensais não acumulam na renovação.
                 </p>
               </div>
-              <p className="text-lg font-semibold">
-                {formatCurrency(selectedPlan.price_cents)}
+
+              {isStartActive ? (
+                <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                  Ativo
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-6">
+              <p className="text-3xl font-semibold">
+                {startPlan ? formatCurrency(startPlan.price_cents) : "R$ 197,00"}
+              </p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Renovação mensal automática
               </p>
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
               <button
                 type="button"
-                onClick={() => void startCheckout(selectedPlan.code, "PIX")}
-                disabled={loadingKey !== null}
+                onClick={() => void startSubscription("PIX")}
+                disabled={!startPlan || loadingKey !== null || isStartActive}
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
               >
-                {loadingKey === `${selectedPlan.code}:PIX`
+                {loadingKey === "subscription:PIX"
                   ? "Gerando PIX..."
-                  : "Pagar com PIX"}
+                  : isStartActive
+                    ? "Plano ativo"
+                    : "Assinar com PIX"}
               </button>
-
 
               <button
                 type="button"
-                onClick={() => void startCheckout(selectedPlan.code, "CREDIT_CARD")}
-                disabled={loadingKey !== null}
+                onClick={() => void startSubscription("CREDIT_CARD")}
+                disabled={!startPlan || loadingKey !== null || isStartActive}
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
               >
-                {loadingKey === `${selectedPlan.code}:CREDIT_CARD`
+                {loadingKey === "subscription:CREDIT_CARD"
                   ? "Abrindo cartão..."
-                  : "Cartão de crédito"}
+                  : isStartActive
+                    ? "Plano ativo"
+                    : "Assinar com cartão"}
               </button>
             </div>
-
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              PIX e cartão de crédito disponíveis. A cobrança abre em nova aba quando o Asaas retornar invoiceUrl.
-            </p>
           </div>
         </div>
-      ) : null}
+
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-slate-50/70 p-5 dark:border-white/10 dark:bg-white/5">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Créditos extras
+            </h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              Recargas avulsas para usar até a próxima renovação. Os créditos extras têm validade de 30 dias.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4">
+            {topupProducts.map((topup) => (
+              <div
+                key={topup.id}
+                className="rounded-[1.5rem] border border-slate-200/80 bg-white/80 p-5 dark:border-white/10 dark:bg-[#0d1726]"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Recarga avulsa
+                    </p>
+                    <h3 className="mt-2 text-2xl font-semibold">{topup.name}</h3>
+                  </div>
+
+                  <span className="rounded-full border border-sky-300 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-200">
+                    {topup.credits} créditos
+                  </span>
+                </div>
+
+                <div className="mt-5">
+                  <p className="text-2xl font-semibold">
+                    {formatCurrency(topup.price_cents)}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Validade de {topup.expires_in_days} dias
+                  </p>
+                </div>
+
+                <div className="mt-5 grid gap-3 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => void startTopupCheckout(topup.code, "PIX")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
+                  >
+                    {loadingKey === `${topup.code}:PIX`
+                      ? "Gerando PIX..."
+                      : "Comprar com PIX"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void startTopupCheckout(topup.code, "CREDIT_CARD")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                  >
+                    {loadingKey === `${topup.code}:CREDIT_CARD`
+                      ? "Abrindo cartão..."
+                      : "Comprar com cartão"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {result?.checkout?.pixCopyPaste ? (
         <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5">
@@ -263,8 +298,8 @@ export function SubscriptionPlans({
 
             <button
               type="button"
-              onClick={() => void copy(result.checkout.pixCopyPaste || "")}
-              className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm text-slate-800 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+              onClick={() => void copy(result.checkout.pixCopyPaste!)}
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
             >
               Copiar código PIX
             </button>
@@ -273,7 +308,7 @@ export function SubscriptionPlans({
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
+        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
           {error}
         </div>
       ) : null}

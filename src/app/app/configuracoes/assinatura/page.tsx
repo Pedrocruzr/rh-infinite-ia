@@ -86,6 +86,11 @@ export default async function AssinaturaPage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const { data: creditGrants } = await supabase
+    .from("credit_grants")
+    .select("remaining_credits, expires_at")
+    .eq("user_id", user.id);
+
   const { data: transactions } = await supabase
     .from("credit_transactions")
     .select("*")
@@ -103,7 +108,14 @@ export default async function AssinaturaPage() {
   const { data: plans } = await supabase
     .from("plans")
     .select("*")
-    .eq("active", true);
+    .eq("active", true)
+    .eq("code", "start");
+
+  const { data: topupProducts } = await supabase
+    .from("topup_products")
+    .select("*")
+    .eq("active", true)
+    .order("credits", { ascending: true });
 
   let plan: any = null;
 
@@ -117,8 +129,23 @@ export default async function AssinaturaPage() {
     plan = data;
   }
 
-  const displayPlanName = plan ? "Start" : "Sem plano ativo";
-  const displayPlanPrice = plan ? "R$ 197,00" : "Escolha um plano para começar";
+  const activeBalance =
+    (creditGrants ?? []).reduce((sum, item: any) => {
+      const expiresAt = item?.expires_at ? new Date(item.expires_at) : null;
+      if (expiresAt && expiresAt.getTime() <= Date.now()) {
+        return sum;
+      }
+
+      return sum + Number(item?.remaining_credits ?? 0);
+    }, 0) || wallet?.balance || 0;
+
+  const startPlan = ((plans ?? [])[0] ?? null) as any;
+  const displayPlanName = plan?.name ?? startPlan?.name ?? "Sem plano ativo";
+  const displayPlanPrice = plan?.price_cents
+    ? formatCurrency(plan.price_cents)
+    : startPlan?.price_cents
+      ? formatCurrency(startPlan.price_cents)
+      : "Escolha um plano para começar";
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
@@ -199,7 +226,8 @@ export default async function AssinaturaPage() {
         </div>
 
         <SubscriptionPlans
-          plans={(plans ?? []) as any[]}
+          startPlan={startPlan}
+          topupProducts={(topupProducts ?? []) as any[]}
           currentPlanCode={plan?.code ?? null}
           currentStatus={subscription?.status ?? null}
         />
@@ -218,7 +246,7 @@ export default async function AssinaturaPage() {
           <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
             <p className="text-sm text-slate-500 dark:text-slate-400">Créditos disponíveis</p>
             <p className="mt-3 text-2xl font-semibold tracking-tight">
-              {wallet?.balance ?? 0}
+              {activeBalance}
             </p>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               Saldo atual da sua carteira

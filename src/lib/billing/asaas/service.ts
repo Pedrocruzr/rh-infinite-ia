@@ -1,18 +1,21 @@
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { asaasFetch } from "./client";
 import type {
+  AsaasListResponse,
   AsaasCustomer,
   AsaasPayment,
+  AsaasSubscription,
   AsaasWebhookPayload,
   CreateCheckoutInput,
   CreateCheckoutResult,
+  CreateTopupCheckoutInput,
 } from "./types";
 
 function centsToCurrencyValue(value: number) {
   return Number((value / 100).toFixed(2));
 }
 
-function buildExternalReference(input: CreateCheckoutInput) {
+function buildSubscriptionExternalReference(input: CreateCheckoutInput) {
   const userId = String(input.userId || "")
     .replace(/[^a-zA-Z0-9-]/g, "")
     .slice(0, 36);
@@ -23,7 +26,22 @@ function buildExternalReference(input: CreateCheckoutInput) {
 
   const credits = String(Number(input.monthlyCredits || 0));
 
-  return `rhia|u:${userId}|p:${planCode}|c:${credits}`;
+  return `sub|u:${userId}|p:${planCode}|c:${credits}`;
+}
+
+function buildTopupExternalReference(input: CreateTopupCheckoutInput) {
+  const userId = String(input.userId || "")
+    .replace(/[^a-zA-Z0-9-]/g, "")
+    .slice(0, 36);
+
+  const topupCode = String(input.topupCode || "")
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .slice(0, 32);
+
+  const credits = String(Number(input.credits || 0));
+  const days = String(Number(input.expiresInDays || 30));
+
+  return `topup|u:${userId}|t:${topupCode}|c:${credits}|d:${days}`;
 }
 
 function getWebhookEventId(payload: AsaasWebhookPayload) {
@@ -38,7 +56,9 @@ function buildDueDate(daysAhead = 1) {
   return date.toISOString().slice(0, 10);
 }
 
-function buildCustomerPayload(input: CreateCheckoutInput) {
+function buildCustomerPayload(
+  input: CreateCheckoutInput | CreateTopupCheckoutInput
+) {
   return {
     name: input.name,
     email: input.email,
@@ -55,7 +75,7 @@ function isActionablePaymentEvent(eventType: string) {
 
 async function tryUpdateExistingCustomer(
   customerId: string,
-  input: CreateCheckoutInput
+  input: CreateCheckoutInput | CreateTopupCheckoutInput
 ) {
   const body = JSON.stringify(buildCustomerPayload(input));
 
@@ -84,7 +104,9 @@ async function tryUpdateExistingCustomer(
   return null;
 }
 
-async function createOrReuseCustomer(input: CreateCheckoutInput) {
+async function createOrReuseCustomer(
+  input: CreateCheckoutInput | CreateTopupCheckoutInput
+) {
   const customerPayload = buildCustomerPayload(input);
 
   try {
@@ -124,15 +146,15 @@ async function createOrReuseCustomer(input: CreateCheckoutInput) {
 
 async function createPayment(
   customerId: string,
-  input: CreateCheckoutInput
+  input: CreateTopupCheckoutInput
 ) {
   const paymentPayload: Record<string, unknown> = {
     customer: customerId,
     billingType: input.method,
     value: centsToCurrencyValue(input.priceCents),
     dueDate: buildDueDate(1),
-    description: `${input.planName} - ${input.monthlyCredits} créditos`,
-    externalReference: buildExternalReference(input),
+    description: `${input.topupName} - ${input.credits} créditos extras`,
+    externalReference: buildTopupExternalReference(input),
   };
 
   const payment = await asaasFetch<AsaasPayment>("/payments", {
@@ -143,8 +165,56 @@ async function createPayment(
   return payment;
 }
 
-export async function createAsaasCheckout(
+async function getFirstSubscriptionPayment(subscriptionId: string) {
+  const payments = await asaasFetch<AsaasListResponse<AsaasPayment>>(
+    `/subscriptions/${subscriptionId}/payments`
+  );
+
+  return payments?.data?.[0] ?? null;
+}
+
+async function createSubscription(
+  customerId: string,
   input: CreateCheckoutInput
+){
+  const subscriptionPayload: Record<string, unknown> = {
+    customer: customerId,
+    billingType: input.method,
+    value: centsToCurrencyValue(input.priceCents),
+    nextDueDate: buildDueDate(1),
+    cycle: "MONTHLY",
+    description: `${input.planName} - ${input.monthlyCredits} créditos/mês`,
+    externalReference: buildSubscriptionExternalReference(input),
+  };
+
+  return asaasFetch<AsaasSubscription>("/subscriptions", {
+    method: "POST",
+    body: JSON.stringify(subscriptionPayload),
+  });
+}
+
+export async function createAsaasSubscriptionCheckout(
+  input: CreateCheckoutInput
+): Promise<CreateCheckoutResult> {
+  const customer = await createOrReuseCustomer(input);
+  const subscription = await createSubscription(customer.id, input);
+  const firstPayment = subscription.id
+    ? await getFirstSubscriptionPayment(subscription.id).catch(() => null)
+    : null;
+
+  return {
+    customerId: customer.id,
+    subscriptionId: subscription.id,
+    paymentId: firstPayment?.id,
+    status: firstPayment?.status ?? subscription.status,
+    invoiceUrl: firstPayment?.invoiceUrl ?? firstPayment?.bankSlipUrl ?? null,
+    pixQrCode: firstPayment?.pixQrCode ?? null,
+    pixCopyPaste: firstPayment?.pixCopyPaste ?? null,
+  };
+}
+
+export async function createAsaasTopupCheckout(
+  input: CreateTopupCheckoutInput
 ): Promise<CreateCheckoutResult> {
   const customer = await createOrReuseCustomer(input);
   const payment = await createPayment(customer.id, input);

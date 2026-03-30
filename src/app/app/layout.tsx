@@ -54,6 +54,11 @@ export default async function InternalAppLayout({
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const { data: rawCreditGrants } = await supabase
+    .from("credit_grants")
+    .select("remaining_credits, expires_at")
+    .eq("user_id", user.id);
+
   const wallet = (rawWallet ?? null) as any;
 
   let plan: any = null;
@@ -103,7 +108,14 @@ export default async function InternalAppLayout({
       : "Sem plano ativo";
 
   const creditBalance =
-    typeof wallet?.balance === "number" ? wallet.balance : 0;
+    (rawCreditGrants ?? []).reduce((sum: number, item: any) => {
+      const expiresAt = item?.expires_at ? new Date(item.expires_at) : null;
+      if (expiresAt && expiresAt.getTime() <= Date.now()) {
+        return sum;
+      }
+
+      return sum + Number(item?.remaining_credits ?? 0);
+    }, 0) || (typeof wallet?.balance === "number" ? wallet.balance : 0);
 
   const navLinkClass =
     "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-[#0d1a2b] dark:hover:text-neutral-100";

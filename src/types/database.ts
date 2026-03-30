@@ -75,6 +75,8 @@ export interface Database {
           user_id: string;
           plan_id: string | null;
           status: string;
+          asaas_customer_id: string | null;
+          asaas_subscription_id: string | null;
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           current_period_start: string | null;
@@ -88,6 +90,8 @@ export interface Database {
           user_id: string;
           plan_id?: string | null;
           status?: string;
+          asaas_customer_id?: string | null;
+          asaas_subscription_id?: string | null;
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           current_period_start?: string | null;
@@ -150,6 +154,7 @@ export interface Database {
           name: string;
           credits: number;
           price_cents: number;
+          expires_in_days: number;
           active: boolean;
           stripe_product_id: string | null;
           stripe_price_id: string | null;
@@ -162,6 +167,7 @@ export interface Database {
           name: string;
           credits: number;
           price_cents: number;
+          expires_in_days?: number;
           active?: boolean;
           stripe_product_id?: string | null;
           stripe_price_id?: string | null;
@@ -169,6 +175,33 @@ export interface Database {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["topup_products"]["Insert"]>;
+      };
+      credit_grants: {
+        Row: {
+          id: string;
+          user_id: string;
+          subscription_id: string | null;
+          source_type: string;
+          source_id: string;
+          total_credits: number;
+          remaining_credits: number;
+          expires_at: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          subscription_id?: string | null;
+          source_type: string;
+          source_id: string;
+          total_credits: number;
+          remaining_credits: number;
+          expires_at?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["credit_grants"]["Insert"]>;
       };
       agents: {
         Row: {
