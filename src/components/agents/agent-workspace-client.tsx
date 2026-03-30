@@ -59,21 +59,24 @@ export function AgentWorkspaceClient({ agent }: Props) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+    <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <div className="rounded-[1.9rem] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-slate-950/75 dark:shadow-[0_18px_50px_rgba(15,23,42,0.18)] md:p-8">
         <div className="space-y-5">
           <div>
-            <h2 className="text-lg font-semibold">Entrada do agente</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
+              Entrada do agente
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">Contexto de execução</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
               Fluxo inicial conectado à API de execução.
             </p>
           </div>
 
           <div className="grid gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Contexto</label>
+              <label className="text-sm font-medium text-slate-900 dark:text-white">Contexto</label>
               <textarea
-                className="min-h-[140px] w-full rounded-md border bg-background px-4 py-3 text-sm outline-none"
+                className="min-h-[140px] w-full rounded-[1.35rem] border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-300 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40"
                 placeholder="Descreva o contexto que será enviado ao agente..."
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
@@ -81,9 +84,9 @@ export function AgentWorkspaceClient({ agent }: Props) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Objetivo</label>
+              <label className="text-sm font-medium text-slate-900 dark:text-white">Objetivo</label>
               <input
-                className="w-full rounded-md border bg-background px-4 py-3 text-sm outline-none"
+                className="w-full rounded-[1.35rem] border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-300 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40"
                 placeholder="Objetivo da execução"
                 value={objective}
                 onChange={(e) => setObjective(e.target.value)}
@@ -95,66 +98,69 @@ export function AgentWorkspaceClient({ agent }: Props) {
             <button
               onClick={handleExecute}
               disabled={loading}
-              className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
+              className="rounded-[1.1rem] bg-slate-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
             >
               {loading ? "Executando..." : "Executar agente"}
             </button>
 
             <a
               href="/app/agentes"
-              className="rounded-md border px-4 py-2 text-sm font-medium"
+              className="rounded-[1.1rem] border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/8"
             >
               Voltar
             </a>
           </div>
 
           {error ? (
-            <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+            <div className="rounded-[1.25rem] border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
               {error}
             </div>
           ) : null}
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+      <div className="rounded-[1.9rem] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-slate-950/75 dark:shadow-[0_18px_50px_rgba(15,23,42,0.18)] md:p-8">
         <div className="space-y-5">
           <div>
-            <h2 className="text-lg font-semibold">Resumo do agente</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs uppercase tracking-[0.16em] text-sky-700 dark:text-sky-300">
+              Saída e telemetria
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">Resumo do agente</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
               Metadados iniciais da execução.
             </p>
           </div>
 
           <div className="grid gap-3 text-sm">
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <span className="text-muted-foreground">Créditos do agente</span>
-              <span className="font-medium">{agent.creditCost}</span>
+            <div className="flex items-center justify-between rounded-[1.25rem] border border-slate-200 p-4 dark:border-white/10">
+              <span className="text-slate-500 dark:text-slate-400">Créditos do agente</span>
+              <span className="font-medium text-slate-900 dark:text-white">{agent.creditCost}</span>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <span className="text-muted-foreground">Status</span>
-              <span className="font-medium text-emerald-600">
+            <div className="flex items-center justify-between rounded-[1.25rem] border border-slate-200 p-4 dark:border-white/10">
+              <span className="text-slate-500 dark:text-slate-400">Status</span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-300">
                 {agent.active ? "Ativo" : "Inativo"}
               </span>
             </div>
 
-            <div className="rounded-lg border p-4">
-              <div className="text-sm font-medium">Run ID</div>
-              <div className="mt-2 break-all text-sm text-muted-foreground">
+            <div className="rounded-[1.25rem] border border-slate-200 p-4 dark:border-white/10">
+              <div className="text-sm font-medium text-slate-900 dark:text-white">Run ID</div>
+              <div className="mt-2 break-all text-sm text-slate-500 dark:text-slate-400">
                 {runId || "Ainda não executado."}
               </div>
             </div>
 
-            <div className="rounded-lg border p-4">
-              <div className="text-sm font-medium">Créditos consumidos</div>
-              <div className="mt-2 text-sm text-muted-foreground">
+            <div className="rounded-[1.25rem] border border-slate-200 p-4 dark:border-white/10">
+              <div className="text-sm font-medium text-slate-900 dark:text-white">Créditos consumidos</div>
+              <div className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 {creditsUsed ?? "Ainda não executado."}
               </div>
             </div>
 
-            <div className="rounded-lg border p-4">
-              <div className="text-sm font-medium">Resultado</div>
-              <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+            <div className="rounded-[1.25rem] border border-slate-200 p-4 dark:border-white/10">
+              <div className="text-sm font-medium text-slate-900 dark:text-white">Resultado</div>
+              <div className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-500 dark:text-slate-400">
                 {result || "Aqui aparecerá a resposta gerada pelo agente."}
               </div>
             </div>

@@ -61,7 +61,7 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center rounded-xl border px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+          className="inline-flex items-center rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
         >
           Gerar Novamente
         </button>
@@ -79,10 +79,10 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
           placeholder="Exemplo: alterar horas trabalhadas de 160 para 140"
-          className="min-h-[140px] w-full rounded-xl border p-3 text-sm outline-none"
+          className="min-h-[140px] w-full rounded-2xl border border-slate-200 bg-white/90 p-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500"
         />
 
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           Exemplo curto: “Alterar horas trabalhadas de 160 para 140” ou
           “Corrigir entregas realizadas de 300 para 280”.
         </p>
@@ -91,7 +91,7 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="inline-flex items-center rounded-xl border px-4 py-2 text-sm font-medium"
+            className="inline-flex items-center rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 dark:border-white/10 dark:bg-white/6 dark:text-slate-100"
           >
             Cancelar
           </button>
@@ -99,7 +99,7 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
             type="button"
             onClick={handleRegenerate}
             disabled={loading || !instruction.trim()}
-            className="inline-flex items-center rounded-xl border px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="inline-flex items-center rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-slate-950"
           >
             {loading ? "Atualizando..." : "Aplicar e gerar"}
           </button>

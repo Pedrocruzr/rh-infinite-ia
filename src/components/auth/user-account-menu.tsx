@@ -79,8 +79,8 @@ export function UserAccountMenu({
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-14 z-50 w-80 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
-          <div className="border-b border-neutral-200 px-5 py-4 dark:border-neutral-800">
+        <div className="absolute right-0 top-14 z-50 w-80 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-[#1d2b3d] dark:bg-[#0c1624]">
+          <div className="border-b border-neutral-200 px-5 py-4 dark:border-[#1d2b3d]">
             <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
               Minha conta
             </p>
@@ -88,7 +88,7 @@ export function UserAccountMenu({
 
           <div className="space-y-4 px-5 py-4">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-[#7f8ea3]">
                 Status da conta
               </p>
               <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -97,7 +97,7 @@ export function UserAccountMenu({
             </div>
 
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-[#7f8ea3]">
                 Nome da empresa
               </p>
               <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -106,7 +106,7 @@ export function UserAccountMenu({
             </div>
 
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-[#7f8ea3]">
                 Perfil
               </p>
               <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -115,7 +115,7 @@ export function UserAccountMenu({
             </div>
 
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-[#7f8ea3]">
                 Assinatura
               </p>
               <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -124,7 +124,7 @@ export function UserAccountMenu({
             </div>
 
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-[#7f8ea3]">
                 Saldo de crédito
               </p>
               <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -133,7 +133,7 @@ export function UserAccountMenu({
             </div>
           </div>
 
-          <div className="border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+          <div className="border-t border-neutral-200 px-5 py-4 dark:border-[#1d2b3d] dark:bg-[#0a1320]">
             <SignOutButton />
           </div>
         </div>

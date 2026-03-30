@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Coins,
+  CreditCard,
+  ReceiptText,
+} from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { SubscriptionPlans } from "@/components/settings/subscription-plans";
@@ -110,23 +117,85 @@ export default async function AssinaturaPage() {
     plan = data;
   }
 
+  const displayPlanName = plan ? "Start" : "Sem plano ativo";
+  const displayPlanPrice = plan ? "R$ 197,00" : "Escolha um plano para começar";
+
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-semibold tracking-tight">Assinatura</h1>
-            <p className="mt-2 text-muted-foreground">
-              Acompanhe plano, créditos, renovação e uso recente da sua conta.
-            </p>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
+      <section className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8 md:py-10">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                <BadgeCheck className="h-3.5 w-3.5" />
+                Cobrança e créditos
+              </div>
+              <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl">
+                Assinatura
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300 md:text-lg">
+                Acompanhe plano, créditos, renovação e uso recente da sua conta mantendo o motor comercial atual intacto.
+              </p>
+            </div>
+
+            <Link
+              href="/app/configuracoes"
+              className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white/80 px-5 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:border-sky-400/30 dark:hover:bg-white/8"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar
+            </Link>
           </div>
 
-          <Link
-            href="/app/configuracoes"
-            className="inline-flex h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted"
-          >
-            Voltar
-          </Link>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-200">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    Planos ativos
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Escolha e acompanhe sua assinatura.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200">
+                  <Coins className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    Carteira de créditos
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Saldo e movimentações recentes.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-200">
+                  <ReceiptText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    Uso recente
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Histórico visual sem mudar backend.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <SubscriptionPlans
@@ -136,28 +205,28 @@ export default async function AssinaturaPage() {
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border bg-card p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">Plano atual</p>
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Plano atual</p>
             <p className="mt-3 text-2xl font-semibold tracking-tight">
-              {plan?.name ?? "Sem plano ativo"}
+              {displayPlanName}
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {plan ? formatCurrency(plan.price_cents) : "Escolha um plano para começar"}
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {displayPlanPrice}
             </p>
           </div>
 
-          <div className="rounded-2xl border bg-card p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">Créditos disponíveis</p>
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Créditos disponíveis</p>
             <p className="mt-3 text-2xl font-semibold tracking-tight">
               {wallet?.balance ?? 0}
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               Saldo atual da sua carteira
             </p>
           </div>
 
-          <div className="rounded-2xl border bg-card p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">Status da assinatura</p>
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Status da assinatura</p>
             <div className="mt-3">
               <span
                 className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${statusClass(
@@ -167,7 +236,7 @@ export default async function AssinaturaPage() {
                 {formatStatus(subscription?.status ?? "sem_assinatura")}
               </span>
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {subscription?.status === "pending_payment"
                 ? "Aguardando pagamento manual por PIX"
                 : subscription?.cancel_at_period_end
@@ -176,12 +245,12 @@ export default async function AssinaturaPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border bg-card p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">Próxima renovação</p>
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Próxima renovação</p>
             <p className="mt-3 text-2xl font-semibold tracking-tight">
               {formatDate(subscription?.current_period_end)}
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {plan?.billing_interval
                 ? `Intervalo: ${plan.billing_interval}`
                 : "Sem periodicidade definida"}
@@ -190,13 +259,13 @@ export default async function AssinaturaPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-          <section className="rounded-2xl border bg-card p-5 shadow-sm">
+          <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight">
                   Resumo do plano
                 </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                   Dados atuais da sua assinatura e capacidade mensal.
                 </p>
               </div>
@@ -204,44 +273,44 @@ export default async function AssinaturaPage() {
               <button
                 type="button"
                 disabled
-                className="inline-flex h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium text-muted-foreground opacity-70"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/80 px-4 text-sm font-medium text-slate-400 opacity-70 dark:border-white/10 dark:bg-white/5 dark:text-slate-400"
               >
                 Cancelar assinatura
               </button>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border bg-background p-4">
-                <p className="text-sm text-muted-foreground">Nome do plano</p>
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Nome do plano</p>
                 <p className="mt-2 text-lg font-semibold">
-                  {plan?.name ?? "Sem plano"}
+                  {plan ? "Start" : "Sem plano"}
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-background p-4">
-                <p className="text-sm text-muted-foreground">Créditos mensais</p>
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Créditos mensais</p>
                 <p className="mt-2 text-lg font-semibold">
                   {plan?.monthly_credits ?? 0}
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-background p-4">
-                <p className="text-sm text-muted-foreground">Valor</p>
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Valor</p>
                 <p className="mt-2 text-lg font-semibold">
                   {formatCurrency(plan?.price_cents)}
                 </p>
               </div>
 
-              <div className="rounded-2xl border bg-background p-4">
-                <p className="text-sm text-muted-foreground">Início do período</p>
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Início do período</p>
                 <p className="mt-2 text-lg font-semibold">
                   {formatDate(subscription?.current_period_start)}
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 rounded-2xl border bg-background p-4">
-              <p className="text-sm text-muted-foreground">Consumo estimado</p>
+            <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
+              <p className="text-sm text-slate-500 dark:text-slate-400">Consumo estimado</p>
               <p className="mt-2 text-sm leading-6 text-foreground/90">
                 Tarefa simples consome 1 crédito. Tarefa média consome 2 créditos.
                 Tarefa mais robusta consome de 3 a 4 créditos.
@@ -249,31 +318,31 @@ export default async function AssinaturaPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border bg-card p-5 shadow-sm">
+          <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
             <h2 className="text-2xl font-semibold tracking-tight">
               Movimentações de créditos
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               Histórico recente da carteira de créditos.
             </p>
 
             <div className="mt-6 space-y-3">
               {(transactions ?? []).length === 0 ? (
-                <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">
+                <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-white/10 dark:text-slate-400">
                   Nenhuma movimentação encontrada.
                 </div>
               ) : (
                 transactions!.map((item: any) => (
                   <div
                     key={item.id}
-                    className="rounded-2xl border bg-background p-4"
+                    className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="font-medium">
                           {item.description ?? item.transaction_type ?? "Movimentação"}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                           {formatDateTime(item.created_at)}
                         </p>
                       </div>
@@ -287,7 +356,7 @@ export default async function AssinaturaPage() {
                           {item.delta >= 0 ? "+" : ""}
                           {item.delta}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                           Saldo após: {item.balance_after ?? "—"}
                         </p>
                       </div>
@@ -299,16 +368,16 @@ export default async function AssinaturaPage() {
           </section>
         </div>
 
-        <section className="rounded-2xl border bg-card p-5 shadow-sm">
+        <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
           <h2 className="text-2xl font-semibold tracking-tight">Uso recente</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Eventos recentes de consumo dentro da plataforma.
           </p>
 
-          <div className="mt-6 overflow-hidden rounded-2xl border">
+          <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10">
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse text-sm">
-                <thead className="bg-muted/50 text-left">
+                <thead className="bg-slate-100/80 text-left dark:bg-white/5">
                   <tr>
                     <th className="px-4 py-3 font-medium">Data</th>
                     <th className="px-4 py-3 font-medium">Evento</th>
@@ -320,14 +389,14 @@ export default async function AssinaturaPage() {
                     <tr>
                       <td
                         colSpan={3}
-                        className="px-4 py-8 text-center text-muted-foreground"
+                        className="px-4 py-8 text-center text-slate-500 dark:text-slate-400"
                       >
                         Nenhum evento de uso encontrado.
                       </td>
                     </tr>
                   ) : (
                     usageEvents!.map((item: any) => (
-                      <tr key={item.id} className="border-t">
+                      <tr key={item.id} className="border-t border-slate-200/80 dark:border-white/10">
                         <td className="px-4 py-3">{formatDateTime(item.created_at)}</td>
                         <td className="px-4 py-3">{item.event_type ?? "—"}</td>
                         <td className="px-4 py-3">{item.credits_delta ?? 0}</td>

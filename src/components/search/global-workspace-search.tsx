@@ -131,8 +131,8 @@ export function GlobalWorkspaceSearch() {
 
   return (
     <div ref={wrapRef} className="relative w-full max-w-[520px]">
-      <div className="flex h-14 items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/90 px-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/80">
-        <Search className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />
+      <div className="flex h-14 items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/90 px-4 shadow-sm dark:border-white/12 dark:bg-white/6 dark:backdrop-blur-xl dark:shadow-[0_10px_30px_rgba(2,6,23,0.22)]">
+        <Search className="h-5 w-5 text-neutral-500 dark:text-slate-300" />
         <input
           ref={inputRef}
           type="text"
@@ -144,15 +144,15 @@ export function GlobalWorkspaceSearch() {
           }}
           onKeyDown={handleInputKeyDown}
           placeholder="Buscar..."
-          className="flex-1 bg-transparent text-base text-neutral-900 outline-none placeholder:text-neutral-500 dark:text-neutral-100 dark:placeholder:text-neutral-400"
+          className="flex-1 bg-transparent text-base text-neutral-900 outline-none placeholder:text-neutral-500 dark:text-slate-100 dark:placeholder:text-slate-400"
         />
       </div>
 
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-50 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-50 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-white/12 dark:bg-[#0b1726]/95 dark:backdrop-blur-xl">
           <div className="max-h-[380px] overflow-y-auto p-2">
             {loading ? (
-              <div className="px-3 py-6 text-sm text-neutral-500 dark:text-neutral-400">
+              <div className="px-3 py-6 text-sm text-neutral-500 dark:text-slate-400">
                 Buscando...
               </div>
             ) : results.length ? (
@@ -164,22 +164,22 @@ export function GlobalWorkspaceSearch() {
                   onClick={() => goTo(item.href)}
                   className={`flex w-full items-start rounded-xl px-3 py-3 text-left transition ${
                     index === activeIndex
-                      ? "bg-neutral-100 dark:bg-neutral-900"
-                      : "hover:bg-neutral-50 dark:hover:bg-neutral-900/70"
+                      ? "bg-neutral-100 dark:bg-white/8"
+                      : "hover:bg-neutral-50 dark:hover:bg-white/5"
                   }`}
                 >
                   <div>
-                    <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <p className="text-sm font-medium text-neutral-900 dark:text-slate-100">
                       {item.title}
                     </p>
-                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                    <p className="mt-1 text-xs text-neutral-500 dark:text-slate-400">
                       {item.category}
                     </p>
                   </div>
                 </button>
               ))
             ) : (
-              <div className="px-3 py-6 text-sm text-neutral-500 dark:text-neutral-400">
+              <div className="px-3 py-6 text-sm text-neutral-500 dark:text-slate-400">
                 Nada encontrado no microsaas.
               </div>
             )}

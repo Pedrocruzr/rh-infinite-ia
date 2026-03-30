@@ -2,9 +2,16 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ReactNode } from "react";
-import { UserAccountMenu } from "@/components/auth/user-account-menu";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { GlobalWorkspaceSearch } from "@/components/search/global-workspace-search";
+import {
+  Bot,
+  BriefcaseBusiness,
+  BookOpen,
+  CircleHelp,
+  FileText,
+  Scale,
+  Settings2,
+} from "lucide-react";
+import { InternalTopbar } from "@/components/layout/internal-topbar";
 
 export const dynamic = "force-dynamic";
 
@@ -99,56 +106,44 @@ export default async function InternalAppLayout({
     typeof wallet?.balance === "number" ? wallet.balance : 0;
 
   const navLinkClass =
-    "block rounded-lg px-3 py-2 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-neutral-900 dark:hover:text-neutral-100";
+    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-[#0d1a2b] dark:hover:text-neutral-100";
+
+  const navigation = [
+    { href: "/app/agentes", label: "Agentes", icon: Bot },
+    { href: "/app/recrutador/assessments", label: "Relatórios Stackers", icon: FileText },
+    { href: "/app/painel-de-vagas", label: "Painel de Vagas", icon: BriefcaseBusiness },
+    { href: "/app/agentes/clt-ia", label: "CLT IA", icon: Scale },
+    { href: "/app/tutorial", label: "Tutorial", icon: BookOpen },
+    { href: "/app/suporte", label: "Suporte", icon: CircleHelp },
+    { href: "/app/configuracoes", label: "Configurações", icon: Settings2 },
+  ] as const;
 
   return (
-    <div className="min-h-screen bg-white text-black dark:bg-neutral-950 dark:text-neutral-100">
+    <div className="min-h-screen bg-white text-black dark:bg-[#07111f] dark:text-neutral-100">
       <div className="grid min-h-screen grid-cols-[240px_1fr]">
-        <aside className="border-r border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-950">
+        <aside className="sticky top-0 h-screen border-r border-neutral-200 bg-white p-6 dark:border-[#122033] dark:bg-[#07111f]">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">Workspace</p>
           <h1 className="mt-2 text-2xl font-semibold">RH Infinite IA</h1>
 
           <nav className="mt-10 space-y-3">
-            <Link href="/app/agentes" className={navLinkClass}>
-              Agentes
-            </Link>
-            <Link href="/app/recrutador/assessments" className={navLinkClass}>
-              Relatórios Stackers
-            </Link>
-            <Link href="/app/painel-de-vagas" className={navLinkClass}>
-              Painel de Vagas
-            </Link>
-            <Link href="/app/agentes/clt-ia" className={navLinkClass}>
-              CLT IA
-            </Link>
-            <Link href="/app/tutorial" className={navLinkClass}>
-              Tutorial
-            </Link>
-            <Link href="/app/suporte" className={navLinkClass}>
-              Suporte
-            </Link>
-            <Link href="/app/configuracoes" className={navLinkClass}>
-              Configurações
-            </Link>
+            {navigation.map((item) => (
+              <Link key={item.href} href={item.href} className={navLinkClass}>
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
           </nav>
         </aside>
 
         <section className="min-w-0">
-          <div className="flex items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-4 dark:border-neutral-800 dark:bg-neutral-950">
-            <GlobalWorkspaceSearch />
-
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <UserAccountMenu
-                fullName={fullName}
-                companyName={companyName}
-                accountStatus={accountStatus}
-                planName={planName}
-                creditBalance={creditBalance}
-                avatarUrl={avatarUrl}
-              />
-            </div>
-          </div>
+          <InternalTopbar
+            fullName={fullName}
+            companyName={companyName}
+            accountStatus={accountStatus}
+            planName={planName}
+            creditBalance={creditBalance}
+            avatarUrl={avatarUrl}
+          />
 
           {children}
         </section>

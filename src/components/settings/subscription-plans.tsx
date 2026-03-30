@@ -105,12 +105,12 @@ export function SubscriptionPlans({
   }
 
   return (
-    <section className="rounded-2xl border bg-card p-5 shadow-sm">
+    <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
       <div className="max-w-3xl">
         <h2 className="text-2xl font-semibold tracking-tight">
-          Escolha seu plano
+          Créditos Extras
         </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
           Todos os agentes liberados. Você escolhe apenas o volume de uso.
         </p>
       </div>
@@ -130,15 +130,15 @@ export function SubscriptionPlans({
               key={plan.id}
               className={`rounded-2xl border p-5 shadow-sm ${
                 isPopular
-                  ? "border-neutral-900 bg-neutral-950 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-950"
-                  : "bg-background"
-              } ${isSelected ? "ring-2 ring-neutral-400" : ""}`}
+                  ? "border-slate-950 bg-slate-950 text-white dark:border-sky-200/20 dark:bg-white dark:text-slate-950"
+                  : "border-slate-200/80 bg-slate-50/80 dark:border-white/10 dark:bg-white/5"
+              } ${isSelected ? "ring-2 ring-sky-400/40" : ""}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p
                     className={`text-sm ${
-                      isPopular ? "text-white/70 dark:text-neutral-600" : "text-muted-foreground"
+                      isPopular ? "text-white/70 dark:text-slate-500" : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {plan.description || "Plano"}
@@ -157,17 +157,19 @@ export function SubscriptionPlans({
                 <p className="text-3xl font-semibold">
                   {formatCurrency(plan.price_cents)}
                 </p>
-                <p
-                  className={`mt-1 text-sm ${
-                    isPopular ? "text-white/70 dark:text-neutral-600" : "text-muted-foreground"
-                  }`}
-                >
-                  {plan.billing_interval === "month" ? "por mês" : plan.billing_interval}
-                </p>
+                {plan.billing_interval === "month" ? null : (
+                  <p
+                    className={`mt-1 text-sm ${
+                      isPopular ? "text-white/70 dark:text-slate-500" : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  >
+                    {plan.billing_interval}
+                  </p>
+                )}
               </div>
 
               <div className="mt-6 space-y-2 text-sm">
-                <p>{plan.monthly_credits} créditos mensais</p>
+                <p>{plan.monthly_credits} créditos</p>
                 <p>Todos os agentes liberados</p>
                 <p>Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos</p>
               </div>
@@ -179,15 +181,15 @@ export function SubscriptionPlans({
                   disabled={loadingKey !== null || isCurrent}
                   className={`inline-flex h-11 w-full items-center justify-center rounded-xl px-4 text-sm font-medium transition ${
                     isPopular
-                      ? "bg-white text-black hover:opacity-90 disabled:opacity-60 dark:bg-neutral-950 dark:text-neutral-100"
-                      : "border hover:bg-muted disabled:opacity-60"
+                      ? "bg-white text-black hover:opacity-90 disabled:opacity-60 dark:bg-slate-950 dark:text-white"
+                      : "border border-slate-200 bg-white/80 text-slate-800 hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                   }`}
                 >
                   {isCurrent
                     ? "Plano atual"
                     : isSelected
-                      ? "Plano selecionado"
-                      : "Escolher plano"}
+                      ? "Créditos extras"
+                      : "Créditos extras"}
                 </button>
               </div>
             </div>
@@ -196,18 +198,18 @@ export function SubscriptionPlans({
       </div>
 
       {selectedPlan ? (
-        <div className="mt-6 rounded-2xl border bg-background p-5">
+        <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5">
           <h3 className="text-lg font-semibold">Plano selecionado</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Agora escolha a forma de pagamento.
           </p>
 
-          <div className="mt-4 rounded-2xl border p-4">
+          <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium">{selectedPlan.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedPlan.monthly_credits} créditos mensais
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {selectedPlan.monthly_credits} créditos
                 </p>
               </div>
               <p className="text-lg font-semibold">
@@ -220,7 +222,7 @@ export function SubscriptionPlans({
                 type="button"
                 onClick={() => void startCheckout(selectedPlan.code, "PIX")}
                 disabled={loadingKey !== null}
-                className="inline-flex h-11 items-center justify-center rounded-xl border bg-black px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
               >
                 {loadingKey === `${selectedPlan.code}:PIX`
                   ? "Gerando PIX..."
@@ -232,7 +234,7 @@ export function SubscriptionPlans({
                 type="button"
                 onClick={() => void startCheckout(selectedPlan.code, "CREDIT_CARD")}
                 disabled={loadingKey !== null}
-                className="inline-flex h-11 items-center justify-center rounded-xl border px-4 text-sm font-medium transition hover:bg-muted disabled:opacity-60"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
               >
                 {loadingKey === `${selectedPlan.code}:CREDIT_CARD`
                   ? "Abrindo cartão..."
@@ -240,7 +242,7 @@ export function SubscriptionPlans({
               </button>
             </div>
 
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
               PIX e cartão de crédito disponíveis. A cobrança abre em nova aba quando o Asaas retornar invoiceUrl.
             </p>
           </div>
@@ -248,13 +250,13 @@ export function SubscriptionPlans({
       ) : null}
 
       {result?.checkout?.pixCopyPaste ? (
-        <div className="mt-6 rounded-2xl border bg-background p-5">
+        <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5">
           <h3 className="text-lg font-semibold">PIX gerado</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Se a janela da cobrança abriu, você também pode concluir por lá.
           </p>
 
-          <div className="mt-4 rounded-2xl border p-4">
+          <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
             <p className="break-all text-sm leading-6">
               {result.checkout.pixCopyPaste}
             </p>
@@ -262,7 +264,7 @@ export function SubscriptionPlans({
             <button
               type="button"
               onClick={() => void copy(result.checkout.pixCopyPaste || "")}
-              className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border px-4 text-sm hover:bg-muted"
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm text-slate-800 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
             >
               Copiar código PIX
             </button>
@@ -271,7 +273,7 @@ export function SubscriptionPlans({
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
           {error}
         </div>
       ) : null}

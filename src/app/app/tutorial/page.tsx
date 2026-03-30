@@ -21,8 +21,8 @@ export default async function TutorialPage() {
   const { data } = await query;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
+      <section className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8 md:py-10">
         <TutorialPageClient
           initialVideos={(data ?? []) as any}
           adminEnabled={adminEnabled}

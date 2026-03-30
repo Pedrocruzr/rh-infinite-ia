@@ -2,6 +2,14 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import {
+  BadgeCheck,
+  BookOpen,
+  CircleHelp,
+  PlayCircle,
+  Search,
+  Sparkles,
+} from "lucide-react";
 
 import type { TutorialVideo, TutorialVideoPayload } from "@/lib/tutorial/types";
 import { getYouTubeThumbnail, matchesSearch } from "@/lib/tutorial/utils";
@@ -162,11 +170,17 @@ export function TutorialPageClient({
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="rounded-3xl border bg-card p-6 shadow-sm">
+      <section className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-4xl font-semibold tracking-tight">Tutorial</h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+              <Sparkles className="h-3.5 w-3.5" />
+              Central de aprendizado
+            </div>
+            <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl">
+              Tutorial
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300 md:text-lg">
               Aprenda a acessar os agentes, preencher os campos, interpretar as respostas
               e usar melhor a plataforma.
             </p>
@@ -181,58 +195,111 @@ export function TutorialPageClient({
                   block: "start",
                 })
               }
-              className="rounded-xl border px-4 py-2 text-sm transition hover:bg-muted"
+              className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
             >
               Ver tutorial rápido
             </button>
 
             <Link
               href="/app/agentes"
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
+              className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 dark:bg-white dark:text-slate-950"
             >
               Ir para os agentes
             </Link>
           </div>
         </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-200">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  Tutorial rápido
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Guias curtos por assunto.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200">
+                <PlayCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  Vídeos curtos
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Conteúdo visual para acelerar uso.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-200">
+                <CircleHelp className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  FAQ
+                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Respostas rápidas e objetivas.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="rounded-2xl border bg-card p-4 shadow-sm">
+      <section className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
         <label className="flex flex-col gap-2 text-sm">
-          <span className="font-medium">Buscar por assunto</span>
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Ex: interpretar respostas, preencher campos, vídeos..."
-            className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
-          />
+          <span className="font-medium text-slate-800 dark:text-slate-100">Buscar por assunto</span>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Ex: interpretar respostas, preencher campos, vídeos..."
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white/90 pl-11 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
+            />
+          </div>
         </label>
       </section>
 
       <section id="tutorial-rapido" className="grid gap-4 md:grid-cols-2">
         {filteredGuides.map((item) => (
-          <article key={item.title} className="rounded-2xl border bg-card p-5 shadow-sm">
-            <h2 className="text-lg font-semibold">{item.title}</h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.content}</p>
+          <article key={item.title} className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">{item.title}</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">{item.content}</p>
           </article>
         ))}
 
         {filteredGuides.length === 0 && (
-          <div className="rounded-2xl border border-dashed bg-card p-5 text-sm text-muted-foreground md:col-span-2">
+          <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-white/85 p-5 text-sm text-slate-500 dark:border-white/10 dark:bg-[#102033]/72 dark:text-slate-400 md:col-span-2">
             Nenhum conteúdo rápido encontrado para essa busca.
           </div>
         )}
       </section>
 
-      <section className="rounded-2xl border bg-card p-5 shadow-sm">
+      <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
         <div className="mb-4">
           <h2 className="text-2xl font-semibold tracking-tight">Vídeos curtos</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Conteúdo rápido para acelerar seu uso da plataforma sem depender de suporte repetitivo.
           </p>
         </div>
 
         {filteredVideos.length === 0 ? (
-          <div className="rounded-2xl border border-dashed p-5 text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-slate-200 p-5 text-sm text-slate-500 dark:border-white/10 dark:text-slate-400">
             Nenhum vídeo encontrado.
           </div>
         ) : (
@@ -243,7 +310,7 @@ export function TutorialPageClient({
               return (
                 <article
                   key={video.id}
-                  className="overflow-hidden rounded-2xl border bg-background shadow-sm"
+                  className="overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-slate-50/80 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/5"
                 >
                   <a
                     href={video.youtube_url}
@@ -259,6 +326,7 @@ export function TutorialPageClient({
                       />
                     ) : (
                       <div className="flex h-48 items-center justify-center bg-muted text-sm text-muted-foreground">
+                        
                         Thumbnail indisponível
                       </div>
                     )}
@@ -279,7 +347,7 @@ export function TutorialPageClient({
                     </div>
 
                     {video.description ? (
-                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
                         {video.description}
                       </p>
                     ) : null}
@@ -289,7 +357,7 @@ export function TutorialPageClient({
                         href={video.youtube_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-lg border px-3 py-2 text-sm transition hover:bg-muted"
+                        className="rounded-xl border border-slate-200 bg-white/90 px-3 py-2 text-sm text-slate-800 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                       >
                         Ver no YouTube
                       </a>
@@ -298,7 +366,7 @@ export function TutorialPageClient({
                         <button
                           type="button"
                           onClick={() => handleDeleteVideo(video.id)}
-                          className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 transition hover:bg-red-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-950/30"
+                          className="rounded-xl border border-red-200 px-3 py-2 text-sm text-red-600 transition hover:bg-red-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-950/30"
                         >
                           Excluir
                         </button>
@@ -312,24 +380,24 @@ export function TutorialPageClient({
         )}
       </section>
 
-      <section className="rounded-2xl border bg-card p-5 shadow-sm">
+      <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
         <div className="mb-4">
           <h2 className="text-2xl font-semibold tracking-tight">Perguntas frequentes</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Respostas diretas para reduzir dúvidas repetidas no uso do produto.
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           {filteredFaq.map((item) => (
-            <article key={item.question} className="rounded-2xl border bg-background p-4">
-              <h3 className="font-medium">{item.question}</h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.answer}</p>
+            <article key={item.question} className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
+              <h3 className="font-medium text-slate-950 dark:text-white">{item.question}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{item.answer}</p>
             </article>
           ))}
 
           {filteredFaq.length === 0 && (
-            <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground md:col-span-2">
+            <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-white/10 dark:text-slate-400 md:col-span-2">
               Nenhuma pergunta frequente encontrada para essa busca.
             </div>
           )}
@@ -337,52 +405,56 @@ export function TutorialPageClient({
       </section>
 
       {adminEnabled ? (
-        <section className="rounded-2xl border bg-card p-5 shadow-sm">
+        <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
           <div className="mb-4">
-            <h2 className="text-2xl font-semibold tracking-tight">Admin de vídeos</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+              <BadgeCheck className="h-3.5 w-3.5" />
+              Modo admin
+            </div>
+            <h2 className="mt-4 text-2xl font-semibold tracking-tight">Admin de vídeos</h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               Cadastre vídeos com título, descrição e link do YouTube. A thumbnail será gerada automaticamente.
             </p>
           </div>
 
           <form onSubmit={handleCreateVideo} className="grid gap-4 lg:grid-cols-2">
             <label className="flex flex-col gap-2 text-sm lg:col-span-1">
-              <span className="font-medium">Título</span>
+              <span className="font-medium text-slate-800 dark:text-slate-100">Título</span>
               <input
                 value={form.title ?? ""}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, title: event.target.value }))
                 }
                 placeholder="Ex: Como preencher os campos do agente"
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
+                className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
               />
             </label>
 
             <label className="flex flex-col gap-2 text-sm lg:col-span-1">
-              <span className="font-medium">Link do YouTube</span>
+              <span className="font-medium text-slate-800 dark:text-slate-100">Link do YouTube</span>
               <input
                 value={form.youtube_url ?? ""}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, youtube_url: event.target.value }))
                 }
                 placeholder="https://www.youtube.com/watch?v=..."
-                className="h-11 rounded-xl border bg-background px-3 outline-none transition focus:border-primary"
+                className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
               />
             </label>
 
             <label className="flex flex-col gap-2 text-sm lg:col-span-2">
-              <span className="font-medium">Descrição</span>
+              <span className="font-medium text-slate-800 dark:text-slate-100">Descrição</span>
               <textarea
                 value={form.description ?? ""}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, description: event.target.value }))
                 }
                 placeholder="Explique rapidamente o que o vídeo ensina."
-                className="min-h-[120px] rounded-xl border bg-background px-3 py-3 outline-none transition focus:border-primary"
+                className="min-h-[120px] rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
               />
             </label>
 
-            <label className="flex items-center gap-3 text-sm">
+            <label className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 text-sm dark:border-white/10 dark:bg-white/5">
               <input
                 type="checkbox"
                 checked={Boolean(form.is_published)}
@@ -413,7 +485,7 @@ export function TutorialPageClient({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950"
                 >
                   {submitting ? "Salvando..." : "Adicionar vídeo"}
                 </button>

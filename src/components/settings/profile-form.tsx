@@ -163,19 +163,21 @@ export function ProfileForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-3xl border bg-card p-8 shadow-sm"
+      className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
     >
       <div className="space-y-8">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Dados do perfil</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
+            Dados do perfil
+          </h2>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
             Atualize os dados básicos da sua conta.
           </p>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <label htmlFor="full_name" className="text-sm font-medium">
+            <label htmlFor="full_name" className="text-sm font-medium text-slate-800 dark:text-slate-100">
               Nome
             </label>
             <input
@@ -183,13 +185,13 @@ export function ProfileForm({
               type="text"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border px-4 text-sm outline-none transition focus:border-neutral-400"
+              className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
               placeholder="Seu nome"
             />
           </div>
 
           <div>
-            <label htmlFor="company_name" className="text-sm font-medium">
+            <label htmlFor="company_name" className="text-sm font-medium text-slate-800 dark:text-slate-100">
               Nome da empresa
             </label>
             <input
@@ -197,13 +199,13 @@ export function ProfileForm({
               type="text"
               value={companyName}
               onChange={(event) => setCompanyName(event.target.value)}
-              className="mt-2 h-12 w-full rounded-xl border px-4 text-sm outline-none transition focus:border-neutral-400"
+              className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
               placeholder="Nome da empresa"
             />
           </div>
 
-          <div>
-            <label htmlFor="document_number" className="text-sm font-medium">
+          <div className="md:col-span-2">
+            <label htmlFor="document_number" className="text-sm font-medium text-slate-800 dark:text-slate-100">
               CPF ou CNPJ
             </label>
             <input
@@ -212,16 +214,16 @@ export function ProfileForm({
               inputMode="numeric"
               value={documentNumber}
               onChange={(event) => setDocumentNumber(formatDocument(event.target.value))}
-              className="mt-2 h-12 w-full rounded-xl border px-4 text-sm outline-none transition focus:border-neutral-400"
+              className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
               placeholder="Digite seu CPF ou CNPJ"
             />
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               Esse dado é necessário para gerar cobranças no Asaas.
             </p>
           </div>
 
-          <div>
-            <label htmlFor="email" className="text-sm font-medium">
+          <div className="md:col-span-2">
+            <label htmlFor="email" className="text-sm font-medium text-slate-800 dark:text-slate-100">
               E-mail
             </label>
             <input
@@ -229,31 +231,35 @@ export function ProfileForm({
               type="email"
               value={email}
               disabled
-              className="mt-2 h-12 w-full rounded-xl border bg-neutral-50 px-4 text-sm text-neutral-500 outline-none"
+              className="mt-2 h-12 w-full rounded-2xl border border-slate-200 bg-slate-50/90 px-4 text-sm text-slate-500 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-400"
             />
           </div>
 
-          <div>
-            <p className="mb-3 text-sm font-medium">Foto do perfil</p>
+          <div className="md:col-span-2 rounded-[1.75rem] border border-slate-200/80 bg-slate-50/70 p-6 dark:border-white/10 dark:bg-white/5">
+            <p className="mb-4 text-sm font-medium text-slate-800 dark:text-slate-100">
+              Foto do perfil
+            </p>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt="Avatar"
-                  className="h-20 w-20 rounded-full border object-cover"
+                  className="h-20 w-20 rounded-full border border-slate-200 object-cover dark:border-white/10"
                 />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full border bg-neutral-100 text-lg font-semibold text-neutral-700">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-semibold text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-white">
                   {getInitials()}
                 </div>
               )}
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">Avatar</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  Avatar
+                </p>
                 <label
                   htmlFor="avatar-upload"
-                  className="inline-flex cursor-pointer items-center justify-center rounded-xl border px-4 py-2 text-sm font-medium transition hover:bg-neutral-50"
+                  className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                 >
                   Escolher foto
                 </label>
@@ -264,10 +270,10 @@ export function ProfileForm({
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Formatos aceitos: PNG, JPG, JPEG e WEBP.
                 </p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {avatarFile ? avatarFile.name : "Nenhum arquivo selecionado"}
                 </p>
               </div>
@@ -276,13 +282,13 @@ export function ProfileForm({
         </div>
 
         {error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
             {error}
           </div>
         ) : null}
 
         {success ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
             {success}
           </div>
         ) : null}
@@ -291,7 +297,7 @@ export function ProfileForm({
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-black px-5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
+            className="inline-flex h-12 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-slate-950"
           >
             {saving ? "Salvando..." : "Salvar alterações"}
           </button>

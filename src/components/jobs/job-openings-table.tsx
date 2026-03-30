@@ -17,10 +17,10 @@ export function JobOpeningsTable({
   onStatusChange,
 }: JobOpeningsTableProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse text-sm">
-          <thead className="bg-muted/50 text-left">
+          <thead className="bg-slate-100/80 text-left dark:bg-white/5">
             <tr>
               <th className="px-4 py-3 font-medium">Vaga</th>
               <th className="px-4 py-3 font-medium">Abertura</th>
@@ -36,14 +36,14 @@ export function JobOpeningsTable({
               <tr>
                 <td
                   colSpan={6}
-                  className="px-4 py-8 text-center text-muted-foreground"
+                  className="px-4 py-8 text-center text-slate-500 dark:text-slate-400"
                 >
                   Nenhuma vaga encontrada com os filtros atuais.
                 </td>
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id} className="border-t">
+                <tr key={item.id} className="border-t border-slate-200/80 dark:border-white/10">
                   <td className="px-4 py-3 font-medium">{item.nome_vaga}</td>
                   <td className="px-4 py-3">{formatDateBR(item.data_abertura)}</td>
                   <td className="px-4 py-3">{formatDateBR(item.data_fechamento)}</td>
@@ -62,7 +62,7 @@ export function JobOpeningsTable({
                       <button
                         type="button"
                         onClick={() => onEdit(item)}
-                        className="rounded-lg border px-3 py-1.5 text-xs transition hover:bg-muted"
+                        className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                       >
                         Editar
                       </button>
@@ -71,7 +71,7 @@ export function JobOpeningsTable({
                         <button
                           type="button"
                           onClick={() => onStatusChange(item, "fechada")}
-                          className="rounded-lg border px-3 py-1.5 text-xs transition hover:bg-muted"
+                          className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                         >
                           Fechar
                         </button>
@@ -79,7 +79,7 @@ export function JobOpeningsTable({
                         <button
                           type="button"
                           onClick={() => onStatusChange(item, "em_aberto")}
-                          className="rounded-lg border px-3 py-1.5 text-xs transition hover:bg-muted"
+                          className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                         >
                           Reabrir
                         </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { BriefcaseBusiness, Download, Sparkles } from "lucide-react";
 
 import type {
   JobFilters,
@@ -184,34 +185,42 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   return (
     <>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-4xl font-semibold tracking-tight">
-              Painel de Vagas
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              Gerencie vagas, acompanhe status e exporte seus dados.
-            </p>
-          </div>
+        <section className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                <Sparkles className="h-3.5 w-3.5" />
+                Operação de recrutamento
+              </div>
+              <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl">
+                Painel de Vagas
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300 md:text-lg">
+                Gerencie vagas, acompanhe status e exporte seus dados em um painel visual unificado.
+              </p>
+            </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => exportJobOpeningsToCsv(filteredItems)}
-              className="rounded-xl border px-4 py-2 text-sm transition hover:bg-muted"
-            >
-              Exportar CSV
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => exportJobOpeningsToCsv(filteredItems)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+              >
+                <Download className="h-4 w-4" />
+                Exportar CSV
+              </button>
 
-            <button
-              type="button"
-              onClick={openCreateDialog}
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-            >
-              + Nova vaga
-            </button>
+              <button
+                type="button"
+                onClick={openCreateDialog}
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 dark:bg-white dark:text-slate-950"
+              >
+                <BriefcaseBusiness className="h-4 w-4" />
+                Nova vaga
+              </button>
+            </div>
           </div>
-        </div>
+        </section>
 
         <JobOpeningsStats
           total={stats.total}
@@ -234,7 +243,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
         ) : null}
 
         {loading ? (
-          <div className="rounded-2xl border bg-card px-4 py-6 text-sm text-muted-foreground shadow-sm">
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 px-4 py-6 text-sm text-slate-500 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72 dark:text-slate-400">
             Atualizando vagas...
           </div>
         ) : null}

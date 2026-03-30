@@ -25,30 +25,30 @@ export function JobOpeningsBoard({
         return (
           <section
             key={statusOption.value}
-            className="rounded-2xl border bg-card p-4 shadow-sm"
+            className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72"
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold">{statusOption.label}</h2>
-              <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
                 {statusItems.length}
               </span>
             </div>
 
             <div className="space-y-3">
               {statusItems.length === 0 ? (
-                <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500 dark:border-white/10 dark:text-slate-400">
                   Nenhuma vaga neste status.
                 </div>
               ) : (
                 statusItems.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-xl border bg-background p-4 shadow-sm"
+                    className="rounded-[1.35rem] border border-slate-200/80 bg-slate-50/70 p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="font-medium">{item.nome_vaga}</h3>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                           Aberta em {formatDateBR(item.data_abertura)}
                         </p>
                       </div>
@@ -62,7 +62,7 @@ export function JobOpeningsBoard({
                       </span>
                     </div>
 
-                    <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
+                    <div className="mt-4 grid gap-2 text-sm text-slate-500 dark:text-slate-400">
                       <p>Dias em aberto: {item.dias_em_aberto}</p>
                       <p>Fechamento: {formatDateBR(item.data_fechamento)}</p>
                     </div>
@@ -72,7 +72,7 @@ export function JobOpeningsBoard({
                         <button
                           type="button"
                           onClick={() => onStatusChange(item, "em_aberto")}
-                          className="rounded-lg border px-3 py-1.5 text-xs transition hover:bg-muted"
+                          className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                         >
                           Reabrir
                         </button>
@@ -82,7 +82,7 @@ export function JobOpeningsBoard({
                         <button
                           type="button"
                           onClick={() => onStatusChange(item, "pausada")}
-                          className="rounded-lg border px-3 py-1.5 text-xs transition hover:bg-muted"
+                          className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                         >
                           Pausar
                         </button>
@@ -92,7 +92,7 @@ export function JobOpeningsBoard({
                         <button
                           type="button"
                           onClick={() => onStatusChange(item, "fechada")}
-                          className="rounded-lg border px-3 py-1.5 text-xs transition hover:bg-muted"
+                          className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                         >
                           Fechar
                         </button>
@@ -101,7 +101,7 @@ export function JobOpeningsBoard({
                       <button
                         type="button"
                         onClick={() => onEdit(item)}
-                        className="rounded-lg border px-3 py-1.5 text-xs transition hover:bg-muted"
+                        className="rounded-xl border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
                       >
                         Editar
                       </button>
