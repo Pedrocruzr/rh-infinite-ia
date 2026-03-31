@@ -62,7 +62,12 @@ export async function POST(request: Request) {
       .eq("id", user.id)
       .maybeSingle();
 
-    const documentNumber = normalizeDocument((profile as any)?.document_number);
+    const documentNumber = normalizeDocument(
+      (profile as any)?.document_number ??
+        (typeof user.user_metadata?.document_number === "string"
+          ? user.user_metadata.document_number
+          : null)
+    );
 
     if (!documentNumber || ![11, 14].includes(documentNumber.length)) {
       return NextResponse.json(

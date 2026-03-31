@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { executeAgentRuntime } from "@/lib/agents/runtime";
-
-const DEV_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const authSupabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await authSupabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "auth",
+          error: authError?.message ?? "Não autenticado",
+        },
+        { status: 401 }
+      );
+    }
+
     const supabase = createAdminClient();
 
     const { data: agent, error: agentError } = await supabase
@@ -35,7 +51,7 @@ export async function POST(request: Request) {
     const { data: insertedRun, error: runError } = await supabase
       .from("agent_runs")
       .insert({
-        user_id: DEV_USER_ID,
+        user_id: user.id,
         agent_id: agent.id,
         status: "success",
         input_summary: body?.objective || body?.context || "execução manual",
@@ -66,7 +82,7 @@ export async function POST(request: Request) {
     const { error: usageError } = await supabase
       .from("usage_events")
       .insert({
-        user_id: DEV_USER_ID,
+        user_id: user.id,
         agent_id: agent.id,
         agent_run_id: insertedRun.id,
         event_type: "agent_execution",
