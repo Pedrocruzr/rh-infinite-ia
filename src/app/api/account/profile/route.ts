@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type Body = {
   fullName?: string | null;
@@ -16,6 +17,7 @@ function normalizeDocument(value: string | null | undefined) {
 
 export async function POST(request: Request) {
   const supabase = await createClient();
+  const admin = createAdminClient();
 
   const {
     data: { user },
@@ -47,15 +49,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: profileData, error: profileError } = await supabase.rpc(
-    "upsert_my_profile",
-    {
-      p_email: user.email ?? null,
-      p_full_name: fullName || null,
-      p_avatar_url: avatarUrl || null,
-      p_document_number: documentNumber,
-    }
-  );
+  const { data: profileData, error: profileError } = await admin
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        email: user.email ?? null,
+        full_name: fullName || null,
+        avatar_url: avatarUrl || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    )
+    .select("*")
+    .single();
 
   if (profileError) {
     return NextResponse.json(
@@ -69,6 +76,7 @@ export async function POST(request: Request) {
     full_name: fullName || null,
     company_name: companyName || null,
     avatar_url: avatarUrl || null,
+    document_number: documentNumber,
   };
 
   const { error: metadataError } = await supabase.auth.updateUser({
