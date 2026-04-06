@@ -110,6 +110,11 @@ function isPlausibleName(value: string): boolean {
 function validateAnswer(field: ProfileField, answer: string): string | null {
   const normalized = answer.trim();
 
+  // Perguntas de múltipla escolha aceitam "1".."4", "a".."d" ou palavra-chave.
+  if (field === "discResposta" || field === "motivacao") {
+    return null;
+  }
+
   if (isWeakAnswer(normalized)) {
     return "Não consegui validar sua resposta. Responda exatamente o que foi pedido, com mais clareza.";
   }
