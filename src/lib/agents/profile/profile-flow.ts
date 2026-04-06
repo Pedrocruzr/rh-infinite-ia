@@ -158,16 +158,46 @@ export function updateProfileSession(
   field: ProfileField,
   answer: string
 ): ProfileSession {
+  let resolved = answer;
+  if (field === "motivacao") {
+    resolved = resolveChoice(answer, MOTIVATION_OPTIONS) ?? answer;
+  } else if (field === "discResposta") {
+    resolved = resolveChoice(answer, DISC_OPTIONS) ?? answer;
+  }
+
   const next: ProfileSession = {
     ...session,
-    [field]: answer,
+    [field]: resolved,
   };
 
-  if (field === "vaga" && answer.trim()) {
-    next.competenciasPrincipais = suggestCompetenciasByRole(answer.trim());
+  if (field === "vaga" && resolved.trim()) {
+    next.competenciasPrincipais = suggestCompetenciasByRole(resolved.trim());
   }
 
   return next;
+}
+
+function resolveChoice(answer: string, options: ClosedOption[]): string | null {
+  const raw = answer.trim().toLowerCase();
+  if (!raw) return null;
+
+  const num = parseInt(raw, 10);
+  if (!Number.isNaN(num) && num >= 1 && num <= options.length) {
+    return options[num - 1].value;
+  }
+
+  const byId = options.find((o) => o.id === raw);
+  if (byId) return byId.value;
+
+  const byValue = options.find((o) => o.value === raw);
+  if (byValue) return byValue.value;
+
+  const byKeyword = options.find((o) =>
+    o.label.toLowerCase().split(/[\s.,]+/).includes(raw)
+  );
+  if (byKeyword) return byKeyword.value;
+
+  return null;
 }
 
 export function getNextProfileQuestion(session: ProfileSession): FlowQuestion | null {

@@ -20,25 +20,11 @@ export const agents = [
     shortDescription: "Analisa clima organizacional e sinais do ambiente interno.",
     active: true,
   },
-{
+  {
     name: "CLT IA",
-    slug: "coletor-dados-six-box",
+    slug: "clt-ia",
     category: "Pesquisa",
     shortDescription: "Busca artigos da CLT em base local e responde com resumo fiel e artigo na íntegra.",
-    active: true,
-  },
-  {
-    name: "Analista de Diagnóstico Six Box",
-    slug: "analista-diagnostico-six-box",
-    category: "Diagnóstico",
-    shortDescription: "Analisa os dados do Six Box para identificar gaps e prioridades.",
-    active: true,
-  },
-  {
-    name: "Analista de Pesquisa de Clima",
-    slug: "clt-ia",
-    category: "Diagnóstico",
-    shortDescription: "Analisa clima organizacional e sinais do ambiente interno.",
     active: true,
   },
   {
@@ -106,7 +92,7 @@ export const agents = [
   },
   {
     name: "Especialista em Taxa de Aderência com a Vaga",
-    slug: "taxa-de-aderencia-com-a-vaga",
+    slug: "taxa-aderencia-vaga",
     category: "Recrutamento & Seleção",
     shortDescription: "Calcula aderência entre perfil, vaga e contexto cultural.",
     active: true,
@@ -118,15 +104,6 @@ export const agents = [
     shortDescription: "Gera parecer técnico com base nas evidências da entrevista.",
     active: true,
   },
-
-  {
-    name: "Especialista em Taxa de Aderência com a Vaga",
-    slug: "taxa-aderencia-vaga",
-    category: "Recrutamento & Seleção",
-    shortDescription: "Calcula aderência entre perfil, vaga e contexto cultural.",
-    active: true,
-  },
-
   {
     name: "Onboarding Estratégico",
     slug: "onboarding-estrategico",
@@ -148,4 +125,4 @@ export const agents = [
     shortDescription: "Organiza o desligamento com clareza e humanização.",
     active: true,
   },
-];
+] as const;

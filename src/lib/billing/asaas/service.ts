@@ -183,7 +183,7 @@ async function createSubscription(
     value: centsToCurrencyValue(input.priceCents),
     nextDueDate: buildDueDate(1),
     cycle: "MONTHLY",
-    description: `${input.planName} - ${input.monthlyCredits} créditos/mês`,
+    description: `${input.planName} - ${input.monthlyCredits} créditos/mês · 1 usuário · todos os agentes liberados · preço travado por 12 meses`,
     externalReference: buildSubscriptionExternalReference(input),
   };
 

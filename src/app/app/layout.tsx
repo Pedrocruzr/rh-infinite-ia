@@ -30,6 +30,11 @@ export default async function InternalAppLayout({
     redirect("/login");
   }
 
+  if (!user.email_confirmed_at) {
+    const verifyUrl = `/verificar-email?email=${encodeURIComponent(user.email ?? "")}`;
+    redirect(verifyUrl);
+  }
+
   const { data: rawProfile } = await supabase
     .from("profiles")
     .select("full_name, avatar_url")
@@ -132,10 +137,20 @@ export default async function InternalAppLayout({
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-[#07111f] dark:text-neutral-100">
-      <div className="grid min-h-screen grid-cols-[240px_1fr]">
-        <aside className="sticky top-0 h-screen border-r border-neutral-200 bg-white p-6 dark:border-[#122033] dark:bg-[#07111f]">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">Workspace</p>
-          <h1 className="mt-2 text-2xl font-semibold">RH Infinite IA</h1>
+      <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
+        <aside className="hidden sticky top-0 h-screen border-r border-neutral-200 bg-white p-6 lg:block dark:border-[#122033] dark:bg-[#07111f]">
+          <div className="flex w-full items-center justify-center overflow-hidden rounded-[1.1rem] border border-white/40 bg-white/65 px-4 py-1.5 shadow-[0_18px_40px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:border-white/10 dark:bg-white/6 dark:shadow-[0_18px_40px_rgba(2,8,23,0.35)]">
+            <img
+              src="/brand/stackers-infinite-light.png"
+              alt="Stackers Infinite IA"
+              className="block h-auto w-[376px] scale-[2] dark:hidden"
+            />
+            <img
+              src="/brand/stackers-infinite-dark.png"
+              alt="Stackers Infinite IA"
+              className="hidden h-auto w-[376px] scale-[2] dark:block"
+            />
+          </div>
 
           <nav className="mt-10 space-y-3">
             {navigation.map((item) => (

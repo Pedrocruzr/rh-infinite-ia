@@ -20,7 +20,7 @@ export default async function PerfilPage() {
 
   const { data: rawProfile } = await supabase
     .from("profiles")
-    .select("id, full_name, avatar_url, document_number")
+    .select("id, full_name, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -36,6 +36,11 @@ export default async function PerfilPage() {
     (typeof user.user_metadata?.avatar_url === "string"
       ? user.user_metadata.avatar_url
       : "");
+
+  const initialDocumentNumber =
+    typeof user.user_metadata?.document_number === "string"
+      ? user.user_metadata.document_number
+      : "";
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
@@ -121,7 +126,7 @@ export default async function PerfilPage() {
           initialFullName={profile?.full_name ?? ""}
           initialAvatarUrl={initialAvatarUrl}
           initialCompanyName={initialCompanyName}
-          initialDocumentNumber={profile?.document_number ?? ""}
+          initialDocumentNumber={initialDocumentNumber}
         />
       </section>
     </main>

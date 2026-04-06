@@ -69,6 +69,44 @@ function isWeakAnswer(value: string): boolean {
   return false;
 }
 
+function isPlausibleName(value: string): boolean {
+  const trimmed = value.trim();
+
+  if (trimmed.length < 2) return false;
+  if (/\d/.test(trimmed)) return false;
+
+  const tokens = trimmed
+    .split(/\s+/)
+    .map((token) => token.replace(/^[-'.\s]+|[-'.\s]+$/g, ""))
+    .filter(Boolean);
+
+  if (tokens.length === 0) return false;
+
+  const hasValidToken = tokens.some(
+    (token) => /^[\p{L}][\p{L}'’.-]{1,}$/u.test(token) && /[\p{L}]/u.test(token)
+  );
+
+  if (!hasValidToken) return false;
+
+  const normalized = normalizeText(trimmed);
+  const compact = normalized.replace(/\s+/g, "");
+
+  if (compact.length < 3) return false;
+
+  const obviousNoise = [
+    /(.)\1{3,}/,
+    /^[bcdfghjklmnpqrstvwxyz]{6,}$/i,
+    /^[aeiou]{5,}$/i,
+    /^[a-z]{1,2}$/i,
+  ];
+
+  if (obviousNoise.some((pattern) => pattern.test(compact))) {
+    return false;
+  }
+
+  return true;
+}
+
 function validateAnswer(field: ProfileField, answer: string): string | null {
   const normalized = answer.trim();
 
@@ -77,9 +115,8 @@ function validateAnswer(field: ProfileField, answer: string): string | null {
   }
 
   if (field === "nome") {
-    const parts = normalized.split(/\s+/).filter(Boolean);
-    if (parts.length < 2) {
-      return "Preciso do nome completo. Informe nome e sobrenome.";
+    if (!isPlausibleName(normalized)) {
+      return "Não consegui validar seu nome. Informe pelo menos um nome real, como por exemplo Pedro, Ana, John ou María.";
     }
   }
 
@@ -119,6 +156,8 @@ export async function POST(req: NextRequest) {
           session,
           done: false,
           reply: validationError,
+          currentField: retryResult.nextQuestion?.field ?? body.currentField ?? null,
+          nextField: retryResult.nextQuestion?.field ?? body.currentField ?? null,
           nextQuestion: retryResult.nextQuestion,
           reportMarkdown: null,
         });
@@ -204,6 +243,8 @@ export async function POST(req: NextRequest) {
       reply: result.done
         ? "Relatório de perfil comportamental gerado com sucesso."
         : result.reply,
+      currentField: result.nextQuestion?.field ?? null,
+      nextField: result.nextQuestion?.field ?? null,
       nextQuestion: result.nextQuestion,
       reportMarkdown: finalSession.reportMarkdown ?? null,
     });

@@ -128,30 +128,34 @@ export default function StandardAgentLayout({
 
   return (
     <main className="h-[100dvh] overflow-hidden bg-background text-foreground dark:bg-[#05070b] dark:text-[#f3f5f7]">
-      <div className="mx-auto flex h-full max-w-[1320px] flex-col px-6 py-5">
-        <div className="flex items-start justify-between gap-4">
+      <div className="mx-auto flex h-full max-w-[1320px] flex-col px-4 py-4 sm:px-6 sm:py-5">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm text-muted-foreground dark:text-[#8b97a7]">{`Stacker de ${stackerName}`}</p>
-            <h1 className="mt-2 text-[38px] font-semibold tracking-[-0.04em] dark:text-[#f7f8fa]">{title}</h1>
-            <p className="mt-2 text-base leading-7 text-muted-foreground dark:text-[#a8b3c2]">{subtitle}</p>
+            <h1 className="mt-2 text-[24px] font-semibold leading-tight tracking-[-0.04em] dark:text-[#f7f8fa] sm:text-[38px]">
+              {title}
+            </h1>
+            <p className="mt-2 text-sm leading-7 text-muted-foreground dark:text-[#a8b3c2] sm:text-base">
+              {subtitle}
+            </p>
           </div>
 
           <Link
             href={backHref}
-            className="rounded-2xl border border-border px-5 py-3 text-sm transition hover:bg-muted dark:border-[#202834] dark:bg-[#0c1118] dark:text-[#e8edf3] dark:hover:bg-[#131a23]"
+            className="absolute right-0 top-0 rounded-2xl border border-border px-5 py-3 text-sm transition hover:bg-muted dark:border-[#202834] dark:bg-[#0c1118] dark:text-[#e8edf3] dark:hover:bg-[#131a23] sm:static"
           >
             Voltar
           </Link>
         </div>
 
         <div className="mt-4">
-          <div className="inline-flex max-w-full rounded-2xl border border-amber-300/50 bg-amber-500/10 px-5 py-3 text-sm leading-6 text-amber-900 dark:border-[#7a4a00] dark:bg-[#231500] dark:text-[#f0c56b]">
+          <div className="inline-flex max-w-full rounded-2xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-[#7a4a00] dark:bg-[#231500] dark:text-[#f0c56b] sm:px-5">
             {retentionNotice}
           </div>
         </div>
 
         <div className={`flex min-h-0 flex-1 flex-col ${panelTopSpacingClass}`}>
-          <div className="flex-1 overflow-y-auto py-6">
+          <div className="flex-1 overflow-y-auto py-5 sm:py-6">
             <div className="mx-auto flex min-h-full max-w-[980px] flex-col justify-center">
               <div className="space-y-6">
                 {messages.map((message) => (
@@ -164,7 +168,7 @@ export default function StandardAgentLayout({
                       message.id === initialAssistantId &&
                       !hasUserMessages &&
                       !finished ? (
-                        <div className="flex min-h-[40vh] flex-col items-center justify-center px-8 text-center">
+                        <div className="flex min-h-[40vh] flex-col items-center justify-center px-4 text-center sm:px-8">
                           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10161d] text-[#d9dee5]">
                             {agentImageSrc ? (
                               <img
@@ -177,11 +181,11 @@ export default function StandardAgentLayout({
                               <Search className="h-6 w-6" />
                             )}
                           </div>
-                          <h2 className="mt-6 text-[18px] font-medium text-[#f3f5f7]">
+                          <h2 className="mt-6 text-base font-medium text-[#f3f5f7] sm:text-[18px]">
                             {title}
                           </h2>
                           <div
-                            className={`mx-auto mt-3 max-w-[760px] space-y-4 text-[15px] leading-7 text-[#8f98a6] ${
+                            className={`mx-auto mt-3 max-w-[760px] space-y-4 text-sm leading-7 text-[#8f98a6] sm:text-[15px] ${
                               hasBulletLikeContent(message.content) ? "text-left" : "text-center"
                             }`}
                           >
@@ -190,7 +194,7 @@ export default function StandardAgentLayout({
                         </div>
                       ) : (
                         <div
-                          className={`select-text rounded-[30px] px-8 py-6 text-[18px] leading-9 shadow-sm ${
+                          className={`select-text rounded-[30px] px-5 py-5 text-base leading-8 shadow-sm sm:px-8 sm:py-6 sm:text-[18px] sm:leading-9 ${
                             message.role === "assistant"
                               ? "w-full border border-border bg-card text-foreground dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#edf2f7]"
                               : "bg-neutral-950 text-white dark:bg-[#102033]/88 dark:text-[#f3f5f7]"
@@ -217,7 +221,7 @@ export default function StandardAgentLayout({
 
                 {loading ? (
                   <div className="flex w-full justify-center">
-                    <div className="w-full rounded-[30px] border border-border bg-card px-8 py-6 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8]">
+                    <div className="w-full rounded-[30px] border border-border bg-card px-5 py-5 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8] sm:px-8 sm:py-6">
                       Digitando...
                     </div>
                   </div>
@@ -225,7 +229,7 @@ export default function StandardAgentLayout({
 
                 {finished ? (
                   <div className="flex w-full justify-center">
-                    <div className="w-full rounded-[30px] border border-border bg-card px-8 py-6 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8]">
+                    <div className="w-full rounded-[30px] border border-border bg-card px-5 py-5 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8] sm:px-8 sm:py-6">
                       {finishedMessage}
                     </div>
                   </div>
@@ -253,13 +257,13 @@ export default function StandardAgentLayout({
                 placeholder={finished ? "Avaliação concluída." : inputPlaceholder}
                 disabled={disableInput || finished}
                 rows={1}
-                className="w-full rounded-[28px] border border-border bg-card px-5 py-4 text-lg outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d]"
+                className="w-full rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
               />
 
               <button
                 type="submit"
                 disabled={disableSend || finished}
-                className="flex h-[62px] w-[62px] items-center justify-center rounded-[20px] border border-border bg-card text-foreground transition hover:opacity-90 disabled:opacity-50 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7]"
+                className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-border bg-card text-foreground transition hover:opacity-90 disabled:opacity-50 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] sm:h-[62px] sm:w-[62px]"
               >
                 <Send className="h-5 w-5" />
               </button>

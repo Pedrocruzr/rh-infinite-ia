@@ -131,7 +131,7 @@ export function GlobalWorkspaceSearch() {
 
   return (
     <div ref={wrapRef} className="relative w-full max-w-[520px]">
-      <div className="flex h-14 items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/90 px-4 shadow-sm dark:border-white/12 dark:bg-white/6 dark:backdrop-blur-xl dark:shadow-[0_10px_30px_rgba(2,6,23,0.22)]">
+      <div className="flex h-12 items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/90 px-4 shadow-sm sm:h-14 dark:border-white/12 dark:bg-white/6 dark:backdrop-blur-xl dark:shadow-[0_10px_30px_rgba(2,6,23,0.22)]">
         <Search className="h-5 w-5 text-neutral-500 dark:text-slate-300" />
         <input
           ref={inputRef}
@@ -144,7 +144,7 @@ export function GlobalWorkspaceSearch() {
           }}
           onKeyDown={handleInputKeyDown}
           placeholder="Buscar..."
-          className="flex-1 bg-transparent text-base text-neutral-900 outline-none placeholder:text-neutral-500 dark:text-slate-100 dark:placeholder:text-slate-400"
+          className="min-w-0 flex-1 bg-transparent text-sm text-neutral-900 outline-none placeholder:text-neutral-500 sm:text-base dark:text-slate-100 dark:placeholder:text-slate-400"
         />
       </div>
 

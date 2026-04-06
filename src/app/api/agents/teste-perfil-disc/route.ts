@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import {
   generateDiscReport,
   initializeDiscSession,
@@ -16,6 +16,7 @@ type RequestBody = {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createClient();
     const body = (await req.json()) as RequestBody;
     const session = body.session ?? initializeDiscSession();
     const answer = body.answer ?? "";
@@ -34,8 +35,6 @@ export async function POST(req: NextRequest) {
     }
 
     const reportMarkdown = generateDiscReport(step.session as any);
-
-    const supabase = createAdminClient();
     const now = new Date().toISOString();
 
     const { data, error } = await supabase

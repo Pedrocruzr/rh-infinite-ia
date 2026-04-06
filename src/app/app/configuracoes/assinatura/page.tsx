@@ -11,6 +11,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { SubscriptionPlans } from "@/components/settings/subscription-plans";
 import { CancelSubscriptionButton } from "@/components/settings/cancel-subscription-button";
+import { ChangeCardButton } from "@/components/settings/change-card-button";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,16 @@ function formatCurrency(cents?: number | null) {
     style: "currency",
     currency: "BRL",
   }).format(cents / 100);
+}
+
+function getTopupDisplayPrice(name?: string | null, fallbackCents?: number | null) {
+  const normalized = (name || "").trim().toLowerCase();
+
+  if (normalized === "essencial") return "R$ 39,00";
+  if (normalized === "profissional") return "R$ 69,00";
+  if (normalized === "intensivo") return "R$ 99,00";
+
+  return formatCurrency(fallbackCents);
 }
 
 function formatDate(value?: string | null) {
@@ -141,12 +152,10 @@ export default async function AssinaturaPage() {
     }, 0) || wallet?.balance || 0;
 
   const startPlan = ((plans ?? [])[0] ?? null) as any;
-  const displayPlanName = plan?.name ?? startPlan?.name ?? "Sem plano ativo";
-  const displayPlanPrice = plan?.price_cents
-    ? formatCurrency(plan.price_cents)
-    : startPlan?.price_cents
-      ? formatCurrency(startPlan.price_cents)
-      : "Escolha um plano para começar";
+  const activePlanName =
+    plan?.name || startPlan?.name || "Stacks Infinity";
+  const displayPlanName = subscription?.id ? activePlanName : "Sem plano ativo";
+  const displayPlanPrice = subscription?.id ? "R$ 197,00" : "Escolha um plano para começar";
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
@@ -227,10 +236,7 @@ export default async function AssinaturaPage() {
         </div>
 
         <SubscriptionPlans
-          startPlan={startPlan}
           topupProducts={(topupProducts ?? []) as any[]}
-          currentPlanCode={plan?.code ?? null}
-          currentStatus={subscription?.status ?? null}
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -299,14 +305,17 @@ export default async function AssinaturaPage() {
                 </p>
               </div>
 
-              <CancelSubscriptionButton disabled={!subscription?.id} />
+              <div className="flex flex-wrap items-start justify-end gap-3">
+                <ChangeCardButton disabled={!subscription?.id} />
+                <CancelSubscriptionButton disabled={!subscription?.id} />
+              </div>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
                 <p className="text-sm text-slate-500 dark:text-slate-400">Nome do plano</p>
                 <p className="mt-2 text-lg font-semibold">
-                  {plan ? "Start" : "Sem plano"}
+                  {plan ? activePlanName : "Sem plano"}
                 </p>
               </div>
 
@@ -320,7 +329,14 @@ export default async function AssinaturaPage() {
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
                 <p className="text-sm text-slate-500 dark:text-slate-400">Valor</p>
                 <p className="mt-2 text-lg font-semibold">
-                  {formatCurrency(plan?.price_cents)}
+                  R$ 197,00
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className="text-sm text-slate-500 dark:text-slate-400">Usuários incluídos</p>
+                <p className="mt-2 text-lg font-semibold">
+                  {plan?.max_users ?? 1} usuário
                 </p>
               </div>
 
@@ -333,11 +349,17 @@ export default async function AssinaturaPage() {
             </div>
 
             <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Consumo estimado</p>
-              <p className="mt-2 text-sm leading-6 text-foreground/90">
-                Tarefa simples consome 1 crédito. Tarefa média consome 2 créditos.
-                Tarefa mais robusta consome de 3 a 4 créditos.
-              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Condições do plano</p>
+              <div className="mt-2 space-y-2 text-sm leading-6 text-foreground/90">
+                <p>120 créditos mensais recorrentes.</p>
+                <p>1 usuário incluído no plano.</p>
+                <p>Todos os agentes liberados durante a assinatura.</p>
+                <p>Preço travado por 12 meses.</p>
+                <p>
+                  Consumo estimado: tarefa simples 1 crédito, tarefa média 2 créditos,
+                  tarefa robusta de 3 a 4 créditos.
+                </p>
+              </div>
             </div>
           </section>
 
