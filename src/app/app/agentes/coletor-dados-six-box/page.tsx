@@ -265,7 +265,7 @@ export default function ColetorDadosSixBoxPage() {
                               draggable={false}
                             />
                           </div>
-                          <h2 className="mt-6 text-base font-medium text-[#f3f5f7] sm:text-[18px]">
+                          <h2 className="mt-6 text-base font-medium text-black dark:text-[#f3f5f7] sm:text-[18px]">
                             Coletor de Dados Six Box
                           </h2>
                           <p className="mt-3 text-sm leading-7 text-[#8f98a6] sm:text-[15px]">
