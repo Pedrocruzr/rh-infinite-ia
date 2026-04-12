@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import sharp from "sharp";
 
 function slugify(value: string) {
   return value
@@ -21,8 +20,14 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
-function convertInlineSvgToEmbeddedImages(html: string) {
-  return html.replace(/<svg\b([^>]*)>[\s\S]*?<\/svg>/gi, (svg) => {
+async function convertInlineSvgToEmbeddedImages(html: string) {
+  const matches = Array.from(html.matchAll(/<svg\b([^>]*)>[\s\S]*?<\/svg>/gi));
+  if (matches.length === 0) return html;
+
+  let output = html;
+
+  for (const match of matches) {
+    const svg = match[0];
     const attributeMatch = svg.match(/^<svg\b([^>]*)>/i);
     const attributes = attributeMatch?.[1] ?? "";
     const styleMatch = attributes.match(/\sstyle=(["'])(.*?)\1/i);
@@ -32,48 +37,20 @@ function convertInlineSvgToEmbeddedImages(html: string) {
     const imgStyle = [style, !style?.includes("height") ? "height:auto;" : ""]
       .filter(Boolean)
       .join(style ? ";" : "");
-    const src = `data:image/svg+xml;base64,${Buffer.from(svg, "utf-8").toString("base64")}`;
+    const pngBuffer = await sharp(Buffer.from(svg, "utf-8")).png().toBuffer();
+    const src = `data:image/png;base64,${pngBuffer.toString("base64")}`;
 
-    return `<img src="${src}" alt="Gráfico do relatório" ${
+    output = output.replace(svg, `<img src="${src}" alt="Gráfico do relatório" ${
       width ? `width="${escapeHtml(width)}"` : ""
-    } style="${escapeHtml(imgStyle || "max-width:100%;height:auto;")}" />`;
-  });
+    } style="${escapeHtml(imgStyle || "max-width:100%;height:auto;")}" />`);
+  }
+
+  return output;
 }
 
 type Context = {
   params: Promise<{ id: string }> | { id: string };
 };
-
-async function renderPdfFromHtml(html: string) {
-  chromium.setGraphicsMode = false;
-
-  const browser = await puppeteer.launch({
-    args: puppeteer.defaultArgs({
-      args: chromium.args,
-      headless: "shell",
-    }),
-    executablePath: await chromium.executablePath(),
-    headless: "shell",
-  });
-
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-
-    return await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: {
-        top: "16mm",
-        right: "16mm",
-        bottom: "16mm",
-        left: "16mm",
-      },
-    });
-  } finally {
-    await browser.close();
-  }
-}
 
 export async function GET(_request: Request, context: Context) {
   const params = await context.params;
@@ -81,7 +58,7 @@ export async function GET(_request: Request, context: Context) {
 
   const { data: assessment, error } = await supabase
     .from("profile_assessments")
-    .select("id,candidate_name,agent_name,agent_slug,created_at,report_markdown,report_status")
+    .select("id,candidate_name,agent_name,created_at,report_markdown,report_status")
     .eq("id", params.id)
     .eq("report_status", "generated")
     .maybeSingle();
@@ -99,12 +76,9 @@ export async function GET(_request: Request, context: Context) {
     assessment.candidate_name || assessment.agent_name || `assessment-${assessment.id}`
   );
 
-  const isProfileBehaviorReport = assessment.agent_slug === "teste-perfil-comportamental";
-  const reportHtml = isProfileBehaviorReport
-    ? assessment.report_markdown || "<p>Nenhum relatório disponível.</p>"
-    : convertInlineSvgToEmbeddedImages(
-        assessment.report_markdown || "<p>Nenhum relatório disponível.</p>"
-      );
+  const reportHtml = await convertInlineSvgToEmbeddedImages(
+    assessment.report_markdown || "<p>Nenhum relatório disponível.</p>"
+  );
 
   const docHtml = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -157,21 +131,6 @@ export async function GET(_request: Request, context: Context) {
     </div>
   </body>
 </html>`;
-
-  if (isProfileBehaviorReport) {
-    const pdfBuffer = await renderPdfFromHtml(docHtml);
-
-    return new NextResponse(Buffer.from(pdfBuffer), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="relatorio-stacker-${filenameBase}.pdf"`,
-        "Cache-Control": "no-store, max-age=0",
-        "Pragma": "no-cache",
-        "Expires": "0",
-      },
-    });
-  }
 
   return new NextResponse(docHtml, {
     status: 200,
