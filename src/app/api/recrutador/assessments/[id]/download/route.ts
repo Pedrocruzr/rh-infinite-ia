@@ -19,6 +19,25 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
+function convertInlineSvgToEmbeddedImages(html: string) {
+  return html.replace(/<svg\b([^>]*)>[\s\S]*?<\/svg>/gi, (svg) => {
+    const attributeMatch = svg.match(/^<svg\b([^>]*)>/i);
+    const attributes = attributeMatch?.[1] ?? "";
+    const styleMatch = attributes.match(/\sstyle=(["'])(.*?)\1/i);
+    const widthMatch = attributes.match(/\swidth=(["'])(.*?)\1/i);
+    const style = styleMatch?.[2]?.trim();
+    const width = widthMatch?.[2]?.trim();
+    const imgStyle = [style, !style?.includes("height") ? "height:auto;" : ""]
+      .filter(Boolean)
+      .join(style ? ";" : "");
+    const src = `data:image/svg+xml;base64,${Buffer.from(svg, "utf-8").toString("base64")}`;
+
+    return `<img src="${src}" alt="Gráfico do relatório" ${
+      width ? `width="${escapeHtml(width)}"` : ""
+    } style="${escapeHtml(imgStyle || "max-width:100%;height:auto;")}" />`;
+  });
+}
+
 type Context = {
   params: Promise<{ id: string }> | { id: string };
 };
@@ -47,7 +66,9 @@ export async function GET(_request: Request, context: Context) {
     assessment.candidate_name || assessment.agent_name || `assessment-${assessment.id}`
   );
 
-  const reportHtml = assessment.report_markdown || "<p>Nenhum relatório disponível.</p>";
+  const reportHtml = convertInlineSvgToEmbeddedImages(
+    assessment.report_markdown || "<p>Nenhum relatório disponível.</p>"
+  );
 
   const docHtml = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
