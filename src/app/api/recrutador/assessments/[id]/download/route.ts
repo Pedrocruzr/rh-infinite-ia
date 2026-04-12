@@ -47,9 +47,8 @@ type Context = {
 async function renderPdfFromHtml(html: string) {
   const browser = await puppeteer.launch({
     args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
     executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
+    headless: true,
   });
 
   try {
@@ -157,7 +156,7 @@ export async function GET(_request: Request, context: Context) {
   if (isProfileBehaviorReport) {
     const pdfBuffer = await renderPdfFromHtml(docHtml);
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(Buffer.from(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
