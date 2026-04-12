@@ -185,8 +185,8 @@ function generateGaugeSvg(
 
 /** Radar 12 competências */
 function generateRadar12Svg(items: Array<{ name: string; value: number; color: string }>): string {
-  const cx = 320, cy = 320, r = 205, n = 12;
-  const W = 640, H = 640;
+  const cx = 410, cy = 320, r = 205, n = 12;
+  const W = 820, H = 680;
 
   function ang(i: number) { return -Math.PI / 2 + (i * 2 * Math.PI) / n; }
   function pt(i: number, frac: number) {
@@ -216,7 +216,7 @@ function generateRadar12Svg(items: Array<{ name: string; value: number; color: s
 
   const labelParts = items.map((item, i) => {
     const a = ang(i);
-    const dist = r + 52;
+    const dist = r + 68;
     const lx = cx + dist * Math.cos(a);
     const ly = cy + dist * Math.sin(a);
     const anchor = lx > cx + 8 ? "start" : lx < cx - 8 ? "end" : "middle";
@@ -228,7 +228,7 @@ function generateRadar12Svg(items: Array<{ name: string; value: number; color: s
     return `<text x="${(cx + 3).toFixed(1)}" y="${yy}" font-size="8" fill="#bbb">${p}%</text>`;
   }).join("");
 
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:0 auto;max-width:560px;height:auto;" xmlns="http://www.w3.org/2000/svg">${grid}${axes}${polygon}${dots}${labelParts}${scaleLbls}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:0 auto;max-width:640px;height:auto;" xmlns="http://www.w3.org/2000/svg">${grid}${axes}${polygon}${dots}${labelParts}${scaleLbls}</svg>`;
 }
 
 /** Radar 4 pontos (mini – motivadores) */
