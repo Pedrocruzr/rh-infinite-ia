@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 
 function slugify(value: string) {
   return value
@@ -42,13 +44,40 @@ type Context = {
   params: Promise<{ id: string }> | { id: string };
 };
 
+async function renderPdfFromHtml(html: string) {
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    return await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "16mm",
+        right: "16mm",
+        bottom: "16mm",
+        left: "16mm",
+      },
+    });
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function GET(_request: Request, context: Context) {
   const params = await context.params;
   const supabase = createAdminClient();
 
   const { data: assessment, error } = await supabase
     .from("profile_assessments")
-    .select("id,candidate_name,agent_name,created_at,report_markdown,report_status")
+    .select("id,candidate_name,agent_name,agent_slug,created_at,report_markdown,report_status")
     .eq("id", params.id)
     .eq("report_status", "generated")
     .maybeSingle();
@@ -66,9 +95,12 @@ export async function GET(_request: Request, context: Context) {
     assessment.candidate_name || assessment.agent_name || `assessment-${assessment.id}`
   );
 
-  const reportHtml = convertInlineSvgToEmbeddedImages(
-    assessment.report_markdown || "<p>Nenhum relatório disponível.</p>"
-  );
+  const isProfileBehaviorReport = assessment.agent_slug === "teste-perfil-comportamental";
+  const reportHtml = isProfileBehaviorReport
+    ? assessment.report_markdown || "<p>Nenhum relatório disponível.</p>"
+    : convertInlineSvgToEmbeddedImages(
+        assessment.report_markdown || "<p>Nenhum relatório disponível.</p>"
+      );
 
   const docHtml = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -109,6 +141,7 @@ export async function GET(_request: Request, context: Context) {
         word-wrap: break-word;
       }
       thead th { background: #f8fafc; font-weight: 700; }
+      svg, img { display: block; margin: 0 auto; max-width: 100%; }
       img, table, pre, blockquote, section, article, .card, .block { page-break-inside: avoid; }
       pre, code { white-space: pre-wrap; word-break: break-word; }
       @page { size: A4; margin: 16mm; }
@@ -120,6 +153,21 @@ export async function GET(_request: Request, context: Context) {
     </div>
   </body>
 </html>`;
+
+  if (isProfileBehaviorReport) {
+    const pdfBuffer = await renderPdfFromHtml(docHtml);
+
+    return new NextResponse(pdfBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="relatorio-stacker-${filenameBase}.pdf"`,
+        "Cache-Control": "no-store, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+      },
+    });
+  }
 
   return new NextResponse(docHtml, {
     status: 200,
