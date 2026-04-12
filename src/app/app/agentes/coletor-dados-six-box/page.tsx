@@ -44,6 +44,14 @@ export default function ColetorDadosSixBoxPage() {
     }
   }, [messages, finished, loading]);
 
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [input]);
+
   async function startConversation() {
     try {
       setLoading(true);
@@ -325,7 +333,7 @@ export default function ColetorDadosSixBoxPage() {
                 placeholder="Escreva sua pergunta..."
                 disabled={finished || loading}
                 rows={1}
-                className="w-full rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
+                className="max-h-[320px] w-full resize-none overflow-y-auto rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
               />
 
               <button
