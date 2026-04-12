@@ -45,10 +45,15 @@ type Context = {
 };
 
 async function renderPdfFromHtml(html: string) {
+  chromium.setGraphicsMode = false;
+
   const browser = await puppeteer.launch({
-    args: chromium.args,
+    args: puppeteer.defaultArgs({
+      args: chromium.args,
+      headless: "shell",
+    }),
     executablePath: await chromium.executablePath(),
-    headless: true,
+    headless: "shell",
   });
 
   try {
