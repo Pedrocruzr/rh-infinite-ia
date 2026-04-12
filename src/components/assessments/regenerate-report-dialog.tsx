@@ -66,16 +66,6 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
     void handleRegenerate();
   }
 
-  function handleInstructionKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key !== "Enter" || event.shiftKey) return;
-
-    event.preventDefault();
-
-    if (!instruction.trim() || loading) return;
-
-    void handleRegenerate();
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -102,7 +92,6 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
             <textarea
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
-              onKeyDown={handleInstructionKeyDown}
               onKeyDown={handleInstructionKeyDown}
               placeholder="Exemplo: alterar horas trabalhadas de 160 para 140"
               className="min-h-[180px] w-full resize-y rounded-2xl border border-slate-200/80 bg-white px-4 py-4 text-[15px] leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100/80 dark:border-slate-800 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-500/10"
