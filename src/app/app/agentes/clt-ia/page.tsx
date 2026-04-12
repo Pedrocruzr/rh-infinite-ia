@@ -36,6 +36,14 @@ export default function CltIaPage() {
     }
   }, [loading]);
 
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [input]);
+
   async function copyMessage(content: string) {
     try {
       await navigator.clipboard.writeText(content);
@@ -178,7 +186,7 @@ export default function CltIaPage() {
                           <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 text-[#d9dee5]">
                             <Search className="h-6 w-6" />
                           </div>
-                          <h2 className="mt-6 text-base font-medium text-[#f3f5f7] sm:text-[18px]">
+                          <h2 className="mt-6 text-base font-medium text-black dark:text-[#f3f5f7] sm:text-[18px]">
                             CLT IA
                           </h2>
                           <p className="mt-3 text-sm leading-7 text-[#8f98a6] sm:text-[15px]">
@@ -237,7 +245,7 @@ export default function CltIaPage() {
                 placeholder="Escreva sua pergunta..."
                 disabled={loading}
                 rows={1}
-                className="w-full rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
+                className="w-full resize-y overflow-hidden rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
               />
 
               <button

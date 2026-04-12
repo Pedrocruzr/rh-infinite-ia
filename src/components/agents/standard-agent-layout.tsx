@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import type { ReactNode, KeyboardEventHandler, RefObject } from "react";
 import { Send, Search } from "lucide-react";
 
@@ -126,6 +126,14 @@ export default function StandardAgentLayout({
   const hasUserMessages = messages.some((message) => message.role === "user");
   const agentImageSrc = AGENT_IMAGE_BY_TITLE[title] ?? null;
 
+  useEffect(() => {
+    const textarea = inputRef?.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [inputRef, inputValue]);
+
   return (
     <main className="h-[100dvh] overflow-hidden bg-background text-foreground dark:bg-[#05070b] dark:text-[#f3f5f7]">
       <div className="mx-auto flex h-full max-w-[1320px] flex-col px-4 py-4 sm:px-6 sm:py-5">
@@ -181,7 +189,7 @@ export default function StandardAgentLayout({
                               <Search className="h-6 w-6" />
                             )}
                           </div>
-                          <h2 className="mt-6 text-base font-medium text-[#f3f5f7] sm:text-[18px]">
+                          <h2 className="mt-6 text-base font-medium text-black dark:text-[#f3f5f7] sm:text-[18px]">
                             {title}
                           </h2>
                           <div
@@ -227,7 +235,7 @@ export default function StandardAgentLayout({
                   </div>
                 ) : null}
 
-                {finished ? (
+                {finished && finishedMessage ? (
                   <div className="flex w-full justify-center">
                     <div className="w-full rounded-[30px] border border-border bg-card px-5 py-5 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8] sm:px-8 sm:py-6">
                       {finishedMessage}
@@ -257,7 +265,7 @@ export default function StandardAgentLayout({
                 placeholder={finished ? "Avaliação concluída." : inputPlaceholder}
                 disabled={disableInput || finished}
                 rows={1}
-                className="w-full rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
+                className="w-full resize-y overflow-hidden rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
               />
 
               <button
