@@ -19,6 +19,7 @@ type StandardAgentLayoutProps = {
   subtitle: string;
   retentionNotice?: string;
   panelTopSpacingClass?: string;
+  headerExtra?: ReactNode;
   messages: Message[];
   loading?: boolean;
   finished?: boolean;
@@ -51,6 +52,7 @@ const AGENT_IMAGE_BY_TITLE: Record<string, string> = {
   "Taxa de Produtividade por Colaborador": "/agents/taxa-produtividade-colaborador.png",
   "Teste de Perfil Comportamental": "/agents/teste-perfil-comportamental.png",
   "Teste de Perfil DISC": "/agents/teste-perfil-disc.png",
+  "Agente Teste Big Five": "/agents/analista-bigfive-light.png",
 };
 
 function renderFormattedAssistantContent(content: string) {
@@ -108,6 +110,7 @@ export default function StandardAgentLayout({
   subtitle,
   retentionNotice = "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
   panelTopSpacingClass = "mt-5",
+  headerExtra,
   messages,
   loading = false,
   finished = false,
@@ -131,7 +134,10 @@ export default function StandardAgentLayout({
     if (!textarea) return;
 
     textarea.style.height = "auto";
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    const maxH = 360;
+    const newH = Math.min(textarea.scrollHeight, maxH);
+    textarea.style.height = `${newH}px`;
+    textarea.style.overflowY = textarea.scrollHeight > maxH ? "auto" : "hidden";
   }, [inputRef, inputValue]);
 
   return (
@@ -148,12 +154,15 @@ export default function StandardAgentLayout({
             </p>
           </div>
 
-          <Link
-            href={backHref}
-            className="absolute right-0 top-0 rounded-2xl border border-border px-5 py-3 text-sm transition hover:bg-muted dark:border-[#202834] dark:bg-[#0c1118] dark:text-[#e8edf3] dark:hover:bg-[#131a23] sm:static"
-          >
-            Voltar
-          </Link>
+          <div className="absolute right-0 top-0 flex items-center gap-2 sm:static">
+            {headerExtra}
+            <Link
+              href={backHref}
+              className="rounded-2xl border border-border px-5 py-3 text-sm transition hover:bg-muted dark:border-[#202834] dark:bg-[#0c1118] dark:text-[#e8edf3] dark:hover:bg-[#131a23]"
+            >
+              Voltar
+            </Link>
+          </div>
         </div>
 
         <div className="mt-4">
@@ -265,7 +274,7 @@ export default function StandardAgentLayout({
                 placeholder={finished ? "Avaliação concluída." : inputPlaceholder}
                 disabled={disableInput || finished}
                 rows={1}
-                className="w-full resize-y overflow-hidden rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
+                className="w-full resize-none overflow-hidden rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
               />
 
               <button

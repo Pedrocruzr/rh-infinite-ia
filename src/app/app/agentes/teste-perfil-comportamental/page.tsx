@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
+import GenerateLinkDialog from "@/components/assessments/generate-link-dialog";
 
 type GenericSession = Record<string, string | undefined> & {
   status?: string;
@@ -186,6 +187,7 @@ export default function TestePerfilComportamentalPage() {
       stackerName="Recrutamento & Seleção"
       title="Teste de Perfil Comportamental"
       subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Relatórios Stackers."
+      headerExtra={<GenerateLinkDialog />}
       messages={messages.map((message) => ({
         id: message.id,
         role: message.role,
@@ -200,7 +202,7 @@ export default function TestePerfilComportamentalPage() {
       }))}
       loading={loading}
       finished={finished}
-      finishedMessage="Relatório gerado com sucesso e disponível em Relatórios Stackers."
+      finishedMessage=""
       inputValue={input}
       onInputChange={setInput}
       onSend={() => void sendAnswer()}

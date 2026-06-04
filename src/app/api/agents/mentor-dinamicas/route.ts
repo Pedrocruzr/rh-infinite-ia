@@ -1,5 +1,8 @@
+export const maxDuration = 60;
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getSessionUser } from "@/lib/auth/session";
 import {
   MENTOR_DINAMICAS_AGENT,
   applyAnswer,
@@ -92,6 +95,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const sessionUser = await getSessionUser();
+    const recruiterId = sessionUser?.id ?? null;
+
     const payload = {
       candidate_name: `Dinâmicas - ${finalSession.categoria ?? "categoria"}`,
       target_role: finalSession.categoria ?? null,
@@ -103,6 +109,7 @@ export async function POST(req: NextRequest) {
       report_status: "generated",
       expires_at: expiresAt,
       updated_at: now,
+      ...(recruiterId ? { recruiter_id: recruiterId } : {}),
     };
 
     const { data, error } = await supabase

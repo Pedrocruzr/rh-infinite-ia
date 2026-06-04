@@ -71,29 +71,46 @@ function isComprehensible(value: string) {
 function detectPath(value: string): ClimaPath | null {
   const text = String(value ?? "").trim().toLowerCase();
 
+  // adaptar questionario (two-word check first to avoid ambiguity)
   if (/adapt/.test(text) && /question[aá]rio|questionario/.test(text)) {
     return "adaptar_questionario";
   }
 
+  // montar / criar questionario (two-word)
   if (/montar|criar|elaborar|fazer/.test(text) && /question[aá]rio|questionario/.test(text)) {
     return "montar_questionario";
   }
 
+  // analisar resultados (two-word)
   if (/analis/.test(text) && /resultado|pesquisa|dados|respostas/.test(text)) {
     return "analisar_resultados";
   }
 
+  // interpretar dimensoes (two-word)
   if (/interpret/.test(text) && /lideran|comunica|reconhec|motiva|ambiente|dimens/.test(text)) {
     return "interpretar_dimensoes";
   }
 
+  // relatorio executivo / executivo
   if (/relat[oó]rio executivo|relatorio executivo|executivo/.test(text)) {
     return "relatorio_executivo";
   }
 
+  // plano de acao
   if (/plano de a[cç][aã]o|plano de acao|a[cç][aã]o a partir dos achados|acao a partir dos achados/.test(text)) {
     return "plano_acao";
   }
+
+  // --- single-keyword fallbacks ---
+  if (/\badapt/.test(text)) return "adaptar_questionario";
+  if (/\b(montar|criar|elaborar)\b/.test(text)) return "montar_questionario";
+  if (/\b(analis|analisar)\b/.test(text)) return "analisar_resultados";
+  if (/\b(interpret|interpretar)\b/.test(text)) return "interpretar_dimensoes";
+  if (/\b(relat[oó]rio|relatorio|executivo)\b/.test(text)) return "relatorio_executivo";
+  if (/\b(plano|a[cç][aã]o)\b/.test(text)) return "plano_acao";
+  if (/\b(question[aá]rio|questionario)\b/.test(text)) return "montar_questionario";
+  if (/\b(resultado|dados|respostas)\b/.test(text)) return "analisar_resultados";
+  if (/\b(dimens[aã]o|dimensoes|lideran|comunica|motiva|ambiente)\b/.test(text)) return "interpretar_dimensoes";
 
   return null;
 }

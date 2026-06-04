@@ -21,19 +21,15 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function handleRegenerate() {
-    if (!instruction.trim() || loading) return;
+    if (loading) return;
 
     try {
       setLoading(true);
 
       const response = await fetch(`/api/assessments/${assessmentId}/regenerate`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          instruction: instruction.trim(),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ instruction: instruction.trim() }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -47,27 +43,26 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
       window.location.reload();
     } catch (error) {
       alert(
-        error instanceof Error
-          ? error.message
-          : "Erro ao regenerar relatório."
+        error instanceof Error ? error.message : "Erro ao regenerar relatório."
       );
     } finally {
       setLoading(false);
     }
   }
 
-  function handleInstructionKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key !== "Enter" || event.shiftKey) return;
-
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || loading) return;
     event.preventDefault();
-
-    if (!instruction.trim() || loading) return;
-
     void handleRegenerate();
   }
 
+  function handleOpenChange(value: boolean) {
+    setOpen(value);
+    if (!value) setInstruction("");
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button
           type="button"
@@ -77,13 +72,19 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
         </button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl overflow-hidden border border-sky-100/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(244,249,255,0.96)_100%)] p-0 shadow-2xl shadow-sky-200/25 ring-1 ring-sky-100/60 dark:border-sky-400/15 dark:bg-[linear-gradient(180deg,rgba(10,15,26,0.97)_0%,rgba(14,23,38,0.98)_100%)] dark:ring-sky-400/10">
+      <DialogContent
+        className="max-w-xl overflow-hidden border border-sky-100/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(244,249,255,0.96)_100%)] p-0 shadow-2xl shadow-sky-200/25 ring-1 ring-sky-100/60 dark:border-sky-400/15 dark:bg-[linear-gradient(180deg,rgba(10,15,26,0.97)_0%,rgba(14,23,38,0.98)_100%)] dark:ring-sky-400/10"
+        onInteractOutside={(e) => { if (loading) e.preventDefault(); }}
+        onEscapeKeyDown={(e) => { if (loading) e.preventDefault(); }}
+      >
         <DialogHeader className="gap-3 border-b border-sky-100/80 px-6 py-6 dark:border-sky-400/10">
           <DialogTitle className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-            Solicitar ajuste no relatório
+            {loading ? "Gerando relatório..." : "Solicitar ajuste no relatório"}
           </DialogTitle>
           <DialogDescription className="max-w-lg text-[15px] leading-7 text-slate-600 dark:text-slate-300">
-            Descreva exatamente o que o agente deve alterar antes de gerar novamente.
+            {loading
+              ? "Aguarde enquanto o relatório é gerado. Não feche esta janela."
+              : "Descreva o ajuste desejado ou clique em Gerar para regenerar sem alterações."}
           </DialogDescription>
         </DialogHeader>
 
@@ -91,34 +92,49 @@ export default function RegenerateReportDialog({ assessmentId }: Props) {
           <div className="rounded-3xl border border-sky-100 bg-white/80 p-3 shadow-inner shadow-sky-100/40 dark:border-sky-400/10 dark:bg-slate-950/40 dark:shadow-none">
             <textarea
               value={instruction}
-              onChange={(e) => setInstruction(e.target.value)}
-              onKeyDown={handleInstructionKeyDown}
-              placeholder="Exemplo: alterar horas trabalhadas de 160 para 140"
-              className="min-h-[180px] w-full resize-y rounded-2xl border border-slate-200/80 bg-white px-4 py-4 text-[15px] leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100/80 dark:border-slate-800 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-500/10"
+              onChange={(e) => !loading && setInstruction(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
+              placeholder='Opcional — ex: "Alterar horas trabalhadas de 160 para 140". Deixe em branco para regenerar sem alterações.'
+              className="min-h-[160px] w-full resize-y rounded-2xl border border-slate-200/80 bg-white px-4 py-4 text-[15px] leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-300 focus:ring-4 focus:ring-sky-100/80 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 dark:border-slate-800 dark:bg-slate-950/70 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-500/10 dark:disabled:bg-slate-900/50"
             />
           </div>
 
-          <div className="rounded-2xl border border-sky-100/80 bg-sky-50/70 px-4 py-3 text-sm leading-6 text-slate-600 dark:border-sky-400/10 dark:bg-sky-500/8 dark:text-slate-300">
-            Exemplo curto: “Alterar horas trabalhadas de 160 para 140” ou
-            “Corrigir entregas realizadas de 300 para 280”.
-          </div>
+          {!loading && (
+            <div className="rounded-2xl border border-sky-100/80 bg-sky-50/70 px-4 py-3 text-sm leading-6 text-slate-600 dark:border-sky-400/10 dark:bg-sky-500/8 dark:text-slate-300">
+              Exemplo: &quot;Alterar horas trabalhadas de 160 para 140&quot; ou
+              &quot;Corrigir entregas realizadas de 300 para 280&quot;.
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex items-center gap-3 rounded-2xl border border-sky-100/80 bg-sky-50/70 px-4 py-3 text-sm text-slate-600 dark:border-sky-400/10 dark:bg-sky-500/8 dark:text-slate-300">
+              <svg className="h-4 w-4 animate-spin text-sky-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Processando... isso pode levar alguns segundos.
+            </div>
+          )}
         </div>
 
         <DialogFooter className="border-t border-sky-100/80 bg-white/55 px-6 py-5 dark:border-sky-400/10 dark:bg-slate-950/35">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="inline-flex min-w-32 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-800"
-          >
-            Cancelar
-          </button>
+          {!loading && (
+            <button
+              type="button"
+              onClick={() => handleOpenChange(false)}
+              className="inline-flex min-w-32 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-800"
+            >
+              Cancelar
+            </button>
+          )}
           <button
             type="button"
             onClick={handleRegenerate}
-            disabled={loading || !instruction.trim()}
-            className="inline-flex min-w-40 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0f172a_0%,#2563eb_100%)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200/50 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[linear-gradient(135deg,#2563eb_0%,#38bdf8_100%)] dark:text-white dark:shadow-sky-950/30"
+            disabled={loading}
+            className="inline-flex min-w-40 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0f172a_0%,#2563eb_100%)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-200/50 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[linear-gradient(135deg,#2563eb_0%,#38bdf8_100%)] dark:text-white dark:shadow-sky-950/30"
           >
-            {loading ? "Atualizando..." : "Aplicar e gerar"}
+            {loading ? "Gerando..." : "Aplicar e gerar"}
           </button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ClarityScript } from "@/components/clarity-script";
 
 export const metadata: Metadata = {
   title: "RH Infinite IA",
@@ -27,6 +28,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        <ClarityScript />
       </body>
     </html>
   );

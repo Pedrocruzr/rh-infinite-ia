@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import StandardAgentLayout from "@/components/agents/standard-agent-layout";
+import GenerateLinkDialog from "@/components/assessments/generate-link-dialog";
 import { validateClientAgentInput } from "@/lib/agents/client-input-guards";
 
 type GenericSession = Record<string, string | undefined> & {
@@ -280,6 +281,7 @@ export default function TestePerfilDiscPage() {
         stackerName="Comportamento"
         title="Teste de Perfil DISC"
         subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Relatórios Stackers."
+        headerExtra={<GenerateLinkDialog agentSlug="teste-perfil-disc" />}
         messages={removeFirstDuplicateFinalMessage(messages).map((message) => ({
           id: message.id,
           role: message.role,

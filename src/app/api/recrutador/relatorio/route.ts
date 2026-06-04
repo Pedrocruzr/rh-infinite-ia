@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateDiscReport } from "@/lib/disc-runner";
+import { generateBigFiveReport } from "@/lib/agente-teste-bigfive-runner";
 
 function normalize(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -261,6 +262,8 @@ export async function POST(req: NextRequest) {
 
     if (assessment.agent_slug === "teste-perfil-disc") {
       report = await generateDiscReport((assessment.raw_answers ?? {}) as any);
+    } else if (assessment.agent_slug === "agente-teste-bigfive") {
+      report = await generateBigFiveReport((assessment.raw_answers ?? {}) as any);
     } else {
       report = buildProfileReport(assessment);
     }

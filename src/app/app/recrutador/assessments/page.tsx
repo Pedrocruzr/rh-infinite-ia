@@ -1,15 +1,33 @@
 import Link from "next/link";
-import { BadgeCheck, Download, FileText, Sparkles } from "lucide-react";
+import { BadgeCheck, Download, FileText, Sparkles, Lock } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSessionUser } from "@/lib/auth/session";
 
 export default async function RecruiterAssessmentsPage() {
+  const user = await getSessionUser();
   const supabase = createAdminClient();
 
-  const { data: assessments } = await supabase
+  const query = supabase
     .from("profile_assessments")
     .select("*")
     .eq("report_status", "generated")
     .order("created_at", { ascending: false });
+
+  const { data: assessments } = user?.id
+    ? await query.eq("recruiter_id", user.id)
+    : await query;
+
+  const { data: unlocks } = user?.id
+    ? await supabase
+        .from("usage_events")
+        .select("metadata")
+        .eq("user_id", user.id)
+        .eq("event_type", "report_unlock")
+    : { data: [] };
+
+  const unlockedIds = new Set(
+    unlocks?.map((u) => (u.metadata as any)?.assessment_id).filter(Boolean) || []
+  );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] px-4 py-6 text-slate-950 sm:px-6 sm:py-8 lg:px-8 lg:py-10 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
@@ -81,32 +99,45 @@ export default async function RecruiterAssessmentsPage() {
             </thead>
             <tbody>
               {assessments && assessments.length > 0 ? (
-                assessments.map((assessment) => (
-                  <tr key={assessment.id} className="border-t border-slate-200/80 dark:border-white/10">
-                    <td className="px-6 py-5">{assessment.agent_name || "—"}</td>
-                    <td className="px-6 py-5">
-                      {assessment.created_at
-                        ? new Date(assessment.created_at).toLocaleString("pt-BR")
-                        : "—"}
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/app/recrutador/assessments/${assessment.id}`}
-                          className="rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-                        >
-                          Abrir
-                        </Link>
-                        <a
-                          href={`/api/recrutador/assessments/${assessment.id}/download`}
-                          className="rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-                        >
-                          Baixar
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                assessments.map((assessment) => {
+                  const isUnlocked = unlockedIds.has(assessment.id);
+                  return (
+                    <tr key={assessment.id} className="border-t border-slate-200/80 dark:border-white/10">
+                      <td className="px-6 py-5">{assessment.agent_name || "—"}</td>
+                      <td className="px-6 py-5">
+                        {assessment.created_at
+                          ? new Date(assessment.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
+                          : "—"}
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/app/recrutador/assessments/${assessment.id}`}
+                            className="rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                          >
+                            {isUnlocked ? "Abrir" : "Desbloquear"}
+                          </Link>
+                          {isUnlocked ? (
+                            <a
+                              href={`/api/recrutador/assessments/${assessment.id}/download`}
+                              className="rounded-xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                            >
+                              Baixar
+                            </a>
+                          ) : (
+                            <button
+                              disabled
+                              className="rounded-xl border border-slate-200/50 bg-slate-100/50 px-4 py-2 text-sm font-medium text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-slate-500 cursor-not-allowed inline-flex items-center gap-1.5"
+                            >
+                              <Lock className="h-3.5 w-3.5" />
+                              Bloqueado
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={3} className="px-6 py-8 text-slate-500 dark:text-slate-400">
@@ -120,45 +151,58 @@ export default async function RecruiterAssessmentsPage() {
 
         <div className="mt-8 space-y-4 md:hidden">
           {assessments && assessments.length > 0 ? (
-            assessments.map((assessment) => (
-              <article
-                key={assessment.id}
-                className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-200">
-                    <FileText className="h-4 w-4" />
+            assessments.map((assessment) => {
+              const isUnlocked = unlockedIds.has(assessment.id);
+              return (
+                <article
+                  key={assessment.id}
+                  className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-200">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-slate-500 dark:text-slate-400">Agente usado</p>
+                      <h2 className="mt-1 text-base font-semibold leading-6 text-slate-950 dark:text-white">
+                        {assessment.agent_name || "—"}
+                      </h2>
+                      <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Criado em</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
+                        {assessment.created_at
+                          ? new Date(assessment.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
+                          : "—"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Agente usado</p>
-                    <h2 className="mt-1 text-base font-semibold leading-6 text-slate-950 dark:text-white">
-                      {assessment.agent_name || "—"}
-                    </h2>
-                    <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Criado em</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-300">
-                      {assessment.created_at
-                        ? new Date(assessment.created_at).toLocaleString("pt-BR")
-                        : "—"}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-                  <Link
-                    href={`/app/recrutador/assessments/${assessment.id}`}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-                  >
-                    Abrir
-                  </Link>
-                  <a
-                    href={`/api/recrutador/assessments/${assessment.id}/download`}
-                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-                  >
-                    Baixar
-                  </a>
-                </div>
-              </article>
-            ))
+                  <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                    <Link
+                      href={`/app/recrutador/assessments/${assessment.id}`}
+                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                    >
+                      {isUnlocked ? "Abrir" : "Desbloquear"}
+                    </Link>
+                    {isUnlocked ? (
+                      <a
+                        href={`/api/recrutador/assessments/${assessment.id}/download`}
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                      >
+                        Baixar
+                      </a>
+                    ) : (
+                      <button
+                        disabled
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200/50 bg-slate-100/50 px-4 py-3 text-sm font-medium text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-slate-500 cursor-not-allowed"
+                      >
+                        <Lock className="h-4 w-4" />
+                        Bloqueado
+                      </button>
+                    )}
+                  </div>
+                </article>
+              );
+            })
           ) : (
             <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 px-5 py-8 text-sm text-slate-500 shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72 dark:text-slate-400">
               Nenhum relatório encontrado.

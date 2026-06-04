@@ -70,7 +70,12 @@ function buildCustomerPayload(
 }
 
 function isActionablePaymentEvent(eventType: string) {
-  return eventType === "PAYMENT_CONFIRMED" || eventType === "PAYMENT_RECEIVED";
+  return (
+    eventType === "PAYMENT_CONFIRMED" ||
+    eventType === "PAYMENT_RECEIVED" ||
+    eventType === "PAYMENT_OVERDUE" ||
+    eventType === "SUBSCRIPTION_DELETED"
+  );
 }
 
 async function tryUpdateExistingCustomer(
@@ -232,6 +237,50 @@ export async function createAsaasTopupCheckout(
 export async function cancelAsaasSubscription(subscriptionId: string) {
   await asaasFetch(`/subscriptions/${subscriptionId}`, {
     method: "DELETE",
+  });
+}
+
+export async function updateAsaasSubscriptionCard(
+  subscriptionId: string,
+  cardInput: {
+    holderName: string;
+    number: string;
+    expiryMonth: string;
+    expiryYear: string;
+    ccv: string;
+    holderInfo: {
+      name: string;
+      email: string;
+      cpfCnpj: string;
+      postalCode: string;
+      addressNumber: string;
+      phone: string;
+    };
+    remoteIp: string;
+  }
+) {
+  const payload = {
+    creditCard: {
+      holderName: cardInput.holderName,
+      number: cardInput.number,
+      expiryMonth: cardInput.expiryMonth,
+      expiryYear: cardInput.expiryYear,
+      ccv: cardInput.ccv,
+    },
+    creditCardHolderInfo: {
+      name: cardInput.holderInfo.name,
+      email: cardInput.holderInfo.email,
+      cpfCnpj: cardInput.holderInfo.cpfCnpj,
+      postalCode: cardInput.holderInfo.postalCode,
+      addressNumber: cardInput.holderInfo.addressNumber,
+      phone: cardInput.holderInfo.phone,
+    },
+    remoteIp: cardInput.remoteIp,
+  };
+
+  return asaasFetch(`/subscriptions/${subscriptionId}/creditCard`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
   });
 }
 

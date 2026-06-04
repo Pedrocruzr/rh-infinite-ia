@@ -1,5 +1,12 @@
 function clean(value?: string) {
-  return value?.trim() || "";
+  let val = value?.trim() || "";
+  if (
+    (val.startsWith("'") && val.endsWith("'")) ||
+    (val.startsWith('"') && val.endsWith('"'))
+  ) {
+    val = val.slice(1, -1).trim();
+  }
+  return val;
 }
 
 function resolveEnvValue(primary?: string, previewOverride?: string) {

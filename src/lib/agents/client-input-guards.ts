@@ -136,6 +136,11 @@ export function validateClientAgentInput(
       field
     );
 
+  // Allow short professional abbreviations for area/cargo fields (rh, dp, ti, etc.)
+  if (isNameField && /area|área|cargo/.test(field) && raw.length <= 5 && /^[a-zA-ZÀ-ÿ.\/ ]+$/i.test(raw)) {
+    return null;
+  }
+
   if (isNameField && !isMeaningfulName(raw)) {
     return CLEAR_MESSAGE;
   }
@@ -148,6 +153,13 @@ export function validateClientAgentInput(
 
   if (strictAgents.has(agentSlug) && !isComprehensibleText(raw)) {
     return CLEAR_MESSAGE;
+  }
+
+  if (agentSlug === "agente-teste-bigfive" && !isNameField) {
+    const num = parseInt(raw, 10);
+    if (Number.isNaN(num) || num < 1 || num > 5) {
+      return "Resposta inválida. Por favor, digite um número de 1 a 5.";
+    }
   }
 
   return null;

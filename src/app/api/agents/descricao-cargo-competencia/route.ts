@@ -1,5 +1,8 @@
+export const maxDuration = 60;
+
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSessionUser } from "@/lib/auth/session";
 import {
   initializeDescricaoCargoSession,
   runDescricaoCargoStep,
@@ -38,6 +41,8 @@ export async function POST(req: NextRequest) {
 
     const supabase = createAdminClient();
     const now = new Date().toISOString();
+    const sessionUser = await getSessionUser();
+    const recruiterId = sessionUser?.id ?? null;
 
     const { data, error } = await supabase
       .from("profile_assessments")
@@ -51,6 +56,7 @@ export async function POST(req: NextRequest) {
         status: "completed",
         report_status: "generated",
         updated_at: now,
+        ...(recruiterId ? { recruiter_id: recruiterId } : {}),
       })
       .select("id")
       .single();

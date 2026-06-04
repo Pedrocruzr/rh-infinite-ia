@@ -121,16 +121,16 @@ export function InternalTopbar({
                 <X className="h-5 w-5" />
               </button>
 
-              <div className="mt-1 flex h-[50px] items-center justify-center overflow-hidden rounded-[0.35rem] border border-neutral-200 bg-white px-1 py-0 dark:border-white/14 dark:bg-[#13263d]">
+              <div className="mt-1 flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-2 py-2 dark:border-white/14 dark:bg-[#13263d]">
                 <img
-                  src="/brand/stackers-infinite-light.png"
-                  alt="Stackers Infinite IA"
-                  className="block h-auto w-[420px] dark:hidden"
+                  src="/brand/logomark-dark.png"
+                  alt="Gestão Stackers"
+                  className="block h-auto w-full object-contain dark:hidden"
                 />
                 <img
-                  src="/brand/stackers-infinite-dark.png"
-                  alt="Stackers Infinite IA"
-                  className="hidden h-auto w-[420px] dark:block"
+                  src="/brand/logomark-light.png"
+                  alt="Gestão Stackers"
+                  className="hidden h-auto w-full object-contain dark:block"
                 />
               </div>
             </div>

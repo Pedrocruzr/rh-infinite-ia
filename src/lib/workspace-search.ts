@@ -29,6 +29,7 @@ export const STATIC_WORKSPACE_SEARCH_ITEMS: WorkspaceSearchItem[] = [
   { title: "Taxa de Aderência com a Vaga", href: "/app/agentes/taxa-aderencia-vaga", category: "Agente", keywords: ["aderencia", "vaga"] },
   { title: "Teste de Perfil Comportamental", href: "/app/agentes/teste-perfil-comportamental", category: "Agente", keywords: ["perfil", "comportamental"] },
   { title: "DISC", href: "/app/agentes/teste-perfil-disc", category: "Agente", keywords: ["disc", "perfil"] },
+  { title: "Agente Teste Big Five", href: "/app/agentes/agente-teste-bigfive", category: "Agente", keywords: ["teste", "disc", "perfil", "big", "five", "bigfive", "ocean"] },
   { title: "Entrevistador Automatizado", href: "/app/agentes/entrevistador-automatizado", category: "Agente", keywords: ["entrevista"] },
   { title: "Parecer Técnico de Entrevista", href: "/app/agentes/parecer-tecnico-entrevista", category: "Agente", keywords: ["parecer", "entrevista"] },
   { title: "Onboarding Estratégico", href: "/app/agentes/onboarding-estrategico", category: "Agente", keywords: ["onboarding"] },

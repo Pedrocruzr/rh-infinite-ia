@@ -31,24 +31,77 @@ export type FitCulturalSession = {
 type FlowQuestion = {
   field: FitCulturalField;
   question: string;
+  context: string;
 };
 
 const FLOW: FlowQuestion[] = [
-  { field: "objetivo", question: "Gostaria de atualizar ou criar o fit cultural da sua empresa?" },
-  { field: "culturaAtual", question: "Como você descreveria a cultura atual da sua organização?" },
-  { field: "valoresDecisoes", question: "Quais são os três principais valores que guiam as decisões na empresa?" },
-  { field: "discrepancia", question: "Existe alguma discrepância entre a cultura declarada e a praticada? Se sim, qual?" },
-  { field: "comportamentosRecompensados", question: "Quais comportamentos são recompensados na sua organização?" },
-  { field: "evolucaoDesejada", question: "Como você gostaria que a cultura evoluísse nos próximos anos?" },
-  { field: "diferenciaisCulturais", question: "O que diferencia sua empresa dos concorrentes em termos culturais?" },
-  { field: "proposito", question: "Qual é o propósito fundamental da sua organização?" },
-  { field: "sucesso", question: "Como você definiria sucesso para sua empresa além dos resultados financeiros?" },
-  { field: "comportamentosInaceitaveis", question: "Quais comportamentos são inaceitáveis na sua cultura?" },
-  { field: "lideranca", question: "Como a liderança exemplifica os valores da empresa?" },
+  {
+    field: "objetivo",
+    question: "Gostaria de criar do zero ou atualizar o fit cultural da sua empresa?",
+    context: "Vou te guiar por uma análise completa de fit cultural. Antes de começar, preciso entender se você quer construir um fit cultural novo ou revisar o que já existe.",
+  },
+  {
+    field: "culturaAtual",
+    question: "Como você descreveria a cultura atual da sua organização?",
+    context: "Cultura organizacional é o conjunto de valores, crenças e comportamentos que definem como as pessoas agem no dia a dia. Quero entender como isso se manifesta na sua empresa hoje — pode ser o ritmo de trabalho, a forma de tomar decisões, o relacionamento entre as pessoas etc.",
+  },
+  {
+    field: "valoresDecisoes",
+    question: "Quais são os três principais valores que guiam as decisões na empresa?",
+    context: "Valores organizacionais são princípios que orientam como a empresa age quando precisa escolher entre caminhos diferentes. Por exemplo: integridade, foco no cliente, inovação.",
+  },
+  {
+    field: "discrepancia",
+    question: "Existe alguma discrepância entre a cultura declarada e a praticada? Se sim, qual?",
+    context: "Muitas empresas têm valores escritos no site, mas na prática o dia a dia funciona de forma diferente. Quero saber se isso acontece na sua organização — e se sim, onde essa diferença aparece mais. Se não houver, pode responder 'não'.",
+  },
+  {
+    field: "comportamentosRecompensados",
+    question: "Quais comportamentos são recompensados na sua organização?",
+    context: "O que uma empresa recompensa (promoções, reconhecimento, bônus) revela muito sobre sua cultura real. Pense em quais atitudes levam as pessoas a serem elogiadas ou promovidas na sua empresa.",
+  },
+  {
+    field: "evolucaoDesejada",
+    question: "Como você gostaria que a cultura evoluísse nos próximos anos?",
+    context: "Toda cultura pode amadurecer. Quero entender para onde você quer levar a empresa: o que precisa mudar, o que precisa ser fortalecido ou o que ainda está faltando construir.",
+  },
+  {
+    field: "diferenciaisCulturais",
+    question: "O que diferencia sua empresa dos concorrentes em termos culturais?",
+    context: "Além de produto ou preço, a cultura pode ser um diferencial competitivo real. Quero entender o que torna o ambiente e as pessoas da sua empresa únicos em relação ao mercado.",
+  },
+  {
+    field: "proposito",
+    question: "Qual é o propósito fundamental da sua organização?",
+    context: "Propósito é o 'por que existimos' além de gerar lucro — o impacto que a empresa quer ter no mundo, nos clientes ou na sociedade. Pode ser uma frase curta ou uma ideia central.",
+  },
+  {
+    field: "sucesso",
+    question: "Como você definiria sucesso para sua empresa além dos resultados financeiros?",
+    context: "Empresas com cultura forte definem sucesso de forma mais ampla: clima organizacional, retenção de talentos, impacto social, satisfação dos clientes. O que mais importa além dos números?",
+  },
+  {
+    field: "comportamentosInaceitaveis",
+    question: "Quais comportamentos são inaceitáveis na sua cultura?",
+    context: "Os limites culturais dizem tanto quanto os valores positivos. O que uma empresa não tolera revela o que ela realmente preza — pode ser falta de respeito, falta de comprometimento, desonestidade etc.",
+  },
+  {
+    field: "lideranca",
+    question: "Como a liderança exemplifica os valores da empresa?",
+    context: "A liderança é o principal espelho da cultura. Quero entender se os líderes vivem os valores na prática — nas decisões, no dia a dia e no relacionamento com as equipes.",
+  },
 ];
 
 function normalizeText(value: string) {
   return String(value ?? "").trim().replace(/\s+/g, " ");
+}
+
+function normalizeForComparison(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function cleanToken(token: string) {
@@ -59,41 +112,79 @@ function hasVowel(token: string) {
   return /[aeiouáàâãéêíóôõúü]/i.test(token);
 }
 
-function isAllowedShortAnswer(token: string) {
-  const normalized = token.toLowerCase();
-  return [
-    "ok",
-    "sim",
-    "não",
-    "nao",
-    "criar",
-    "atualizar",
-    "revisar",
-    "ajustar",
-  ].includes(normalized);
+function isShortValidAnswer(text: string) {
+  const n = normalizeForComparison(text.trim());
+  return ["ok", "sim", "não", "nao", "criar", "atualizar", "revisar", "ajustar"].includes(n);
+}
+
+function detectObjetivoIntent(text: string): "criar" | "atualizar" | null {
+  const n = normalizeForComparison(text);
+
+  const criarKeywords = [
+    "criar", "criar do zero", "do zero", "novo", "nova", "montar", "construir",
+    "começar", "comecar", "estruturar", "desenvolver", "fazer do zero",
+    "criar agora", "quero criar", "vamos criar", "preciso criar",
+  ];
+  const atualizarKeywords = [
+    "atualizar", "revisar", "ajustar", "editar", "modificar", "melhorar",
+    "refinar", "atualiza", "revisa", "quero atualizar", "preciso atualizar",
+    "quero revisar", "preciso revisar",
+  ];
+
+  if (criarKeywords.some((k) => n.includes(k))) return "criar";
+  if (atualizarKeywords.some((k) => n.includes(k))) return "atualizar";
+
+  return null;
+}
+
+function isConfusedOrAsking(text: string): boolean {
+  const trimmed = text.trim();
+  const n = normalizeForComparison(trimmed);
+
+  if (trimmed.endsWith("?") && trimmed.split(/\s+/).length <= 8) return true;
+
+  const confusionPatterns = [
+    "em qual sentido",
+    "o que voce quer dizer",
+    "nao entendi",
+    "pode explicar",
+    "como assim",
+    "nao compreendi",
+    "nao sei",
+    "nao entendo",
+    "o que isso significa",
+    "pode detalhar",
+    "o que e isso",
+    "o que significa",
+    "me explica",
+    "pode me explicar",
+    "explica melhor",
+    "nao estou entendendo",
+    "nao to entendendo",
+    "qual sentido",
+    "que sentido",
+  ];
+
+  return confusionPatterns.some((p) => n.includes(p));
 }
 
 function looksLikeNoise(token: string) {
   const clean = cleanToken(token).toLowerCase();
-
   if (!clean) return true;
   if (clean.length <= 2) return true;
   if (!hasVowel(clean)) return true;
   if (/^[bcdfghjklmnpqrstvwxyz]{4,}$/i.test(clean)) return true;
   if (/^(.)\1{2,}$/.test(clean)) return true;
-
   return false;
 }
 
 function looksComprehensibleWord(token: string) {
   const clean = cleanToken(token);
-
   if (!clean) return false;
-  if (isAllowedShortAnswer(clean)) return true;
+  if (isShortValidAnswer(clean)) return true;
   if (looksLikeNoise(clean)) return false;
   if (clean.length < 4) return false;
   if (!hasVowel(clean)) return false;
-
   return true;
 }
 
@@ -102,7 +193,6 @@ function countComprehensibleWords(value: string) {
     .split(/\s+/)
     .map(cleanToken)
     .filter(Boolean);
-
   return tokens.filter(looksComprehensibleWord).length;
 }
 
@@ -111,29 +201,38 @@ function looksStructuredAnswer(value: string) {
   return /[,;\n]/.test(text) || /\d+\./.test(text) || / e /i.test(text);
 }
 
-function validateAnswer(field: FitCulturalField, value: string) {
+function formatQuestion(item: FlowQuestion, includeContext = true): string {
+  if (includeContext) {
+    return `${item.context}\n\n${item.question}`;
+  }
+  return item.question;
+}
+
+function validateAnswer(field: FitCulturalField, value: string): string | null {
   const text = normalizeText(value);
 
   if (!text) {
-    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+    return "Sua resposta ficou vazia. Pode digitar algo para continuar?";
   }
 
   if (field === "objetivo") {
-    const token = cleanToken(text);
-    if (!isAllowedShortAnswer(token)) {
-      return "Não consegui entender sua resposta com segurança. Responda de forma clara, por exemplo: criar ou atualizar.";
+    const intent = detectObjetivoIntent(text);
+    if (!intent) {
+      return "Não consegui identificar sua intenção. Responda com **criar** (para construir do zero) ou **atualizar** (para revisar o que já existe).";
     }
     return null;
   }
 
+  if (isShortValidAnswer(text)) return null;
+
   const comprehensibleWords = countComprehensibleWords(text);
 
   if (comprehensibleWords === 0) {
-    return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+    return "Não consegui entender sua resposta. Pode escrever de forma mais clara?";
   }
 
   if (comprehensibleWords < 2 && !looksStructuredAnswer(text)) {
-    return "Não consegui entender sua resposta com segurança. Pode escrever novamente de forma mais clara?";
+    return "Sua resposta ficou muito curta. Pode detalhar um pouco mais?";
   }
 
   return null;
@@ -186,15 +285,29 @@ export function runFitCulturalStep(
       currentField: next?.field ?? null,
       nextField: next?.field ?? null,
       question: next?.question ?? null,
-      reply: next?.question ?? null,
+      reply: next ? formatQuestion(next) : null,
     };
   }
 
   const raw = normalizeText(answer ?? "");
+  const current = FLOW.find((item) => item.field === currentField);
+
+  if (isConfusedOrAsking(raw)) {
+    return {
+      session,
+      completed: false,
+      currentField,
+      nextField: currentField,
+      question: current?.question ?? null,
+      reply: current
+        ? `Sem problema, deixa eu explicar melhor!\n\n${formatQuestion(current)}`
+        : "Pode reformular sua resposta?",
+    };
+  }
+
   const error = validateAnswer(currentField as FitCulturalField, raw);
 
   if (error) {
-    const current = FLOW.find((item) => item.field === currentField);
     return {
       session,
       completed: false,
@@ -224,6 +337,6 @@ export function runFitCulturalStep(
     currentField: next?.field ?? null,
     nextField: next?.field ?? null,
     question: next?.question ?? null,
-    reply: completed ? null : next?.question ?? null,
+    reply: completed ? null : next ? formatQuestion(next) : null,
   };
 }

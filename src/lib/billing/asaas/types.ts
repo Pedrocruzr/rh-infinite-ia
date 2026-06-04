@@ -84,4 +84,10 @@ export type AsaasWebhookPayload = {
     billingType?: string;
     externalReference?: string;
   };
+  subscription?: {
+    id?: string;
+    customer?: string;
+    status?: string;
+    externalReference?: string;
+  };
 };

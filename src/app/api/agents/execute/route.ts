@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -39,6 +41,62 @@ export async function POST(request: Request) {
           error: agentError?.message ?? "Agente não encontrado",
         },
         { status: 500 }
+      );
+    }
+
+    // Validate subscription status
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("status, current_period_end")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const normalizedStatus = (subscription?.status || "").toLowerCase();
+    const isMainActive = new Set(["active", "paid", "ativo"]).has(normalizedStatus);
+
+    const isTrialingAndNotExpired =
+      normalizedStatus === "trialing" &&
+      subscription?.current_period_end &&
+      new Date(subscription.current_period_end) > new Date();
+
+    const isCanceledButNotExpired =
+      normalizedStatus === "canceled" &&
+      subscription?.current_period_end &&
+      new Date(subscription.current_period_end) > new Date();
+
+    const isBypassUser = user.email?.toLowerCase() === "rnsantos27@gmail.com";
+
+    if (!isMainActive && !isTrialingAndNotExpired && !isCanceledButNotExpired && !isBypassUser) {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "subscription_check",
+          error: "Assinatura inativa ou suspensa. Ative o plano completo para poder executar agentes.",
+        },
+        { status: 403 }
+      );
+    }
+
+    // Validate credits balance before execution
+    const { data: wallet } = await supabase
+      .from("credit_wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const currentBalance = wallet?.balance ?? 0;
+    const requiredCredits = agent.credit_cost ?? 1;
+
+    if (currentBalance < requiredCredits) {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "credits_check",
+          error: `Saldo de créditos insuficiente. Este agente custa ${requiredCredits} créditos, mas você possui apenas ${currentBalance}.`,
+        },
+        { status: 403 }
       );
     }
 

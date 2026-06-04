@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { runAgent } from "@/lib/agents/coletor-dados-six-box/runner";
@@ -77,6 +79,7 @@ export async function POST(req: NextRequest) {
         status: "completed",
         report_status: "generated",
         updated_at: now,
+        recruiter_id: user.id,
       })
       .select("id")
       .single();

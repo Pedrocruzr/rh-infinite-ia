@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, FileText, Sparkles, Lock } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSessionUser } from "@/lib/auth/session";
 import RegenerateReportDialog from "@/components/assessments/regenerate-report-dialog";
 import AssessmentReportContent from "@/components/assessments/assessment-report-content";
+import UnlockReportButton from "@/components/assessments/unlock-report-button";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -11,6 +13,12 @@ type Props = {
 
 export default async function RecruiterAssessmentDetailPage({ params }: Props) {
   const { id } = await params;
+  const user = await getSessionUser();
+
+  if (!user?.id) {
+    notFound();
+  }
+
   const supabase = createAdminClient();
 
   const { data: assessment } = await supabase
@@ -22,6 +30,38 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
   if (!assessment) {
     notFound();
   }
+
+  // Validate ownership
+  if (assessment.recruiter_id && assessment.recruiter_id !== user.id) {
+    notFound();
+  }
+
+  // Check if report is unlocked
+  const { data: existingUnlock } = await supabase
+    .from("usage_events")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("event_type", "report_unlock")
+    .eq("metadata->>assessment_id", id)
+    .maybeSingle();
+
+  const isUnlocked = !!existingUnlock;
+
+  // Fetch current credit balance
+  const { data: wallet } = await supabase
+    .from("credit_wallets")
+    .select("balance")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  // Fetch agent cost
+  const { data: agent } = await supabase
+    .from("agents")
+    .select("name, credit_cost")
+    .eq("slug", assessment.agent_slug)
+    .maybeSingle();
+
+  const cost = agent?.credit_cost ?? 2;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] px-8 py-10 text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
@@ -42,14 +82,28 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
             </div>
 
             <div className="flex items-center gap-3">
-              {assessment?.id ? <RegenerateReportDialog assessmentId={assessment.id} /> : null}
-              <a
-                href={`/api/recrutador/assessments/${assessment.id}/download`}
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-5 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-              >
-                <Download className="h-4 w-4" />
-                Baixar
-              </a>
+              {isUnlocked && assessment?.id ? (
+                <>
+                  <RegenerateReportDialog assessmentId={assessment.id} />
+                  <a
+                    href={`/api/recrutador/assessments/${assessment.id}/download`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-5 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                  >
+                    <Download className="h-4 w-4" />
+                    Baixar PDF
+                  </a>
+                </>
+              ) : (
+                <button
+                  disabled
+                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-200/50 bg-slate-100/50 px-5 py-3 text-sm font-medium text-slate-400 dark:border-white/5 dark:bg-white/5 dark:text-slate-500 cursor-not-allowed"
+                >
+                  <Lock className="h-4 w-4" />
+                  PDF Bloqueado
+                </button>
+              )}
               <Link
                 href="/app/recrutador/assessments"
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-5 py-3 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
@@ -70,7 +124,7 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
                 <p className="text-sm text-slate-500 dark:text-slate-400">Criado em</p>
                 <p className="mt-2 text-lg font-medium">
                   {assessment.created_at
-                    ? new Date(assessment.created_at).toLocaleString("pt-BR")
+                    ? new Date(assessment.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
                     : "—"}
                 </p>
               </div>
@@ -116,8 +170,16 @@ export default async function RecruiterAssessmentDetailPage({ params }: Props) {
           </div>
         </section>
 
-        <div className="mt-6 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/88 p-10 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
-          <AssessmentReportContent assessment={assessment} />
+        <div className="mt-6 overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white p-10 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#0b1728]">
+          {isUnlocked ? (
+            <AssessmentReportContent assessment={assessment} />
+          ) : (
+            <UnlockReportButton
+              assessmentId={assessment.id}
+              cost={cost}
+              currentBalance={wallet?.balance ?? 0}
+            />
+          )}
         </div>
       </div>
     </main>

@@ -33,6 +33,7 @@ const SECTION_CONFIG = [
       "mentor-dinamicas",
       "teste-perfil-comportamental",
       "teste-perfil-disc",
+      "agente-teste-bigfive",
       "taxa-aderencia-vaga",
       "parecer-tecnico-entrevista",
     ],
@@ -62,6 +63,7 @@ const TITLE_OVERRIDES: Record<string, string> = {
   "mentor-dinamicas": "Mentor de Dinâmicas",
   "teste-perfil-comportamental": "Teste de Perfil Comportamental",
   "teste-perfil-disc": "DISC",
+  "agente-teste-bigfive": "Agente Teste Big Five",
   "taxa-aderencia-vaga": "Especialista em Taxa de Aderência com a Vaga",
   "parecer-tecnico-entrevista": "Especialista em Parecer Técnico de Entrevista",
   "onboarding-estrategico": "Onboarding Estratégico",
@@ -128,6 +130,7 @@ type CatalogAgent = (typeof agentsCatalog)[number];
 type VisualAgent = RuntimeAgent & {
   displayName: string;
   image: string;
+  imageDark: string;
 };
 
 function getCatalogAgent(slug: string): CatalogAgent | undefined {
@@ -152,7 +155,8 @@ function getAgentsBySlugs(slugs: readonly string[]) {
     resolved.push({
       ...runtimeAgent,
       displayName: TITLE_OVERRIDES[slug] ?? runtimeAgent.name,
-      image: catalogAgent?.image ?? "/agents/teste-perfil-comportamental.png",
+      image: catalogAgent?.image ?? "/agents/teste-perfil-comportamental-light.png",
+      imageDark: (catalogAgent as any)?.imageDark ?? "/agents/teste-perfil-comportamental-dark.png",
     });
   }
 
@@ -173,7 +177,7 @@ export default function AgentesPage() {
               <Sparkles className="h-3.5 w-3.5" />
               Central de agentes
             </div>
-            <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl">
+            <h1 className="font-michroma mt-6 text-4xl font-medium tracking-wide md:text-5xl">
               Stackers Agents
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-300 md:text-lg">
@@ -214,7 +218,14 @@ export default function AgentesPage() {
                           src={agent.image}
                           alt={agent.displayName}
                           fill
-                          className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                          className="object-cover transition duration-500 group-hover:scale-[1.03] dark:hidden"
+                          sizes="(max-width: 1280px) 100vw, 33vw"
+                        />
+                        <Image
+                          src={agent.imageDark}
+                          alt={agent.displayName}
+                          fill
+                          className="hidden object-cover transition duration-500 group-hover:scale-[1.03] dark:block"
                           sizes="(max-width: 1280px) 100vw, 33vw"
                         />
                         <div className={`absolute inset-0 bg-gradient-to-t ${style.accent}`} />

@@ -1,5 +1,8 @@
+export const maxDuration = 60;
+
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSessionUser } from "@/lib/auth/session";
 import { generateTaxaAderenciaReport } from "@/lib/agents/taxa-de-aderencia-com-a-vaga/runner";
 
 type RequestBody = {
@@ -53,6 +56,8 @@ export async function POST(request: Request) {
     const reportHtml = generateTaxaAderenciaReport(answers);
     const now = new Date().toISOString();
     const expiresAt = addDays(new Date(), 3);
+    const sessionUser = await getSessionUser();
+    const recruiterId = sessionUser?.id ?? null;
 
     const payload = {
       candidate_name: candidateName,
@@ -98,6 +103,7 @@ export async function POST(request: Request) {
       .insert({
         ...payload,
         created_at: now,
+        ...(recruiterId ? { recruiter_id: recruiterId } : {}),
       })
       .select("id, candidate_name, target_role, agent_slug, status, report_status")
       .single();

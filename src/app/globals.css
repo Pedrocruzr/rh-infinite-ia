@@ -2,6 +2,32 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* ── Fontes ── */
+@theme inline {
+  --font-aeonik: var(--font-aeonik);
+  --font-inter: var(--font-inter);
+  --font-geist-mono: var(--font-geist-mono);
+  --font-michroma: var(--font-michroma);
+}
+
+.font-michroma {
+  font-family: var(--font-michroma), sans-serif;
+  font-weight: 700;
+}
+
+body {
+  font-family: var(--font-inter), sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-michroma), sans-serif;
+  font-weight: 700;
+}
+
+code, pre, kbd, samp, .font-mono {
+  font-family: var(--font-geist-mono), monospace;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

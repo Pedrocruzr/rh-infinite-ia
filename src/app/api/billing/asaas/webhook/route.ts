@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       request.headers.get("authorization") ||
       "";
 
-    if (config.webhookToken && token && !token.includes(config.webhookToken)) {
+    if (config.webhookToken && (!token || !token.includes(config.webhookToken))) {
       return NextResponse.json({ error: "Webhook não autorizado." }, { status: 401 });
     }
 

@@ -91,6 +91,13 @@ export const agents = [
     active: true,
   },
   {
+    name: "Agente Teste Big Five",
+    slug: "agente-teste-bigfive",
+    category: "Recrutamento & Seleção",
+    shortDescription: "Avaliação Big Five de 120 questões com relatório e radar de competências.",
+    active: true,
+  },
+  {
     name: "Especialista em Taxa de Aderência com a Vaga",
     slug: "taxa-aderencia-vaga",
     category: "Recrutamento & Seleção",

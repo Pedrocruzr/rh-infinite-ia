@@ -268,7 +268,7 @@ function buildMontarQuestionarioReport(session: ClimaSession) {
   const observacoes = normalizeSentence(session.observacoesMontagem ?? "Não informado");
 
   return `
-<section>
+<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
   <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">QUESTIONÁRIO DE CLIMA ORGANIZACIONAL</h1>
 
   <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Contexto da montagem</h2>
@@ -319,7 +319,7 @@ function buildAdaptarQuestionarioReport(session: ClimaSession) {
   }
 
   return `
-<section>
+<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
   <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">QUESTIONÁRIO DE CLIMA ADAPTADO</h1>
 
   <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Tipo de adaptação identificada</h2>
@@ -660,7 +660,7 @@ function buildAnaliseResultadosReport(session: ClimaSession) {
     : "Mesmo quando a média geral parece aceitável, perguntas individuais muito baixas merecem atenção porque revelam os pontos de maior frustração do colaborador.";
 
   return `
-<section>
+<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
   <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">ANÁLISE EXECUTIVA DOS RESULTADOS DA PESQUISA DE CLIMA</h1>
 
   <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Visão geral</h2>
@@ -716,7 +716,7 @@ function buildInterpretarDimensoesReport(session: ClimaSession) {
     : `<p style="margin:0 0 24px 0;">Não foi possível identificar dimensões específicas no material enviado, então a leitura foi mantida em nível geral.</p>`;
 
   return `
-<section>
+<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
   <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">INTERPRETAÇÃO DE DIMENSÕES DO CLIMA</h1>
 
   <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Dimensões solicitadas</h2>
@@ -1043,7 +1043,7 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
     : `<p style="margin:0 0 24px 0;">Os itens críticos mais baixos devem ser identificados e acompanhados, porque costumam revelar o ponto de maior frustração do colaborador.</p>`;
 
   return `
-<section>
+<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
   <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">RELATÓRIO EXECUTIVO — PESQUISA DE CLIMA ORGANIZACIONAL</h1>
 
   <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Objetivo</h2>
@@ -1348,7 +1348,7 @@ function buildPlanoAcaoReport(session: ClimaSession) {
   })();
 
   return `
-<section>
+<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
   <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">PLANO DE AÇÃO SUGERIDO</h1>
 
   <p style="margin:0 0 24px 0;">Com base nos achados enviados, eu sugeriria um plano de ação em frentes prioritárias, com execução em até 90 dias. A lógica é simples: atacar primeiro os temas que mais fragilizam percepção de justiça, clareza, integração e previsibilidade, sem perder o que hoje sustenta o clima.</p>
@@ -1399,7 +1399,7 @@ export function buildClimaReport(session: ClimaSession) {
       return buildPlanoAcaoReport(session);
     default:
       return `
-<section>
+<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
   <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">PESQUISA DE CLIMA ORGANIZACIONAL</h1>
   <p style="margin:0 0 0 0;">Não foi possível identificar o caminho do agente para montar o relatório final.</p>
 </section>

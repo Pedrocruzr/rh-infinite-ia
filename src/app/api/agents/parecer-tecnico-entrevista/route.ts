@@ -1,5 +1,8 @@
+export const maxDuration = 60;
+
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSessionUser } from "@/lib/auth/session";
 import {
   initializeParecerSession,
   runParecerStep,
@@ -217,6 +220,8 @@ export async function POST(req: NextRequest) {
       const expiresAt = new Date(
         now.getTime() + 3 * 24 * 60 * 60 * 1000
       ).toISOString();
+      const sessionUser = await getSessionUser();
+      const recruiterId = sessionUser?.id ?? null;
 
       const { data: created, error: createError } = await supabase
         .from("profile_assessments")
@@ -231,6 +236,7 @@ export async function POST(req: NextRequest) {
           agent_slug: "parecer-tecnico-entrevista",
           raw_answers: {},
           expires_at: expiresAt,
+          ...(recruiterId ? { recruiter_id: recruiterId } : {}),
         })
         .select("id")
         .single();

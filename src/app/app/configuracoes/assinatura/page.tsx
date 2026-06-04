@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SubscriptionPlans } from "@/components/settings/subscription-plans";
 import { CancelSubscriptionButton } from "@/components/settings/cancel-subscription-button";
 import { ChangeCardButton } from "@/components/settings/change-card-button";
+import { SubscribeButton } from "@/components/settings/subscribe-button";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,14 @@ function statusClass(status?: string | null) {
   }
 }
 
-export default async function AssinaturaPage() {
+interface AssinaturaPageProps {
+  searchParams: Promise<{
+    blocked?: string;
+  }>;
+}
+
+export default async function AssinaturaPage({ searchParams }: AssinaturaPageProps) {
+  const { blocked } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -160,6 +168,13 @@ export default async function AssinaturaPage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
       <section className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8 md:py-10">
+        {blocked === "true" && (
+          <div className="rounded-[1.75rem] border border-red-300 bg-red-50 p-6 text-sm text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
+            <h3 className="font-semibold text-lg mb-1">Acesso Suspenso</h3>
+            <p>Sua assinatura atual está inativa ou expirada. Ative o plano de recorrência abaixo para liberar o acesso a todos os agentes e recursos da plataforma.</p>
+          </div>
+        )}
+
         <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/80 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="max-w-3xl">
@@ -305,9 +320,12 @@ export default async function AssinaturaPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-start justify-end gap-3">
-                <ChangeCardButton disabled={!subscription?.id} />
-                <CancelSubscriptionButton disabled={!subscription?.id} />
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                {subscription?.status !== "active" && (
+                  <SubscribeButton label="Ativar plano completo" />
+                )}
+                <ChangeCardButton disabled={!subscription?.id || !subscription?.asaas_subscription_id} />
+                <CancelSubscriptionButton disabled={!subscription?.id || !subscription?.asaas_subscription_id} />
               </div>
             </div>
 

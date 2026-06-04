@@ -18,6 +18,7 @@ import { buildAnalistaDiagnosticoSixBoxReport } from "@/lib/agents/analista-diag
 import { buildCustoContratacaoReport } from "@/lib/agents/custo-contratacao/runner";
 import { buildProdutividadeReport } from "@/lib/agents/taxa-aderencia-vaga/runner";
 import { buildProdutividadeColaboradorReport } from "@/lib/agents/taxa-produtividade-colaborador/runner";
+import { generateBigFiveReport } from "@/lib/agente-teste-bigfive-runner";
 export function regenerateReportBySlug(slug: string, rawAnswers: unknown): string {
   switch (slug) {
     case "analista-fit-cultural":
@@ -50,6 +51,8 @@ export function regenerateReportBySlug(slug: string, rawAnswers: unknown): strin
       return reportBuilder_disc(rawAnswers as any);
     case "taxa-aderencia-vaga":
       return reportBuilder_9(rawAnswers as any);
+    case "agente-teste-bigfive":
+      return generateBigFiveReport(rawAnswers as any);
     default:
       if (slug === "analista-diagnostico-six-box") {
     return buildAnalistaDiagnosticoSixBoxReport((rawAnswers ?? {}) as any);

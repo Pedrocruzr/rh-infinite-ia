@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { headers } from "next/headers";
 import {
   Bot,
   BriefcaseBusiness,
@@ -102,10 +103,31 @@ export default async function InternalAppLayout({
       ? subscription.status.toLowerCase()
       : "";
 
-  const activeStatuses = new Set(["active", "trialing", "paid", "ativo"]);
-  const accountStatus = activeStatuses.has(normalizedStatus)
+  const isMainActive = new Set(["active", "paid", "ativo"]).has(normalizedStatus);
+
+  const isTrialingAndNotExpired =
+    normalizedStatus === "trialing" &&
+    subscription?.current_period_end &&
+    new Date(subscription.current_period_end) > new Date();
+
+  const isCanceledButNotExpired =
+    normalizedStatus === "canceled" &&
+    subscription?.current_period_end &&
+    new Date(subscription.current_period_end) > new Date();
+
+  const accountStatus = (isMainActive || isTrialingAndNotExpired || isCanceledButNotExpired || user.email?.toLowerCase() === "rnsantos27@gmail.com")
     ? "Ativo"
     : "Inativo";
+
+  const headerList = await headers();
+  const pathname = headerList.get("x-pathname") || "";
+  const isBypassedPage =
+    pathname.startsWith("/app/configuracoes") ||
+    pathname.startsWith("/app/suporte");
+
+  if (accountStatus === "Inativo" && !isBypassedPage) {
+    redirect("/app/configuracoes/assinatura?blocked=true");
+  }
 
   const planName =
     typeof plan?.name === "string" && plan.name.trim()
@@ -139,16 +161,16 @@ export default async function InternalAppLayout({
     <div className="min-h-screen bg-white text-black dark:bg-[#07111f] dark:text-neutral-100">
       <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
         <aside className="hidden sticky top-0 h-screen border-r border-neutral-200 bg-white p-6 lg:block dark:border-[#122033] dark:bg-[#07111f]">
-          <div className="flex w-full items-center justify-center overflow-hidden rounded-[1.1rem] border border-white/40 bg-white/65 px-4 py-1.5 shadow-[0_18px_40px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:border-white/10 dark:bg-white/6 dark:shadow-[0_18px_40px_rgba(2,8,23,0.35)]">
+          <div className="flex w-full items-center justify-center rounded-xl bg-white/65 py-2 dark:bg-transparent">
             <img
-              src="/brand/stackers-infinite-light.png"
-              alt="Stackers Infinite IA"
-              className="block h-auto w-[376px] scale-[2] dark:hidden"
+              src="/brand/logomark-dark.png"
+              alt="Gestão Stackers"
+              className="block w-full h-auto object-contain dark:hidden"
             />
             <img
-              src="/brand/stackers-infinite-dark.png"
-              alt="Stackers Infinite IA"
-              className="hidden h-auto w-[376px] scale-[2] dark:block"
+              src="/brand/logomark-light.png"
+              alt="Gestão Stackers"
+              className="hidden w-full h-auto object-contain dark:block"
             />
           </div>
 
