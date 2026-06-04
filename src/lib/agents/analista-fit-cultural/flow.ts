@@ -323,6 +323,81 @@ Sempre encerre a sua resposta de forma simpática, lembrando-o de que, quando se
   }
 }
 
+async function analisarMensagemUsuarioFit(
+  perguntaUsuario: string,
+  campoAtual: FitCulturalField,
+  historico: { role: "user" | "assistant"; content: string }[]
+): Promise<{ isDoubt: boolean; reply: string }> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const current = FLOW.find((item) => item.field === campoAtual);
+  if (!current) {
+    return { isDoubt: false, reply: "" };
+  }
+
+  if (!apiKey) {
+    const confused = isConfusedOrAsking(perguntaUsuario);
+    if (confused) {
+      return {
+        isDoubt: true,
+        reply: `Sem problema, deixa eu explicar melhor!\n\n${current.context}\n\n${current.question}`
+      };
+    }
+    return { isDoubt: false, reply: "" };
+  }
+
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: `Você é o Analista de Fit Cultural. O usuário está na etapa da pergunta: "${current.question}" (Contexto: "${current.context}").
+Analise a mensagem enviada pelo usuário.
+
+Se o usuário estiver:
+- Fazendo uma pergunta ou tirando dúvidas sobre fit cultural organizacional, conceitos de cultura, ou como montar e aplicar.
+- Demonstrando dúvida, confusão ou dizendo que não entendeu a pergunta atual (ex: "como assim?", "não entendi", "o que é isso?").
+- Reclamando ou indicando que algo deu errado na conversa ou que o bot se equivocou (ex: "não foi isso", "voltar", "está errado", "não era isso").
+- Dizendo que já tem um relatório, material ou questionário pronto (ex: "já tenho aqui", "já tenho o relatório") e quer saber o que fazer.
+- Digitando algo irrelevante ou tentando puxar assunto que não responda à pergunta.
+
+Então, responda de forma cordial, inteligente e concisa para ajudá-lo, tirando suas dúvidas. Nunca use formatação em negrito (**). Sempre encerre lembrando-o simpaticamente de que, assim que estiver pronto e sem dúvidas, ele pode responder à pergunta: "${current.question}".
+
+Se o usuário estiver respondendo de fato à pergunta com dados reais e válidos para a pergunta "${current.question}" (mesmo que seja uma resposta curta como "não temos" ou descrevendo sua cultura/valores), responda estritamente apenas com a palavra: PASS`
+      },
+      ...historico,
+      { role: "user", content: perguntaUsuario }
+    ];
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages,
+        temperature: 0.3,
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro na chamada da OpenAI");
+    }
+
+    const data = await response.json();
+    const content = (data.choices?.[0]?.message?.content ?? "").trim();
+    
+    if (content.toUpperCase() === "PASS" || content.toUpperCase().startsWith("PASS")) {
+      return { isDoubt: false, reply: "" };
+    }
+
+    return { isDoubt: true, reply: content.replaceAll("**", "") };
+  } catch (error) {
+    console.error("Erro na análise da OpenAI:", error);
+    return { isDoubt: false, reply: "" };
+  }
+}
+
 export async function runFitCulturalStep(
   session: FitCulturalSession,
   answer?: string,
@@ -376,6 +451,29 @@ export async function runFitCulturalStep(
 
   const current = FLOW.find((item) => item.field === currentField);
 
+  // Intelligent conversational doubts and complaints analysis using OpenAI
+  const analise = await analisarMensagemUsuarioFit(raw, currentField as FitCulturalField, session.historicoConversaFit ?? []);
+
+  if (analise.isDoubt) {
+    const novoHistorico = [
+      ...(session.historicoConversaFit ?? []),
+      { role: "user" as const, content: raw },
+      { role: "assistant" as const, content: analise.reply }
+    ];
+
+    return {
+      session: {
+        ...session,
+        historicoConversaFit: novoHistorico,
+      },
+      completed: false,
+      currentField,
+      nextField: currentField,
+      question: current?.question ?? null,
+      reply: analise.reply,
+    };
+  }
+
   if (currentField === "objetivo") {
     const intent = detectObjetivoIntent(raw);
 
@@ -400,28 +498,6 @@ export async function runFitCulturalStep(
         reply: respostaIA,
       };
     }
-  }
-
-  if (isConfusedOrAsking(raw)) {
-    const historicoAtual = session.historicoConversaFit ?? [];
-    const respostaIA = await conversarComOpenAIFit(raw, currentField as FitCulturalField, historicoAtual);
-    const novoHistorico = [
-      ...historicoAtual,
-      { role: "user" as const, content: raw },
-      { role: "assistant" as const, content: respostaIA }
-    ];
-
-    return {
-      session: {
-        ...session,
-        historicoConversaFit: novoHistorico,
-      },
-      completed: false,
-      currentField,
-      nextField: currentField,
-      question: current?.question ?? null,
-      reply: respostaIA,
-    };
   }
 
   const error = validateAnswer(currentField as FitCulturalField, raw);
