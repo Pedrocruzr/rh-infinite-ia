@@ -410,9 +410,9 @@ export function generateBigFiveReport(session: BigFiveSession & Record<string, u
 
     return `
     <div style="margin-top:24px;border:1px solid #e2e8f0;border-radius:16px;padding:24px;background:#ffffff;">
-      <div style="display:flex;justify-content:between;align-items:center;border-bottom:2px solid ${col};padding-bottom:8px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid ${col};padding-bottom:8px;margin-bottom:16px;">
         <h3 style="color:${col};margin:0;font-size:18px;">${FACTOR_NAMES[f]} (${f})</h3>
-        <span style="background:${col};color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">Nível: ${level} (${pct}%)</span>
+        <span style="background:${col};color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;margin-left:16px;white-space:nowrap;">Nível: ${level} (${pct}%)</span>
       </div>
       <p style="font-size:14px;line-height:1.6;color:#334155;margin-bottom:20px;">${interp}</p>
       <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center;">

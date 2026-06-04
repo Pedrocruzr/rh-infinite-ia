@@ -320,7 +320,67 @@ export function runBigFiveStep(
     };
   }
 
-  if (!isPersonal) {
+  if (isPersonal) {
+    const fieldLower = String(currentField).toLowerCase();
+    
+    if (fieldLower === "telefone") {
+      const digits = raw.replace(/\D/g, "");
+      if (digits.length !== 10 && digits.length !== 11) {
+        const current = BIG_FIVE_FLOW.find((item) => item.field === currentField);
+        return {
+          session,
+          completed: false,
+          currentField,
+          nextField: currentField,
+          question: current?.question ?? null,
+          reply: "Telefone inválido. Por favor, insira um telefone válido com DDD (10 ou 11 números).",
+        };
+      }
+    }
+    
+    if (fieldLower === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(raw)) {
+        const current = BIG_FIVE_FLOW.find((item) => item.field === currentField);
+        return {
+          session,
+          completed: false,
+          currentField,
+          nextField: currentField,
+          question: current?.question ?? null,
+          reply: "E-mail inválido. Por favor, insira um e-mail no formato correto (exemplo@email.com).",
+        };
+      }
+    }
+    
+    if (fieldLower === "statusprofissional") {
+      if (raw !== "1" && raw !== "2") {
+        const current = BIG_FIVE_FLOW.find((item) => item.field === currentField);
+        return {
+          session,
+          completed: false,
+          currentField,
+          nextField: currentField,
+          question: current?.question ?? null,
+          reply: "Opção inválida. Responda apenas 1 para Candidato ou 2 para Colaborador.",
+        };
+      }
+    }
+    
+    if (fieldLower === "sexo") {
+      if (raw !== "1" && raw !== "2" && raw !== "3") {
+        const current = BIG_FIVE_FLOW.find((item) => item.field === currentField);
+        return {
+          session,
+          completed: false,
+          currentField,
+          nextField: currentField,
+          question: current?.question ?? null,
+          reply: "Opção inválida. Responda apenas 1, 2 ou 3.",
+        };
+      }
+    }
+  } else {
     const num = parseInt(raw, 10);
     if (Number.isNaN(num) || num < 1 || num > 5) {
       const current = BIG_FIVE_FLOW.find((item) => item.field === currentField);

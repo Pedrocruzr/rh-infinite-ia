@@ -289,6 +289,39 @@ export function buildColetorSixBoxReport(raw: Record<string, any>) {
   return buildModeloBaseSixBoxHtml();
 }
 
+function userUnderstood(texto: string): boolean {
+  const t = texto.toLowerCase().trim();
+  if (
+    t === "sim" ||
+    t === "s" ||
+    t === "entendi" ||
+    t.includes("entendi") ||
+    t.includes("compreendi") ||
+    t.includes("sem duvida") ||
+    t.includes("sem dúvida") ||
+    t.includes("tudo certo") ||
+    t.includes("pode gerar") ||
+    t.includes("gerar") ||
+    t.includes("pronto") ||
+    t.includes("ok") ||
+    t.includes("claro") ||
+    t.includes("sei")
+  ) {
+    if (
+      t.includes("não sei") ||
+      t.includes("nao sei") ||
+      t.includes("não entendi") ||
+      t.includes("nao entendi") ||
+      t.includes("ainda não") ||
+      t.includes("ainda nao")
+    ) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
 export async function runAgent(input: any) {
   const currentField = input?.currentField ?? "start";
   const answer = typeof input?.answer === "string" ? input.answer : "";
@@ -330,25 +363,91 @@ export async function runAgent(input: any) {
       };
     }
 
-    const finalSession = {
-      ...session,
-      temQuestionario: "não",
-      status: "completed",
-      reportStatus: "generated",
-    };
-
-    const report = buildColetorSixBoxReport(finalSession);
-
     return {
-      reply: report,
-      report,
-      reportMarkdown: report,
-      session: { ...finalSession, reportMarkdown: report },
-      currentField: null,
-      nextField: null,
-      finished: true,
-      completed: true,
+      reply: "Perfeito, você ainda não tem um questionário. Vou te mostrar como aplicar isso na sua empresa.\n\n" +
+        "Olha, dentro do conceito de gestão empresarial hoje, mapear os perfis e o clima organizacional é de extrema importância para entender como sua equipe está estruturada, identificar o nível de engajamento e achar gargalos de produtividade de forma científica. Isso permite tomar decisões estratégicas baseadas em dados e não em achismos.\n\n" +
+        "Você entendeu até aqui? Já sabe o que tem que fazer utilizando o Google Forms ou o respondi.app?",
+      session: { ...session, temQuestionario: "não" },
+      currentField: "explicarImportancia",
+      nextField: "explicarImportancia",
+      finished: false,
+      completed: false,
     };
+  }
+
+  if (currentField === "explicarImportancia") {
+    if (userUnderstood(answer)) {
+      const finalSession = {
+        ...session,
+        temQuestionario: "não",
+        status: "completed",
+        reportStatus: "generated",
+      };
+
+      const report = buildColetorSixBoxReport(finalSession);
+      const replyText = "Perfeito. Agora estou gerando um questionário para você usar como base para criar esse formulário. Após a criação e aplicação, utilize o nosso agente de diagnóstico.\n\n" + report;
+
+      return {
+        reply: replyText,
+        report,
+        reportMarkdown: report,
+        session: { ...finalSession, reportMarkdown: report },
+        currentField: null,
+        nextField: null,
+        finished: true,
+        completed: true,
+      };
+    } else {
+      return {
+        reply: "Sem problemas! Vou te explicar o passo a passo para criar e aplicar o seu formulário:\n\n" +
+          "1. **Acesse o Google Forms ou o respondi.app** e crie um novo formulário;\n" +
+          "2. **Insira as perguntas** do questionário base que irei gerar para você no final desta conversa;\n" +
+          "3. **Configure as respostas** utilizando uma escala de 1 a 10 (onde 1 significa discordo totalmente/muito ruim e 10 significa concordo totalmente/excelente);\n" +
+          "4. **Envie o link para seus colaboradores** responderem de forma anônima, garantindo a sinceridade dos feedbacks;\n" +
+          "5. **Assista ao vídeo explicativo** detalhado na aba **Tutoriais** da nossa plataforma para ver um guia visual de como montar e aplicar.\n\n" +
+          "Ficou claro agora? Você tem mais alguma dúvida ou já podemos gerar o seu questionário base?",
+        session: { ...session, pediuInstrucoes: true },
+        currentField: "confirmacaoSemDuvidas",
+        nextField: "confirmacaoSemDuvidas",
+        finished: false,
+        completed: false,
+      };
+    }
+  }
+
+  if (currentField === "confirmacaoSemDuvidas") {
+    if (userUnderstood(answer)) {
+      const finalSession = {
+        ...session,
+        temQuestionario: "não",
+        status: "completed",
+        reportStatus: "generated",
+      };
+
+      const report = buildColetorSixBoxReport(finalSession);
+      const replyText = "Perfeito. Agora estou gerando um questionário para você usar como base para criar esse formulário. Após a criação e aplicação, utilize o nosso agente de diagnóstico.\n\n" + report;
+
+      return {
+        reply: replyText,
+        report,
+        reportMarkdown: report,
+        session: { ...finalSession, reportMarkdown: report },
+        currentField: null,
+        nextField: null,
+        finished: true,
+        completed: true,
+      };
+    } else {
+      return {
+        reply: "Sem problemas, estamos aqui para ajudar! Você pode rever o passo a passo que descrevi acima. Além disso, recomendo fortemente assistir ao vídeo tutorial na aba **Tutoriais** da plataforma. Ele mostra na tela como fazer tudo de ponta a ponta.\n\n" +
+          "Ficou claro agora? Já podemos gerar o seu questionário base?",
+        session,
+        currentField: "confirmacaoSemDuvidas",
+        nextField: "confirmacaoSemDuvidas",
+        finished: false,
+        completed: false,
+      };
+    }
   }
 
   if (currentField === "questionarioUsuario") {

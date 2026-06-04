@@ -155,10 +155,40 @@ export function validateClientAgentInput(
     return CLEAR_MESSAGE;
   }
 
-  if (agentSlug === "agente-teste-bigfive" && !isNameField) {
-    const num = parseInt(raw, 10);
-    if (Number.isNaN(num) || num < 1 || num > 5) {
-      return "Resposta inválida. Por favor, digite um número de 1 a 5.";
+  if (agentSlug === "agente-teste-bigfive") {
+    const fieldLower = field.toLowerCase();
+    
+    if (fieldLower === "telefone") {
+      const digits = raw.replace(/\D/g, "");
+      if (digits.length !== 10 && digits.length !== 11) {
+        return "Telefone inválido. Por favor, insira um telefone válido com DDD (10 ou 11 números).";
+      }
+    }
+    
+    if (fieldLower === "email") {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(raw)) {
+        return "E-mail inválido. Por favor, insira um e-mail no formato correto (exemplo@email.com).";
+      }
+    }
+    
+    if (fieldLower === "statusprofissional") {
+      if (raw !== "1" && raw !== "2") {
+        return "Opção inválida. Responda apenas 1 para Candidato ou 2 para Colaborador.";
+      }
+    }
+    
+    if (fieldLower === "sexo") {
+      if (raw !== "1" && raw !== "2" && raw !== "3") {
+        return "Opção inválida. Responda apenas 1, 2 ou 3.";
+      }
+    }
+    
+    if (/^q\d+$/.test(fieldLower)) {
+      const num = parseInt(raw, 10);
+      if (Number.isNaN(num) || num < 1 || num > 5) {
+        return "Resposta inválida. Por favor, digite um número de 1 a 5.";
+      }
     }
   }
 
