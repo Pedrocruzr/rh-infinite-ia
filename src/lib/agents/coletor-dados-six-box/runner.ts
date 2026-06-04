@@ -289,36 +289,68 @@ export function buildColetorSixBoxReport(raw: Record<string, any>) {
   return buildModeloBaseSixBoxHtml();
 }
 
-function userUnderstood(texto: string): boolean {
+function userSaysYes(texto: string): boolean {
   const t = texto.toLowerCase().trim();
   if (
     t === "sim" ||
     t === "s" ||
-    t === "entendi" ||
-    t.includes("entendi") ||
-    t.includes("compreendi") ||
-    t.includes("sem duvida") ||
-    t.includes("sem dúvida") ||
-    t.includes("tudo certo") ||
-    t.includes("pode gerar") ||
-    t.includes("gerar") ||
-    t.includes("pronto") ||
-    t.includes("ok") ||
-    t.includes("claro") ||
-    t.includes("sei")
+    t === "sei" ||
+    t === "sim, sei" ||
+    t.includes("conheço") ||
+    t.includes("conheco") ||
+    t.includes("entendo") ||
+    t.includes("claro")
   ) {
     if (
       t.includes("não sei") ||
       t.includes("nao sei") ||
-      t.includes("não entendi") ||
-      t.includes("nao entendi") ||
-      t.includes("ainda não") ||
-      t.includes("ainda nao")
+      t.includes("não conheço") ||
+      t.includes("nao conheco")
     ) {
       return false;
     }
     return true;
   }
+  return false;
+}
+
+function userWantsToGenerate(texto: string): boolean {
+  const t = texto.toLowerCase().trim();
+  
+  if (
+    t.includes("pode gerar") ||
+    t.includes("pode criar") ||
+    t.includes("gerar") ||
+    t.includes("gerar questionario") ||
+    t.includes("gerar questionário") ||
+    t.includes("pronto") ||
+    t.includes("criar") ||
+    t.includes("vamos")
+  ) {
+    return true;
+  }
+  
+  if (
+    t === "não" ||
+    t === "nao" ||
+    t === "n" ||
+    t.includes("não tenho") ||
+    t.includes("nao tenho") ||
+    t.includes("sem duvida") ||
+    t.includes("sem dúvida") ||
+    t.includes("tudo certo") ||
+    t.includes("tudo ok") ||
+    t.includes("nenhuma") ||
+    t.includes("não, pode gerar") ||
+    t.includes("nao, pode gerar")
+  ) {
+    return true;
+  }
+
+  if (t.includes("sim, pode") || t.includes("sim pode") || t.includes("pode sim")) {
+    return true;
+  }
+
   return false;
 }
 
@@ -366,7 +398,7 @@ export async function runAgent(input: any) {
     return {
       reply: "Perfeito, você ainda não tem um questionário. Vou te mostrar como aplicar isso na sua empresa.\n\n" +
         "Na gestão empresarial moderna, o questionário é a ferramenta que transforma percepções em dados reais para guiar decisões. Vou gerar um questionário baseado no modelo Six Box, que analisa 6 áreas críticas: Propósito, Estrutura, Relacionamentos, Recompensa, Liderança e Mecanismos de apoio. Ele serve para medir o alinhamento da equipe e identificar gargalos de produtividade.\n\n" +
-        "Vou te gerar um questionário para você aplicar e colher os dados na sua empresa. Você entendeu até aqui? Já sabe o que tem que fazer utilizando o Google Forms ou o respondi.app?",
+        "Vou te gerar um questionário para você aplicar e colher os dados na sua empresa. Você sabe utilizar o Google Forms ou o respondi.app?",
       session: { ...session, temQuestionario: "não" },
       currentField: "explicarImportancia",
       nextField: "explicarImportancia",
@@ -376,26 +408,14 @@ export async function runAgent(input: any) {
   }
 
   if (currentField === "explicarImportancia") {
-    if (userUnderstood(answer)) {
-      const finalSession = {
-        ...session,
-        temQuestionario: "não",
-        status: "completed",
-        reportStatus: "generated",
-      };
-
-      const report = buildColetorSixBoxReport(finalSession);
-      const replyText = "Perfeito. Agora estou gerando um questionário para você usar como base para criar esse formulário. Após a criação e aplicação, utilize o nosso agente de diagnóstico.\n\n" + report;
-
+    if (userSaysYes(answer)) {
       return {
-        reply: replyText,
-        report,
-        reportMarkdown: report,
-        session: { ...finalSession, reportMarkdown: report },
-        currentField: null,
-        nextField: null,
-        finished: true,
-        completed: true,
+        reply: "Excelente! Você tem alguma dúvida sobre a aplicação ou já podemos gerar o seu questionário base?",
+        session,
+        currentField: "confirmacaoSemDuvidas",
+        nextField: "confirmacaoSemDuvidas",
+        finished: false,
+        completed: false,
       };
     } else {
       return {
@@ -416,7 +436,7 @@ export async function runAgent(input: any) {
   }
 
   if (currentField === "confirmacaoSemDuvidas") {
-    if (userUnderstood(answer)) {
+    if (userWantsToGenerate(answer)) {
       const finalSession = {
         ...session,
         temQuestionario: "não",
@@ -439,8 +459,11 @@ export async function runAgent(input: any) {
       };
     } else {
       return {
-        reply: "Sem problemas, estamos aqui para ajudar! Você pode rever o passo a passo que descrevi acima. Além disso, recomendo fortemente assistir ao vídeo tutorial na aba Tutoriais da plataforma. Ele mostra na tela como fazer tudo de ponta a ponta.\n\n" +
-          "Ficou claro agora? Já podemos gerar o seu questionário base?",
+        reply: "Entendi! Para te ajudar, aqui estão alguns pontos importantes sobre a aplicação do Six Box:\n\n" +
+          "- Anonimato: É altamente recomendado que a pesquisa seja 100% anônima para que os colaboradores respondam com sinceridade;\n" +
+          "- Escala de 1 a 10: Permite que o colaborador dê notas intermediárias, facilitando identificar nuances em cada uma das 6 áreas;\n" +
+          "- Próximos passos: Depois que você coletar as respostas, você usará o nosso Agente de Diagnóstico Six Box para analisar a planilha de respostas e gerar o plano de ação.\n\n" +
+          "Consegui esclarecer sua dúvida? Tem mais alguma pergunta ou já podemos gerar o seu questionário base?",
         session,
         currentField: "confirmacaoSemDuvidas",
         nextField: "confirmacaoSemDuvidas",
