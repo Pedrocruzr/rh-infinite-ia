@@ -314,6 +314,59 @@ function userSaysYes(texto: string): boolean {
   return false;
 }
 
+async function conversarComOpenAI(perguntaUsuario: string, historico: any[]) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return "Entendi! Para te ajudar, aqui estão alguns pontos importantes sobre a aplicação do Six Box:\n\n" +
+      "- Anonimato: É altamente recomendado que a pesquisa seja 100% anônima para que os colaboradores respondam com sinceridade;\n" +
+      "- Escala de 1 a 10: Permite que o colaborador dê notas intermediárias, facilitando identificar nuances em cada uma das 6 áreas;\n" +
+      "- Próximos passos: Depois que você coletar as respostas, você usará o nosso Agente de Diagnóstico Six Box para analisar a planilha de respostas e gerar o plano de ação.\n\n" +
+      "Consegui esclarecer sua dúvida? Já podemos gerar o seu questionário base?";
+  }
+
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: "Você é o Agente Coletor de Dados Six Box. Seu objetivo é ajudar o usuário a tirar dúvidas sobre o modelo Six Box (um modelo de diagnóstico organizacional que avalia 6 áreas: Propósito, Estrutura, Relacionamentos, Recompensa, Liderança e Mecanismos de apoio) e como aplicá-lo usando ferramentas como Google Forms ou Respondi. Seja conciso, direto, cordial e não use formatação em negrito (**). Caso o usuário pergunte o que fazer após aplicar o questionário ou coletar as respostas, oriente-o expressamente a utilizar o nosso outro agente da plataforma, o Analista de Diagnóstico Six Box, que fará a leitura dos dados e gerará o diagnóstico organizacional. Sempre encerre a sua resposta com uma pergunta clara e objetiva sobre se ele gostaria de tirar mais dúvidas ou se já pode gerar o questionário base."
+      },
+      ...historico,
+      { role: "user", content: perguntaUsuario }
+    ];
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages,
+        temperature: 0.7,
+      })
+    });
+
+    if (!response.ok) {
+      const errPayload = await response.json().catch(() => ({}));
+      console.error("Erro na resposta da OpenAI:", errPayload);
+      throw new Error("Erro na chamada da OpenAI");
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content ?? "";
+    return content.replaceAll("**", "").trim();
+  } catch (error) {
+    console.error("Erro ao chamar OpenAI:", error);
+    return "Entendi! Para te ajudar, aqui estão alguns pontos importantes sobre a aplicação do Six Box:\n\n" +
+      "- Anonimato: É altamente recomendado que a pesquisa seja 100% anônima para que os colaboradores respondam com sinceridade;\n" +
+      "- Escala de 1 a 10: Permite que o colaborador dê notas intermediárias, facilitando identificar nuances em cada uma das 6 áreas;\n" +
+      "- Próximos passos: Depois que você coletar as respostas, você usará o nosso Agente de Diagnóstico Six Box para analisar a planilha de respostas e gerar o plano de ação.\n\n" +
+      "Consegui esclarecer sua dúvida? Já podemos gerar o seu questionário base?";
+  }
+}
+
 function userWantsToGenerate(texto: string): boolean {
   const t = texto.toLowerCase().trim();
   
@@ -457,13 +510,17 @@ export async function runAgent(input: any) {
 
     if (session.aguardandoClarificacaoDuvida) {
       if (t.includes("duvida") || t.includes("dúvida") || t === "sim" || t === "s" || t.includes("tenho")) {
+        const historicoAtual = session.historicoConversa ?? [];
+        const respostaIA = await conversarComOpenAI(answer, historicoAtual);
+        const novoHistorico = [
+          ...historicoAtual,
+          { role: "user", content: answer },
+          { role: "assistant", content: respostaIA }
+        ];
+
         return {
-          reply: "Entendi! Para te ajudar, aqui estão alguns pontos importantes sobre a aplicação do Six Box:\n\n" +
-            "- Anonimato: É altamente recomendado que a pesquisa seja 100% anônima para que os colaboradores respondam com sinceridade;\n" +
-            "- Escala de 1 a 10: Permite que o colaborador dê notas intermediárias, facilitando identificar nuances em cada uma das 6 áreas;\n" +
-            "- Próximos passos: Depois que você coletar as respostas, você usará o nosso Agente de Diagnóstico Six Box para analisar a planilha de respostas e gerar o plano de ação.\n\n" +
-            "Consegui esclarecer sua dúvida? Já podemos gerar o seu questionário base?",
-          session: { ...session, aguardandoClarificacaoDuvida: false },
+          reply: respostaIA,
+          session: { ...session, historicoConversa: novoHistorico, aguardandoClarificacaoDuvida: false },
           currentField: "confirmacaoSemDuvidas",
           nextField: "confirmacaoSemDuvidas",
           finished: false,
@@ -527,13 +584,17 @@ export async function runAgent(input: any) {
         completed: true,
       };
     } else {
+      const historicoAtual = session.historicoConversa ?? [];
+      const respostaIA = await conversarComOpenAI(answer, historicoAtual);
+      const novoHistorico = [
+        ...historicoAtual,
+        { role: "user", content: answer },
+        { role: "assistant", content: respostaIA }
+      ];
+
       return {
-        reply: "Entendi! Para te ajudar, aqui estão alguns pontos importantes sobre a aplicação do Six Box:\n\n" +
-          "- Anonimato: É altamente recomendado que a pesquisa seja 100% anônima para que os colaboradores respondam com sinceridade;\n" +
-          "- Escala de 1 a 10: Permite que o colaborador dê notas intermediárias, facilitando identificar nuances em cada uma das 6 áreas;\n" +
-          "- Próximos passos: Depois que você coletar as respostas, você usará o nosso Agente de Diagnóstico Six Box para analisar a planilha de respostas e gerar o plano de ação.\n\n" +
-          "Consegui esclarecer sua dúvida? Já podemos gerar o seu questionário base?",
-        session,
+        reply: respostaIA,
+        session: { ...session, historicoConversa: novoHistorico },
         currentField: "confirmacaoSemDuvidas",
         nextField: "confirmacaoSemDuvidas",
         finished: false,
