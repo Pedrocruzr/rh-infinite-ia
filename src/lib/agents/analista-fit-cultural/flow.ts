@@ -24,6 +24,7 @@ export type FitCulturalSession = {
   sucesso?: string;
   comportamentosInaceitaveis?: string;
   lideranca?: string;
+  historicoConversaFit?: { role: "user" | "assistant"; content: string }[];
   status?: "in_progress" | "completed";
   reportStatus?: "pending" | "generated";
 };
@@ -211,16 +212,12 @@ function formatQuestion(item: FlowQuestion, includeContext = true): string {
 function validateAnswer(field: FitCulturalField, value: string): string | null {
   const text = normalizeText(value);
 
-  if (!text) {
-    return "Sua resposta ficou vazia. Pode digitar algo para continuar?";
+  if (field === "objetivo") {
+    return null;
   }
 
-  if (field === "objetivo") {
-    const intent = detectObjetivoIntent(text);
-    if (!intent) {
-      return "Não consegui identificar sua intenção. Responda com **criar** (para construir do zero) ou **atualizar** (para revisar o que já existe).";
-    }
-    return null;
+  if (!text) {
+    return "Sua resposta ficou vazia. Pode digitar algo para continuar?";
   }
 
   if (isShortValidAnswer(text)) return null;
@@ -272,7 +269,61 @@ export function isFitCulturalReady(session: FitCulturalSession): boolean {
   return getNextFitCulturalQuestion(session) === null;
 }
 
-export function runFitCulturalStep(
+async function conversarComOpenAIFit(
+  perguntaUsuario: string,
+  campoAtual: FitCulturalField,
+  historico: { role: "user" | "assistant"; content: string }[]
+): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const current = FLOW.find((item) => item.field === campoAtual);
+  const contextoPergunta = current
+    ? `A pergunta atual que o usuário está respondendo é: "${current.question}" (Contexto: "${current.context}").`
+    : "";
+
+  if (!apiKey) {
+    return `Entendi sua dúvida sobre fit cultural! No entanto, a integração com a inteligência artificial não está configurada no momento. Para te ajudar com essa pergunta: ${current?.context ?? ""}\n\nConsegui ajudar? Quando estiver pronto, pode digitar sua resposta para a pergunta: "${current?.question ?? ""}"`;
+  }
+
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: `Você é o Analista de Fit Cultural. Seu objetivo é ajudar o usuário a tirar dúvidas sobre fit cultural organizacional, conceitos de cultura, e como montar ou aplicar o fit cultural na empresa.
+Seja conciso, direto, cordial e não use formatação em negrito (**).
+${contextoPergunta}
+Sempre encerre a sua resposta de forma simpática, lembrando-o de que, quando se sentir confortável e sem dúvidas, ele pode responder à pergunta principal do passo atual: "${current?.question ?? ""}".`
+      },
+      ...historico,
+      { role: "user", content: perguntaUsuario }
+    ];
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages,
+        temperature: 0.7,
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro na resposta da OpenAI");
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content ?? "";
+    return content.replaceAll("**", "").trim();
+  } catch (error) {
+    console.error("Erro ao chamar OpenAI (Fit Cultural):", error);
+    return `Entendi sua dúvida! No entanto, tive uma falha ao me conectar com o serviço. Para te ajudar com essa pergunta: ${current?.context ?? ""}\n\nConsegui ajudar? Quando estiver pronto, pode digitar sua resposta para a pergunta: "${current?.question ?? ""}"`;
+  }
+}
+
+export async function runFitCulturalStep(
   session: FitCulturalSession,
   answer?: string,
   currentField?: FitCulturalField | string
@@ -290,18 +341,86 @@ export function runFitCulturalStep(
   }
 
   const raw = normalizeText(answer ?? "");
+  const wordCount = raw.split(/\s+/).filter(Boolean).length;
+  const detectedIntent = detectObjetivoIntent(raw);
+
+  // Dynamic path switching for short inputs
+  if (detectedIntent && wordCount < 8 && currentField !== "objetivo") {
+    const updated: FitCulturalSession = {
+      ...session,
+      objetivo: detectedIntent === "criar" ? "Criar do zero" : "Atualizar o existente",
+      culturaAtual: undefined,
+      valoresDecisoes: undefined,
+      discrepancia: undefined,
+      comportamentosRecompensados: undefined,
+      evolucaoDesejada: undefined,
+      diferenciaisCulturais: undefined,
+      proposito: undefined,
+      sucesso: undefined,
+      comportamentosInaceitaveis: undefined,
+      lideranca: undefined,
+      historicoConversaFit: undefined,
+    };
+
+    const next = FLOW[1];
+    const q = formatQuestion(next);
+    return {
+      session: updated,
+      completed: false,
+      currentField: next.field,
+      nextField: next.field,
+      question: next.question,
+      reply: q,
+    };
+  }
+
   const current = FLOW.find((item) => item.field === currentField);
 
+  if (currentField === "objetivo") {
+    const intent = detectObjetivoIntent(raw);
+
+    if (!intent) {
+      const historicoAtual = session.historicoConversaFit ?? [];
+      const respostaIA = await conversarComOpenAIFit(raw, "objetivo", historicoAtual);
+      const novoHistorico = [
+        ...historicoAtual,
+        { role: "user" as const, content: raw },
+        { role: "assistant" as const, content: respostaIA }
+      ];
+
+      return {
+        session: {
+          ...session,
+          historicoConversaFit: novoHistorico,
+        },
+        completed: false,
+        currentField: "objetivo" as FitCulturalField,
+        nextField: "objetivo" as FitCulturalField,
+        question: FLOW[0].question,
+        reply: respostaIA,
+      };
+    }
+  }
+
   if (isConfusedOrAsking(raw)) {
+    const historicoAtual = session.historicoConversaFit ?? [];
+    const respostaIA = await conversarComOpenAIFit(raw, currentField as FitCulturalField, historicoAtual);
+    const novoHistorico = [
+      ...historicoAtual,
+      { role: "user" as const, content: raw },
+      { role: "assistant" as const, content: respostaIA }
+    ];
+
     return {
-      session,
+      session: {
+        ...session,
+        historicoConversaFit: novoHistorico,
+      },
       completed: false,
       currentField,
       nextField: currentField,
       question: current?.question ?? null,
-      reply: current
-        ? `Sem problema, deixa eu explicar melhor!\n\n${formatQuestion(current)}`
-        : "Pode reformular sua resposta?",
+      reply: respostaIA,
     };
   }
 

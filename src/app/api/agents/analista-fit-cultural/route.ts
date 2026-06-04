@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const answer = body.answer ?? body.message ?? "";
     const currentField = body.currentField;
 
-    const step = runFitCulturalStep(session, answer, currentField);
+    const step = await runFitCulturalStep(session, answer, currentField);
 
     if (!step.completed) {
       return NextResponse.json({
