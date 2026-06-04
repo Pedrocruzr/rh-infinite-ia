@@ -115,21 +115,21 @@ function hasVowel(token: string) {
 
 function isShortValidAnswer(text: string) {
   const n = normalizeForComparison(text.trim());
-  return ["ok", "sim", "não", "nao", "criar", "atualizar", "revisar", "ajustar"].includes(n);
+  return ["ok", "sim", "não", "nao", "criar", "atualizar", "revisar", "ajustar", "zero", "do zero"].includes(n);
 }
 
 function detectObjetivoIntent(text: string): "criar" | "atualizar" | null {
   const n = normalizeForComparison(text);
 
   const criarKeywords = [
-    "criar", "criar do zero", "do zero", "novo", "nova", "montar", "construir",
+    "criar", "criar do zero", "do zero", "zero", "novo", "nova", "montar", "construir",
     "começar", "comecar", "estruturar", "desenvolver", "fazer do zero",
     "criar agora", "quero criar", "vamos criar", "preciso criar",
   ];
   const atualizarKeywords = [
     "atualizar", "revisar", "ajustar", "editar", "modificar", "melhorar",
     "refinar", "atualiza", "revisa", "quero atualizar", "preciso atualizar",
-    "quero revisar", "preciso revisar",
+    "quero revisar", "preciso revisar", "existente", "rever", "revisar o existente",
   ];
 
   if (criarKeywords.some((k) => n.includes(k))) return "criar";
@@ -361,7 +361,7 @@ Se o usuário estiver:
 
 Então, responda de forma cordial, inteligente e concisa para ajudá-lo, tirando suas dúvidas. Nunca use formatação em negrito (**). Sempre encerre lembrando-o simpaticamente de que, assim que estiver pronto e sem dúvidas, ele pode responder à pergunta: "${current.question}".
 
-Se o usuário estiver respondendo de fato à pergunta com dados reais e válidos para a pergunta "${current.question}" (mesmo que seja uma resposta curta como "não temos" ou descrevendo sua cultura/valores), responda estritamente apenas com a palavra: PASS`
+Se o usuário estiver escolhendo uma das alternativas ou respondendo de fato à pergunta (por exemplo, digitando "criar", "atualizar", "do zero", "zero", "revisar", "sim", "não", "não temos", ou descrevendo o que foi solicitado), responda estritamente apenas com a palavra: PASS`
       },
       ...historico,
       { role: "user", content: perguntaUsuario }
