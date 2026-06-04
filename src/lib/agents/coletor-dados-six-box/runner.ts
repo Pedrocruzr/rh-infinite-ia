@@ -365,8 +365,8 @@ export async function runAgent(input: any) {
 
     return {
       reply: "Perfeito, você ainda não tem um questionário. Vou te mostrar como aplicar isso na sua empresa.\n\n" +
-        "Olha, dentro do conceito de gestão empresarial hoje, mapear os perfis e o clima organizacional é de extrema importância para entender como sua equipe está estruturada, identificar o nível de engajamento e achar gargalos de produtividade de forma científica. Isso permite tomar decisões estratégicas baseadas em dados e não em achismos.\n\n" +
-        "Você entendeu até aqui? Já sabe o que tem que fazer utilizando o Google Forms ou o respondi.app?",
+        "Na gestão empresarial moderna, o questionário é a ferramenta que transforma percepções em dados reais para guiar decisões. Vou gerar um questionário baseado no modelo Six Box, que analisa 6 áreas críticas: Propósito, Estrutura, Relacionamentos, Recompensa, Liderança e Mecanismos de apoio. Ele serve para medir o alinhamento da equipe e identificar gargalos de produtividade.\n\n" +
+        "Vou te gerar um questionário para você aplicar e colher os dados na sua empresa. Você entendeu até aqui? Já sabe o que tem que fazer utilizando o Google Forms ou o respondi.app?",
       session: { ...session, temQuestionario: "não" },
       currentField: "explicarImportancia",
       nextField: "explicarImportancia",
@@ -400,11 +400,11 @@ export async function runAgent(input: any) {
     } else {
       return {
         reply: "Sem problemas! Vou te explicar o passo a passo para criar e aplicar o seu formulário:\n\n" +
-          "1. **Acesse o Google Forms ou o respondi.app** e crie um novo formulário;\n" +
-          "2. **Insira as perguntas** do questionário base que irei gerar para você no final desta conversa;\n" +
-          "3. **Configure as respostas** utilizando uma escala de 1 a 10 (onde 1 significa discordo totalmente/muito ruim e 10 significa concordo totalmente/excelente);\n" +
-          "4. **Envie o link para seus colaboradores** responderem de forma anônima, garantindo a sinceridade dos feedbacks;\n" +
-          "5. **Assista ao vídeo explicativo** detalhado na aba **Tutoriais** da nossa plataforma para ver um guia visual de como montar e aplicar.\n\n" +
+          "1. Acesse o Google Forms ou o respondi.app e crie um novo formulário;\n" +
+          "2. Insira as perguntas do questionário base que irei gerar para você no final desta conversa;\n" +
+          "3. Configure as respostas utilizando uma escala de 1 a 10 (onde 1 significa discordo totalmente/muito ruim e 10 significa concordo totalmente/excelente);\n" +
+          "4. Envie o link para seus colaboradores responderem de forma anônima, garantindo a sinceridade dos feedbacks;\n" +
+          "5. Assista ao vídeo explicativo detalhado na aba Tutoriais da nossa plataforma para ver um guia visual de como montar e aplicar.\n\n" +
           "Ficou claro agora? Você tem mais alguma dúvida ou já podemos gerar o seu questionário base?",
         session: { ...session, pediuInstrucoes: true },
         currentField: "confirmacaoSemDuvidas",
@@ -439,7 +439,7 @@ export async function runAgent(input: any) {
       };
     } else {
       return {
-        reply: "Sem problemas, estamos aqui para ajudar! Você pode rever o passo a passo que descrevi acima. Além disso, recomendo fortemente assistir ao vídeo tutorial na aba **Tutoriais** da plataforma. Ele mostra na tela como fazer tudo de ponta a ponta.\n\n" +
+        reply: "Sem problemas, estamos aqui para ajudar! Você pode rever o passo a passo que descrevi acima. Além disso, recomendo fortemente assistir ao vídeo tutorial na aba Tutoriais da plataforma. Ele mostra na tela como fazer tudo de ponta a ponta.\n\n" +
           "Ficou claro agora? Já podemos gerar o seu questionário base?",
         session,
         currentField: "confirmacaoSemDuvidas",
