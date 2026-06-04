@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const answer = body.answer ?? body.message ?? "";
     const currentField = body.currentField;
 
-    const step = runClimaStep(session, answer, currentField);
+    const step = await runClimaStep(session, answer, currentField);
 
     if (!step.completed) {
       return NextResponse.json({
