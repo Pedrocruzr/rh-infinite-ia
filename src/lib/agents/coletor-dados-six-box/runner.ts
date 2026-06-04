@@ -325,28 +325,28 @@ function userWantsToGenerate(texto: string): boolean {
     t.includes("gerar questionário") ||
     t.includes("pronto") ||
     t.includes("criar") ||
-    t.includes("vamos")
+    t.includes("vamos") ||
+    t.includes("ficou claro") ||
+    t.includes("ficou claro agora") ||
+    t.includes("entendi") ||
+    t.includes("compreendi") ||
+    t.includes("tudo certo") ||
+    t.includes("tudo claro") ||
+    t.includes("sem duvida") ||
+    t.includes("sem dúvida") ||
+    t.includes("nenhuma") ||
+    t.includes("não tenho") ||
+    t.includes("nao tenho") ||
+    t === "não" ||
+    t === "nao" ||
+    t === "n" ||
+    t === "ok" ||
+    t === "fechou" ||
+    t === "claro"
   ) {
     return true;
   }
   
-  if (
-    t === "não" ||
-    t === "nao" ||
-    t === "n" ||
-    t.includes("não tenho") ||
-    t.includes("nao tenho") ||
-    t.includes("sem duvida") ||
-    t.includes("sem dúvida") ||
-    t.includes("tudo certo") ||
-    t.includes("tudo ok") ||
-    t.includes("nenhuma") ||
-    t.includes("não, pode gerar") ||
-    t.includes("nao, pode gerar")
-  ) {
-    return true;
-  }
-
   if (t.includes("sim, pode") || t.includes("sim pode") || t.includes("pode sim")) {
     return true;
   }
@@ -436,6 +436,59 @@ export async function runAgent(input: any) {
   }
 
   if (currentField === "confirmacaoSemDuvidas") {
+    const t = answer.toLowerCase().trim();
+    const isAmbiguous = (t === "sim" || t === "s");
+
+    if (session.aguardandoClarificacaoDuvida) {
+      if (t.includes("duvida") || t.includes("dúvida") || t === "sim" || t === "s" || t.includes("tenho")) {
+        return {
+          reply: "Entendi! Para te ajudar, aqui estão alguns pontos importantes sobre a aplicação do Six Box:\n\n" +
+            "- Anonimato: É altamente recomendado que a pesquisa seja 100% anônima para que os colaboradores respondam com sinceridade;\n" +
+            "- Escala de 1 a 10: Permite que o colaborador dê notas intermediárias, facilitando identificar nuances em cada uma das 6 áreas;\n" +
+            "- Próximos passos: Depois que você coletar as respostas, você usará o nosso Agente de Diagnóstico Six Box para analisar a planilha de respostas e gerar o plano de ação.\n\n" +
+            "Consegui esclarecer sua dúvida? Já podemos gerar o seu questionário base?",
+          session: { ...session, aguardandoClarificacaoDuvida: false },
+          currentField: "confirmacaoSemDuvidas",
+          nextField: "confirmacaoSemDuvidas",
+          finished: false,
+          completed: false,
+        };
+      } else {
+        const finalSession = {
+          ...session,
+          temQuestionario: "não",
+          status: "completed",
+          reportStatus: "generated",
+          aguardandoClarificacaoDuvida: false
+        };
+
+        const report = buildColetorSixBoxReport(finalSession);
+        const replyText = "Perfeito. Agora estou gerando um questionário para você usar como base para criar esse formulário. Após a criação e aplicação, utilize o nosso agente de diagnóstico.\n\n" + report;
+
+        return {
+          reply: replyText,
+          report,
+          reportMarkdown: report,
+          session: { ...finalSession, reportMarkdown: report },
+          currentField: null,
+          nextField: null,
+          finished: true,
+          completed: true,
+        };
+      }
+    }
+
+    if (isAmbiguous) {
+      return {
+        reply: "Você gostaria de tirar alguma dúvida específica ou já podemos gerar o questionário base?",
+        session: { ...session, aguardandoClarificacaoDuvida: true },
+        currentField: "confirmacaoSemDuvidas",
+        nextField: "confirmacaoSemDuvidas",
+        finished: false,
+        completed: false,
+      };
+    }
+
     if (userWantsToGenerate(answer)) {
       const finalSession = {
         ...session,
@@ -463,7 +516,7 @@ export async function runAgent(input: any) {
           "- Anonimato: É altamente recomendado que a pesquisa seja 100% anônima para que os colaboradores respondam com sinceridade;\n" +
           "- Escala de 1 a 10: Permite que o colaborador dê notas intermediárias, facilitando identificar nuances em cada uma das 6 áreas;\n" +
           "- Próximos passos: Depois que você coletar as respostas, você usará o nosso Agente de Diagnóstico Six Box para analisar a planilha de respostas e gerar o plano de ação.\n\n" +
-          "Consegui esclarecer sua dúvida? Tem mais alguma pergunta ou já podemos gerar o seu questionário base?",
+          "Consegui esclarecer sua dúvida? Já podemos gerar o seu questionário base?",
         session,
         currentField: "confirmacaoSemDuvidas",
         nextField: "confirmacaoSemDuvidas",
