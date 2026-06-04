@@ -318,6 +318,22 @@ function userWantsToGenerate(texto: string): boolean {
   const t = texto.toLowerCase().trim();
   
   if (
+    t.includes("não entendi") ||
+    t.includes("nao entendi") ||
+    t.includes("não ficou") ||
+    t.includes("nao ficou") ||
+    t.includes("ainda não") ||
+    t.includes("ainda nao") ||
+    t.includes("?") ||
+    t.includes("como") ||
+    t.includes("duvida") ||
+    t.includes("dúvida") ||
+    t.includes("ajuda")
+  ) {
+    return false;
+  }
+  
+  if (
     t.includes("pode gerar") ||
     t.includes("pode criar") ||
     t.includes("gerar") ||
