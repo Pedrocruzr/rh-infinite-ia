@@ -451,6 +451,52 @@ export async function runFitCulturalStep(
 
   const current = FLOW.find((item) => item.field === currentField);
 
+  // Local bypass: if we are at "objetivo" and a valid intent is detected, proceed immediately!
+  if (currentField === "objetivo" && detectedIntent) {
+    const updated = updateFitCulturalSession(
+      session,
+      "objetivo",
+      detectedIntent === "criar" ? "Criar do zero" : "Atualizar o existente"
+    );
+    const next = getNextFitCulturalQuestion(updated);
+    const completed = isFitCulturalReady(updated);
+    return {
+      session: {
+        ...updated,
+        status: completed ? "completed" : "in_progress",
+        reportStatus: completed ? "generated" : "pending",
+      },
+      completed,
+      currentField: next?.field ?? null,
+      nextField: next?.field ?? null,
+      question: next?.question ?? null,
+      reply: completed ? null : next ? formatQuestion(next) : null,
+    };
+  }
+
+  // Local bypass: if it's a short standard valid answer, proceed immediately!
+  if (currentField !== "objetivo" && isShortValidAnswer(raw)) {
+    const updated = updateFitCulturalSession(
+      session,
+      currentField as FitCulturalField,
+      raw
+    );
+    const next = getNextFitCulturalQuestion(updated);
+    const completed = isFitCulturalReady(updated);
+    return {
+      session: {
+        ...updated,
+        status: completed ? "completed" : "in_progress",
+        reportStatus: completed ? "generated" : "pending",
+      },
+      completed,
+      currentField: next?.field ?? null,
+      nextField: next?.field ?? null,
+      question: next?.question ?? null,
+      reply: completed ? null : next ? formatQuestion(next) : null,
+    };
+  }
+
   // Intelligent conversational doubts and complaints analysis using OpenAI
   const analise = await analisarMensagemUsuarioFit(raw, currentField as FitCulturalField, session.historicoConversaFit ?? []);
 
