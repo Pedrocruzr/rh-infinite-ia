@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const answer = body.answer ?? body.message ?? "";
     const currentField = body.currentField;
 
-    const step = runDescricaoCargoStep(session, answer, currentField);
+    const step = await runDescricaoCargoStep(session, answer, currentField);
 
     if (!step.completed) {
       return NextResponse.json({

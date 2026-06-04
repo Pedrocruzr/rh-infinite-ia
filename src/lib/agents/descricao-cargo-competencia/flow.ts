@@ -34,6 +34,7 @@ export type DescricaoCargoSession = {
 
   observacoes?: string;
 
+  historicoConversaDescricao?: { role: "user" | "assistant"; content: string }[];
   status?: "in_progress" | "completed";
   reportStatus?: "pending" | "generated";
 };
@@ -452,6 +453,184 @@ function validateField(field: DescricaoCargoField, value: string) {
   return null;
 }
 
+function isShortLocalBypass(field: string, text: string): boolean {
+  const n = text.trim().toLowerCase();
+  if (field === "temAtividadesMapeadas") {
+    return isYes(n) || isNo(n);
+  }
+  if (field === "validacaoAtividadesSugeridas" || field === "validacaoResponsabilidadesGeradas") {
+    return isValidationLike(n);
+  }
+  if (field === "observacoes") {
+    return isNo(n) || n === "não" || n === "nao";
+  }
+  return false;
+}
+
+function normalizeForComparison(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function isConfusedOrAsking(text: string): boolean {
+  const trimmed = text.trim();
+  const n = normalizeForComparison(trimmed);
+
+  if (trimmed.endsWith("?") && trimmed.split(/\s+/).length <= 8) return true;
+
+  const confusionPatterns = [
+    "em qual sentido",
+    "o que voce quer dizer",
+    "nao entendi",
+    "pode explicar",
+    "como assim",
+    "nao compreendi",
+    "nao sei",
+    "nao entendo",
+    "o que isso significa",
+    "pode detalhar",
+    "o que e isso",
+    "o que significa",
+    "me explica",
+    "pode me explicar",
+    "explica melhor",
+    "nao estou entendendo",
+    "nao to entendendo",
+    "qual sentido",
+    "que sentido",
+  ];
+
+  return confusionPatterns.some((p) => n.includes(p));
+}
+
+async function conversarComOpenAIDescricao(
+  perguntaUsuario: string,
+  campoAtual: DescricaoCargoField,
+  session: DescricaoCargoSession
+): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const questionText = getQuestion(session, campoAtual);
+  const contextoPergunta = `A pergunta atual que o usuário está respondendo é: "${questionText}".`;
+  const historico = session.historicoConversaDescricao ?? [];
+
+  if (!apiKey) {
+    return `Entendi sua dúvida! No entanto, a integração com a inteligência artificial não está configurada no momento. Para te ajudar com essa pergunta: ${questionText}\n\nConsegui ajudar? Quando estiver pronto, pode digitar sua resposta.`;
+  }
+
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: `Você é o Agente Criador de Descrição de Cargo por Competências. Seu objetivo é ajudar o usuário a tirar dúvidas sobre descrição de cargos, mapeamento de competências organizacionais, técnicas e comportamentais, e como montar e enquadrar os requisitos de um cargo.
+Seja conciso, direto, cordial e não use formatação em negrito (**).
+${contextoPergunta}
+Sempre encerre a sua resposta de forma simpática, lembrando-o de que, quando se sentir confortável e sem dúvidas, ele pode responder à pergunta principal do passo atual: "${questionText}".`
+      },
+      ...historico,
+      { role: "user", content: perguntaUsuario }
+    ];
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages,
+        temperature: 0.7,
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro na resposta da OpenAI");
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content ?? "";
+    return content.replaceAll("**", "").trim();
+  } catch (error) {
+    console.error("Erro ao chamar OpenAI (Descrição Cargo):", error);
+    return `Entendi sua dúvida! No entanto, tive uma falha ao me conectar com o serviço. Para te ajudar com essa pergunta: ${questionText}\n\nConsegui ajudar? Quando estiver pronto, pode digitar sua resposta.`;
+  }
+}
+
+async function analisarMensagemUsuarioDescricao(
+  perguntaUsuario: string,
+  campoAtual: DescricaoCargoField,
+  session: DescricaoCargoSession
+): Promise<{ isDoubt: boolean; reply: string }> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const questionText = getQuestion(session, campoAtual);
+  const historico = session.historicoConversaDescricao ?? [];
+
+  if (!apiKey) {
+    const confused = isConfusedOrAsking(perguntaUsuario);
+    if (confused) {
+      return {
+        isDoubt: true,
+        reply: `Sem problema, deixa eu explicar melhor!\n\n${questionText}`
+      };
+    }
+    return { isDoubt: false, reply: "" };
+  }
+
+  try {
+    const messages = [
+      {
+        role: "system",
+        content: `Você é o Agente Criador de Descrição de Cargo por Competências. O usuário está na etapa da pergunta: "${questionText}".
+Analise a mensagem enviada pelo usuário.
+
+Se o usuário estiver:
+- Fazendo uma pergunta ou tirando dúvidas sobre descrição de cargo, competências (organizacionais, comportamentais, técnicas), requisitos de qualificação, ou como montar e aplicar descrição de cargo.
+- Demonstrando dúvida, confusão ou dizendo que não entendeu a pergunta atual (ex: "como assim?", "não entendi", "o que é isso?").
+- Reclamando ou indicando que algo deu errado na conversa ou que o bot se equivocou (ex: "não foi isso", "voltar", "está errado", "não era isso").
+- Digitando algo irrelevante ou tentando puxar assunto que não responda à pergunta.
+
+Então, responda de forma cordial, inteligente e concisa para ajudá-lo, tirando suas dúvidas. Nunca use formatação em negrito (**). Sempre encerre lembrando-o simpaticamente de que, assim que estiver pronto e sem dúvidas, ele pode responder à pergunta: "${questionText}".
+
+Se o usuário estiver respondendo de fato à pergunta (por exemplo, descrevendo o cargo, respondendo "sim", "não", "ok", ou listando as competências/atividades solicitadas), responda estritamente apenas com a palavra: PASS`
+      },
+      ...historico,
+      { role: "user", content: perguntaUsuario }
+    ];
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages,
+        temperature: 0.3,
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Erro na chamada da OpenAI");
+    }
+
+    const data = await response.json();
+    const content = (data.choices?.[0]?.message?.content ?? "").trim();
+    
+    if (content.toUpperCase() === "PASS" || content.toUpperCase().startsWith("PASS")) {
+      return { isDoubt: false, reply: "" };
+    }
+
+    return { isDoubt: true, reply: content.replaceAll("**", "") };
+  } catch (error) {
+    console.error("Erro na análise da OpenAI (Descrição Cargo):", error);
+    return { isDoubt: false, reply: "" };
+  }
+}
+
 export function initializeDescricaoCargoSession(): DescricaoCargoSession {
   return {
     status: "in_progress",
@@ -480,7 +659,7 @@ function goToResponsibilityValidation(session: DescricaoCargoSession) {
   };
 }
 
-export function runDescricaoCargoStep(
+export async function runDescricaoCargoStep(
   session: DescricaoCargoSession,
   answer?: string,
   currentField?: DescricaoCargoField
@@ -500,6 +679,35 @@ export function runDescricaoCargoStep(
   }
 
   const raw = String(answer ?? "").trim();
+
+  // Check for local shortcuts/bypass first to avoid false positives by the LLM
+  const bypass = isShortLocalBypass(currentField, raw);
+
+  if (!bypass) {
+    // Check if the user is expressing a doubt or asking questions
+    const analise = await analisarMensagemUsuarioDescricao(raw, currentField, session);
+
+    if (analise.isDoubt) {
+      const novoHistorico = [
+        ...(session.historicoConversaDescricao ?? []),
+        { role: "user" as const, content: raw },
+        { role: "assistant" as const, content: analise.reply }
+      ];
+
+      return {
+        session: {
+          ...session,
+          historicoConversaDescricao: novoHistorico,
+        },
+        completed: false,
+        currentField,
+        nextField: currentField,
+        question: getQuestion(session, currentField),
+        reply: analise.reply,
+      };
+    }
+  }
+
   const validationError = validateField(currentField, raw);
 
   if (validationError) {
