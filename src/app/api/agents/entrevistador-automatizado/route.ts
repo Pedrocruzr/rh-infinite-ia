@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const result = applyAnswer(session, message);
+    const result = await applyAnswer(session, message);
 
     if (!result.ok) {
       return NextResponse.json({
