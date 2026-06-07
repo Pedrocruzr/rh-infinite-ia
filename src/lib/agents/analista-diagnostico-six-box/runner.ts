@@ -43,8 +43,8 @@ function generateGaugeSvg(
   value: number,
   zones: Array<{ from: number; to: number; color: string; label: string }>
 ): string {
-  const W = 380, H = 64;
-  const bx = 8, bw = 364, bh = 24, by = 14;
+  const W = 380, H = 76;
+  const bx = 8, bw = 364, bh = 24, by = 10;
 
   const zoneParts = zones.map((z) => {
     const x = (bx + (z.from / 100) * bw).toFixed(1);
@@ -57,14 +57,14 @@ function generateGaugeSvg(
   }).join("");
 
   const ix = Math.min(bx + bw - 12, Math.max(bx + 12, bx + (value / 100) * bw));
-  const iy = by + bh / 2;
   const indicator =
-    `<circle cx="${ix.toFixed(1)}" cy="${iy}" r="13" fill="#1a1a2e" stroke="#fff" stroke-width="2"/>` +
-    `<text x="${ix.toFixed(1)}" y="${iy + 4}" font-size="9" fill="#fff" text-anchor="middle" font-weight="bold">${(value / 10).toFixed(1)}</text>`;
+    `<polygon points="${ix.toFixed(1)},34 ${(ix - 5).toFixed(1)},40 ${(ix + 5).toFixed(1)},40" fill="#1a1a2e"/>` +
+    `<circle cx="${ix.toFixed(1)}" cy="${53}" r="12" fill="#1a1a2e" stroke="#fff" stroke-width="1.5"/>` +
+    `<text x="${ix.toFixed(1)}" y="${56.5}" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold">${(value / 10).toFixed(1)}</text>`;
 
   const border = `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="none" stroke="#ccc" stroke-width="1" rx="3"/>`;
 
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:400px;" xmlns="http://www.w3.org/2000/svg">${zoneParts}${border}${indicator}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:400px; display:block; margin:0 auto;" xmlns="http://www.w3.org/2000/svg">${zoneParts}${border}${indicator}</svg>`;
 }
 
 function generateSixBoxBarChartSvg(summaries: BlockSummary[]): string {
@@ -140,9 +140,16 @@ function normalize(text: unknown) {
 
 function cleanText(text: string) {
   return text
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/\_\_/g, "")
+    .replace(/\_/g, "")
+    .replace(/^\s*>\s*/g, "")
+    .replace(/#+/g, "")
+    .replace(/`+/g, "")
     .replace(/\s+/g, " ")
-    .replace(/^[\-\•\*\|\;\:]+/, "")
-    .replace(/[\|\;\:]+$/, "")
+    .replace(/^[\-\•\|\;\:\s]+/, "")
+    .replace(/[\-\•\|\;\:\s]+$/, "")
     .trim();
 }
 
@@ -230,7 +237,7 @@ function detectBlockHeader(line: string): string | null {
 function extractItems(material: string): ParsedItem[] {
   const lines = normalize(material)
     .split("\n")
-    .map(cleanText)
+    .map((s) => s.trim())
     .filter(Boolean);
 
   const parsed: ParsedItem[] = [];
@@ -246,6 +253,10 @@ function extractItems(material: string): ParsedItem[] {
 
     const score = scoreOnLine;
     if (score !== null) {
+      if (line.includes("#") || line.toLowerCase().includes("section") || line.toLowerCase().includes("fator:")) {
+        continue;
+      }
+
       const raw = cleanText(line);
       const parts = raw.split(/\t| \| | \- |;/).map(cleanText).filter(Boolean);
 
@@ -266,17 +277,20 @@ function extractItems(material: string): ParsedItem[] {
       const area = "Não informado";
       if (parts.length >= 2) {
         const scorePart = parts.find((p) => extractScore(p) !== null);
-        const blockPart = parts.find((p) => canonicalBlock(p) === bloco);
+        const blockPart = parts.find((p) => {
+          const cleanP = p.toLowerCase().replace(/^(dimensão|fator|bloco|fator:)\s+/i, "").trim();
+          return cleanP === bloco.toLowerCase() || 
+                 cleanP === bloco.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        });
         const filtered = parts.filter((p) => p !== scorePart && p !== blockPart);
         item = cleanText(filtered.join(" "));
       }
 
       if (!item) {
-        item = raw
-          .replace(/\d{1,2}(?:[.,]\d+)?/g, "")
-          .replace(new RegExp(bloco, "i"), "")
-          .replace(/\s+/g, " ")
-          .trim();
+        item = raw.replace(/\d{1,2}(?:[.,]\d+)?/g, "").replace(/\s+/g, " ").trim();
+        const blocoEscaped = bloco.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const prefixRegex = new RegExp(`^(${blocoEscaped}|${blocoEscaped.normalize("NFD").replace(/[\u0300-\u036f]/g, "")})\\s*[:\\-\\s|]\\s*`, 'i');
+        item = item.replace(prefixRegex, "");
       }
 
       item = cleanText(item);
@@ -558,12 +572,14 @@ export function buildAnalistaDiagnosticoSixBoxReport(rawAnswers: any) {
   <!-- Gauge SVG do Score Geral -->
   <div style="margin:24px 0;text-align:center;background:#f8fafc;padding:20px;border-radius:8px;border:1px solid #e2e8f0;">
     <p style="font-weight:700;margin-bottom:12px;font-size:14px;color:#1e293b;">Termômetro da Média Geral</p>
-    ${generateGaugeSvg(Math.round(mediaGeral * 10), [
-      { from: 0,  to: 39,  color: "#f1948a", label: "Crítico" },
-      { from: 39, to: 59,  color: "#f9e79f", label: "Atenção" },
-      { from: 59, to: 79,  color: "#a9dfbf", label: "Adequado" },
-      { from: 79, to: 100, color: "#aed6f1", label: "Excelência" },
-    ])}
+    <div style="display:flex;justify-content:center;width:100%;margin-top:12px;">
+      ${generateGaugeSvg(Math.round(mediaGeral * 10), [
+        { from: 0,  to: 39,  color: "#f1948a", label: "Crítico" },
+        { from: 39, to: 59,  color: "#f9e79f", label: "Atenção" },
+        { from: 59, to: 79,  color: "#a9dfbf", label: "Adequado" },
+        { from: 79, to: 100, color: "#aed6f1", label: "Excelência" },
+      ])}
+    </div>
   </div>
 
   <div class="page-break"></div>
@@ -575,10 +591,9 @@ export function buildAnalistaDiagnosticoSixBoxReport(rawAnswers: any) {
     <thead>
       <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1;">
         <th style="color:#1e293b;text-align:left;padding:12px 16px;font-weight:700;width:25%;">Bloco</th>
-        <th style="color:#1e293b;text-align:left;padding:12px 16px;font-weight:700;width:35%;">Item</th>
+        <th style="color:#1e293b;text-align:left;padding:12px 16px;font-weight:700;width:48%;">Item</th>
         <th style="color:#1e293b;text-align:left;padding:12px 16px;font-weight:700;width:12%;">Média</th>
         <th style="color:#1e293b;text-align:left;padding:12px 16px;font-weight:700;width:15%;">Classificação</th>
-        <th style="color:#1e293b;text-align:left;padding:12px 16px;font-weight:700;width:13%;">Observação</th>
       </tr>
     </thead>
     <tbody>
@@ -590,7 +605,6 @@ export function buildAnalistaDiagnosticoSixBoxReport(rawAnswers: any) {
           <td style="padding:12px 16px;color:#475569;line-height:1.4;">${esc(i.item)}</td>
           <td style="padding:12px 16px;font-weight:700;color:${color};">${esc(i.nota.toFixed(1))}</td>
           <td style="padding:12px 16px;font-weight:700;color:${color};"><span style="background:${color}15;padding:4px 8px;border-radius:4px;font-size:11px;">${esc(classify(i.nota))}</span></td>
-          <td style="padding:12px 16px;color:#64748b;font-size:11px;">Baseado na nota do item.</td>
         </tr>`;
       }).join("")}
     </tbody>
