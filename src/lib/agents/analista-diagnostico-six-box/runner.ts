@@ -201,60 +201,30 @@ function extractScore(line: string): number | null {
   return null;
 }
 
-function tryParseStructuredLine(line: string): ParsedItem | null {
-  const raw = cleanText(line);
-  if (raw.length < 8) return null;
-
-  const score = extractScore(raw);
-  if (score === null) return null;
-
-  const parts = raw.split(/\t| \| | \- |;/).map(cleanText).filter(Boolean);
-
-  let area = "Não informado";
-  let bloco = "";
-  let item = "";
-
-  const blockPart = parts.find((p) => canonicalBlock(p));
-  if (blockPart) {
-    bloco = canonicalBlock(blockPart) || "";
-  } else {
-    bloco = canonicalBlock(raw) || "";
+function detectBlockHeader(line: string): string | null {
+  const lower = line.toLowerCase();
+  
+  if (
+    lower.startsWith("cargo") || 
+    lower.startsWith("nome") || 
+    lower.startsWith("area") || 
+    lower.startsWith("setor") || 
+    lower.startsWith("tempo") ||
+    lower.startsWith("escala") ||
+    lower.startsWith("significado")
+  ) {
+    return null;
   }
-
-  if (!bloco) return null;
-
-  if (parts.length >= 3) {
-    const maybeArea = parts[0];
-    const maybeBlock = parts.find((p) => canonicalBlock(p));
-    const scorePart = parts.find((p) => extractScore(p) !== null);
-
-    if (maybeArea && maybeArea !== maybeBlock && extractScore(maybeArea) === null && !canonicalBlock(maybeArea)) {
-      area = toTitle(maybeArea);
-    }
-
-    const filtered = parts.filter((p) => p !== maybeArea && p !== maybeBlock && p !== scorePart);
-    item = cleanText(filtered.join(" "));
-  }
-
-  if (!item) {
-    item = raw
-      .replace(/\d{1,2}(?:[.,]\d+)?/g, "")
-      .replace(new RegExp(bloco, "i"), "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  item = cleanText(item);
-
-  if (item.length < 5) return null;
-
-  return {
-    area,
-    bloco,
-    item,
-    nota: score,
-    raw,
-  };
+  
+  if (/propósito|proposito/i.test(lower)) return "Propósito";
+  if (/estrutura/i.test(lower)) return "Estrutura";
+  if (/relacionamento/i.test(lower)) return "Relacionamento";
+  if (/recompensa/i.test(lower)) return "Recompensa";
+  if (/liderança|lideranca/i.test(lower)) return "Liderança";
+  if (/mecanismo.*apoio|apoio/i.test(lower)) return "Mecanismo de Apoio";
+  if (/responsabilidade/i.test(lower)) return "Responsabilidade";
+  
+  return null;
 }
 
 function extractItems(material: string): ParsedItem[] {
@@ -264,10 +234,64 @@ function extractItems(material: string): ParsedItem[] {
     .filter(Boolean);
 
   const parsed: ParsedItem[] = [];
+  let currentBlock: string | null = null;
 
   for (const line of lines) {
-    const item = tryParseStructuredLine(line);
-    if (item) parsed.push(item);
+    const blockMatch = detectBlockHeader(line);
+    const scoreOnLine = extractScore(line);
+    
+    if (blockMatch && (scoreOnLine === null || line.toLowerCase().includes("###") || line.toLowerCase().includes("section") || line.toLowerCase().includes("fator:"))) {
+      currentBlock = blockMatch;
+    }
+
+    const score = scoreOnLine;
+    if (score !== null) {
+      const raw = cleanText(line);
+      const parts = raw.split(/\t| \| | \- |;/).map(cleanText).filter(Boolean);
+
+      const lowerRaw = raw.toLowerCase();
+      if (lowerRaw.includes("media") || lowerRaw.includes("média") || lowerRaw.includes("total") || lowerRaw.includes("consolidado")) {
+        continue;
+      }
+      if (lowerRaw.includes("pergunta") || lowerRaw.includes("resposta") || lowerRaw.includes("significado") || lowerRaw.includes("escala")) {
+        continue;
+      }
+
+      const bloco = currentBlock || canonicalBlock(raw) || "";
+      if (!bloco) {
+        continue;
+      }
+
+      let item = "";
+      const area = "Não informado";
+      if (parts.length >= 2) {
+        const scorePart = parts.find((p) => extractScore(p) !== null);
+        const blockPart = parts.find((p) => canonicalBlock(p) === bloco);
+        const filtered = parts.filter((p) => p !== scorePart && p !== blockPart);
+        item = cleanText(filtered.join(" "));
+      }
+
+      if (!item) {
+        item = raw
+          .replace(/\d{1,2}(?:[.,]\d+)?/g, "")
+          .replace(new RegExp(bloco, "i"), "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      item = cleanText(item);
+      item = item.replace(/^[\s|:\-*#]+|[\s|:\-*#]+$/g, "").trim();
+
+      if (item.length >= 5) {
+        parsed.push({
+          area,
+          bloco,
+          item,
+          nota: score,
+          raw,
+        });
+      }
+    }
   }
 
   const dedup = new Map<string, ParsedItem>();
