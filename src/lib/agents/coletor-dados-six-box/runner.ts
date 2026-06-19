@@ -128,62 +128,62 @@ function buildModeloBaseSixBoxHtml() {
 
   <h3>1.1 Propósito</h3>
   <ul>
-    <li>Os objetivos da empresa são claros para mim.</li>
-    <li>Eu entendo o que a empresa espera alcançar.</li>
-    <li>Sei como meu trabalho contribui para os objetivos da empresa.</li>
+    <li>Os objetivos da empresa são claros para mim?</li>
+    <li>Eu entendo o que a empresa espera alcançar?</li>
+    <li>Sei como meu trabalho contribui para os objetivos da empresa?</li>
   </ul>
 
   <h3>1.2 Estrutura</h3>
   <ul>
-    <li>As responsabilidades do meu cargo são claras.</li>
-    <li>Existe boa organização das atividades na minha área.</li>
-    <li>O trabalho é distribuído de forma lógica entre as pessoas.</li>
-    <li>Existe coerência entre o que deve ser feito e o que realmente é feito.</li>
+    <li>As responsabilidades do meu cargo são claras?</li>
+    <li>Existe boa organização das atividades na minha área?</li>
+    <li>O trabalho é distribuído de forma lógica entre as pessoas?</li>
+    <li>Existe coerência entre o que deve ser feito e o que realmente é feito?</li>
   </ul>
 
   <h3>1.3 Relacionamento</h3>
   <ul>
-    <li>Há boa colaboração entre as pessoas da equipe.</li>
-    <li>Existe boa comunicação entre áreas.</li>
-    <li>Os conflitos são tratados de forma adequada.</li>
-    <li>As pessoas conseguem trabalhar bem juntas.</li>
-    <li>Os papéis de cada um são compatíveis com a prática.</li>
-    <li>A equipe recebe desenvolvimento adequado.</li>
+    <li>Há boa colaboração entre as pessoas da equipe?</li>
+    <li>Existe boa comunicação entre áreas?</li>
+    <li>Os conflitos são tratados de forma adequada?</li>
+    <li>As pessoas conseguem trabalhar bem juntas?</li>
+    <li>Os papéis de cada um são compatíveis com a prática?</li>
+    <li>A equipe recebe desenvolvimento adequado?</li>
   </ul>
 
   <h3>1.4 Recompensa</h3>
   <ul>
-    <li>Meu salário é compatível com o trabalho que realizo.</li>
-    <li>Existe justiça na forma como a empresa recompensa as pessoas.</li>
-    <li>A empresa reconhece os resultados alcançados.</li>
-    <li>Existem oportunidades de crescimento pessoal.</li>
-    <li>Existem oportunidades de promoção.</li>
+    <li>Meu salário é compatível com o trabalho que realizo?</li>
+    <li>Existe justiça na forma como a empresa recompensa as pessoas?</li>
+    <li>A empresa reconhece os resultados alcançados?</li>
+    <li>Existem oportunidades de crescimento pessoal?</li>
+    <li>Existem oportunidades de promoção?</li>
   </ul>
 
   <h3>1.5 Liderança</h3>
   <ul>
-    <li>Meu líder ou supervisor se comunica bem com a equipe.</li>
-    <li>Existe apoio adequado da liderança.</li>
-    <li>A relação entre líder e equipe é positiva.</li>
-    <li>As lideranças se comunicam bem entre si.</li>
-    <li>Recebo feedbacks úteis.</li>
-    <li>A liderança demonstra boa gestão de pessoas.</li>
-    <li>Meu supervisor tem preparo para liderar.</li>
+    <li>Meu líder ou supervisor se comunica bem com a equipe?</li>
+    <li>Existe apoio adequado da liderança?</li>
+    <li>A relação entre líder e equipe é positiva?</li>
+    <li>As lideranças se comunicam bem entre si?</li>
+    <li>Recebo feedbacks úteis?</li>
+    <li>A liderança demonstra boa gestão de pessoas?</li>
+    <li>Meu supervisor tem preparo para liderar?</li>
   </ul>
 
   <h3>1.6 Mecanismos de apoio</h3>
   <ul>
-    <li>A empresa possui processos bem definidos.</li>
-    <li>Existem políticas que ajudam no trabalho.</li>
-    <li>O planejamento e o controle funcionam bem.</li>
-    <li>Os mecanismos de avaliação ajudam a melhorar o desempenho.</li>
+    <li>A empresa possui processos bem definidos?</li>
+    <li>Existem políticas que ajudam no trabalho?</li>
+    <li>O planejamento e o controle funcionam bem?</li>
+    <li>Os mecanismos de avaliação ajudam a melhorar o desempenho?</li>
   </ul>
 
   <h3>1.7 Responsabilidade</h3>
   <ul>
-    <li>As pessoas demonstram comprometimento com as atividades.</li>
-    <li>Existe senso de responsabilidade no trabalho.</li>
-    <li>Há foco real em alcançar resultados.</li>
+    <li>As pessoas demonstram comprometimento com as atividades?</li>
+    <li>Existe senso de responsabilidade no trabalho?</li>
+    <li>Há foco real em alcançar resultados?</li>
   </ul>
 
   <h2>5. Pergunta aberta</h2>
