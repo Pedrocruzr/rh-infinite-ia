@@ -118,13 +118,6 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
     .order("created_at", { ascending: false })
     .limit(8);
 
-  const { data: usageEvents } = await supabase
-    .from("usage_events")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(8);
-
   const { data: plans } = await supabase
     .from("plans")
     .select("*")
@@ -199,7 +192,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
             </Link>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
             <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-200">
@@ -227,22 +220,6 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     Saldo e movimentações recentes.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-200">
-                  <ReceiptText className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
-                    Uso recente
-                  </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Histórico visual sem mudar backend.
                   </p>
                 </div>
               </div>
@@ -431,47 +408,6 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
             </div>
           </section>
         </div>
-
-        <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-[#102033]/72">
-          <h2 className="text-2xl font-semibold tracking-tight">Uso recente</h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Eventos recentes de consumo dentro da plataforma.
-          </p>
-
-          <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-white/10">
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-sm">
-                <thead className="bg-slate-100/80 text-left dark:bg-white/5">
-                  <tr>
-                    <th className="px-4 py-3 font-medium">Data</th>
-                    <th className="px-4 py-3 font-medium">Evento</th>
-                    <th className="px-4 py-3 font-medium">Créditos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(usageEvents ?? []).length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-4 py-8 text-center text-slate-500 dark:text-slate-400"
-                      >
-                        Nenhum evento de uso encontrado.
-                      </td>
-                    </tr>
-                  ) : (
-                    usageEvents!.map((item: any) => (
-                      <tr key={item.id} className="border-t border-slate-200/80 dark:border-white/10">
-                        <td className="px-4 py-3">{formatDateTime(item.created_at)}</td>
-                        <td className="px-4 py-3">{item.event_type ?? "—"}</td>
-                        <td className="px-4 py-3">{item.credits_delta ?? 0}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
       </section>
     </main>
   );
