@@ -1,6 +1,7 @@
 export const maxDuration = 60;
 
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { executeAgentRuntime } from "@/lib/agents/runtime";
@@ -8,6 +9,20 @@ import { executeAgentRuntime } from "@/lib/agents/runtime";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const cookieStore = await cookies();
+    const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+
+    if (simulatedPlan === "perfil_comportamental" && body?.slug !== "teste-perfil-comportamental") {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "plan_restriction",
+          error: "Este agente não está disponível no seu plano. Atualize sua assinatura para desbloquear todos os agentes.",
+        },
+        { status: 403 }
+      );
+    }
+
     const authSupabase = await createClient();
     const {
       data: { user },

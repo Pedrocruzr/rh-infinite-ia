@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import type { ReactNode, KeyboardEventHandler, RefObject } from "react";
-import { Send, Search } from "lucide-react";
+import { Send, Search, Lock, Sparkles, ArrowRight } from "lucide-react";
 
 type Message = {
   id: string;
@@ -129,6 +129,24 @@ export default function StandardAgentLayout({
   const hasUserMessages = messages.some((message) => message.role === "user");
   const agentImageSrc = AGENT_IMAGE_BY_TITLE[title] ?? null;
 
+  const [planCode, setPlanCode] = useState<"start" | "perfil_comportamental">("perfil_comportamental");
+
+  useEffect(() => {
+    const savedPlan = sessionStorage.getItem("simulated_plan_code") as "start" | "perfil_comportamental";
+    if (savedPlan) {
+      setPlanCode(savedPlan);
+    }
+  }, []);
+
+  const handleTogglePlan = (newPlan: "start" | "perfil_comportamental") => {
+    setPlanCode(newPlan);
+    sessionStorage.setItem("simulated_plan_code", newPlan);
+    document.cookie = `simulated_plan_code=${newPlan}; path=/; max-age=31536000`;
+    window.location.reload();
+  };
+
+  const isAgentBlocked = planCode === "perfil_comportamental" && title !== "Teste de Perfil Comportamental";
+
   useEffect(() => {
     const textarea = inputRef?.current;
     if (!textarea) return;
@@ -171,123 +189,189 @@ export default function StandardAgentLayout({
           </div>
         </div>
 
-        <div className={`flex min-h-0 flex-1 flex-col ${panelTopSpacingClass}`}>
-          <div className="flex-1 overflow-y-auto py-5 sm:py-6">
-            <div className="mx-auto flex min-h-full max-w-[980px] flex-col justify-center">
-              <div className="space-y-6">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex w-full ${message.role === "assistant" ? "justify-center" : "justify-end"}`}
+        {isAgentBlocked ? (
+          <div className="flex flex-1 items-center justify-center py-10">
+            <div className="relative w-full max-w-lg overflow-hidden rounded-[2.2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-[#1e2733] dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Lock className="h-6 w-6" />
+                </div>
+
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">
+                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                  Recurso Bloqueado
+                </div>
+
+                <h2 className="mt-6 text-2xl font-bold tracking-tight leading-tight text-slate-900 dark:text-white sm:text-3xl">
+                  Desbloqueie o {title}
+                </h2>
+
+                <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                  Sua assinatura atual dá acesso exclusivo ao <strong>Teste de Perfil Comportamental</strong>.
+                  <br />
+                  Atualize seu plano para liberar o {title} e todos os outros robôs de inteligência artificial da plataforma!
+                </p>
+
+                <div className="mt-6 w-full rounded-2xl border border-slate-200/60 bg-slate-50/50 p-6 dark:border-white/5 dark:bg-white/5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Plano Completo</p>
+                  <p className="mt-2 text-3xl font-extrabold text-slate-950 dark:text-white">R$ 197<span className="text-lg font-medium text-slate-500">/mês</span></p>
+                  <p className="mt-1 text-xs text-sky-600 dark:text-sky-300 font-semibold">Garante 120 créditos mensais</p>
+                </div>
+
+                <div className="mt-8 flex w-full flex-col gap-3">
+                  <a
+                    href="https://checkout.asaas.com/..."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-500 hover:shadow-sky-500/35"
                   >
-                    <div className={message.role === "assistant" ? "w-full" : "max-w-[78%]"}>
-                      {message.role === "assistant" &&
-                      message.id === initialAssistantId &&
-                      !hasUserMessages &&
-                      !finished ? (
-                        <div className="flex min-h-[40vh] flex-col items-center justify-center px-4 text-center sm:px-8">
-                          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10161d] text-[#d9dee5]">
-                            {agentImageSrc ? (
-                              <img
-                                src={agentImageSrc}
-                                alt={title}
-                                className="h-full w-full object-cover"
-                                draggable={false}
-                              />
-                            ) : (
-                              <Search className="h-6 w-6" />
-                            )}
-                          </div>
-                          <h2 className="mt-6 text-base font-medium text-black dark:text-[#f3f5f7] sm:text-[18px]">
-                            {title}
-                          </h2>
-                          <div
-                            className={`mx-auto mt-3 max-w-[760px] space-y-4 text-sm leading-7 text-[#8f98a6] sm:text-[15px] ${
-                              hasBulletLikeContent(message.content) ? "text-left" : "text-center"
-                            }`}
-                          >
-                            {renderFormattedAssistantContent(message.content)}
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className={`select-text rounded-[30px] px-5 py-5 text-base leading-8 shadow-sm sm:px-8 sm:py-6 sm:text-[18px] sm:leading-9 ${
-                            message.role === "assistant"
-                              ? "w-full border border-border bg-card text-foreground dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#edf2f7]"
-                              : "bg-neutral-950 text-white dark:bg-[#102033]/88 dark:text-[#f3f5f7]"
-                          }`}
-                        >
-                          {message.role === "assistant" ? (
-                            <div className="space-y-4 text-left">
-                              {renderFormattedAssistantContent(message.content)}
-                            </div>
-                          ) : (
-                            <div style={{ whiteSpace: "pre-wrap" }}>{message.content}</div>
-                          )}
-                        </div>
-                      )}
-
-                      {message.actions ? (
-                        <div className={`mt-3 flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}>
-                          {message.actions}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-
-                {loading ? (
-                  <div className="flex w-full justify-center">
-                    <div className="w-full rounded-[30px] border border-border bg-card px-5 py-5 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8] sm:px-8 sm:py-6">
-                      Digitando...
-                    </div>
-                  </div>
-                ) : null}
-
-                {finished && finishedMessage ? (
-                  <div className="flex w-full justify-center">
-                    <div className="w-full rounded-[30px] border border-border bg-card px-5 py-5 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8] sm:px-8 sm:py-6">
-                      {finishedMessage}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div ref={bottomRef} />
+                    Desbloquear Atualizando o Plano
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
+        ) : (
+          <div className={`flex min-h-0 flex-1 flex-col ${panelTopSpacingClass}`}>
+            <div className="flex-1 overflow-y-auto py-5 sm:py-6">
+              <div className="mx-auto flex min-h-full max-w-[980px] flex-col justify-center">
+                <div className="space-y-6">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex w-full ${message.role === "assistant" ? "justify-center" : "justify-end"}`}
+                    >
+                      <div className={message.role === "assistant" ? "w-full" : "max-w-[78%]"}>
+                        {message.role === "assistant" &&
+                        message.id === initialAssistantId &&
+                        !hasUserMessages &&
+                        !finished ? (
+                          <div className="flex min-h-[40vh] flex-col items-center justify-center px-4 text-center sm:px-8">
+                            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#10161d] text-[#d9dee5]">
+                              {agentImageSrc ? (
+                                <img
+                                  src={agentImageSrc}
+                                  alt={title}
+                                  className="h-full w-full object-cover"
+                                  draggable={false}
+                                />
+                              ) : (
+                                <Search className="h-6 w-6" />
+                              )}
+                            </div>
+                            <h2 className="mt-6 text-base font-medium text-black dark:text-[#f3f5f7] sm:text-[18px]">
+                              {title}
+                            </h2>
+                            <div
+                              className={`mx-auto mt-3 max-w-[760px] space-y-4 text-sm leading-7 text-[#8f98a6] sm:text-[15px] ${
+                                hasBulletLikeContent(message.content) ? "text-left" : "text-center"
+                              }`}
+                            >
+                              {renderFormattedAssistantContent(message.content)}
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className={`select-text rounded-[30px] px-5 py-5 text-base leading-8 shadow-sm sm:px-8 sm:py-6 sm:text-[18px] sm:leading-9 ${
+                              message.role === "assistant"
+                                ? "w-full border border-border bg-card text-foreground dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#edf2f7]"
+                                : "bg-neutral-950 text-white dark:bg-[#102033]/88 dark:text-[#f3f5f7]"
+                            }`}
+                          >
+                            {message.role === "assistant" ? (
+                              <div className="space-y-4 text-left">
+                                {renderFormattedAssistantContent(message.content)}
+                              </div>
+                            ) : (
+                              <div style={{ whiteSpace: "pre-wrap" }}>{message.content}</div>
+                            )}
+                          </div>
+                        )}
 
-          <div className="pb-1 pt-4">
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                onSend();
-              }}
-              className="flex items-end gap-3"
-            >
-              <textarea
-                ref={inputRef}
-                autoFocus
-                value={inputValue}
-                onChange={(event) => onInputChange(event.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder={finished ? "Avaliação concluída." : inputPlaceholder}
-                disabled={disableInput || finished}
-                rows={1}
-                className="w-full resize-none overflow-hidden rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
-              />
+                        {message.actions ? (
+                          <div className={`mt-3 flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}>
+                            {message.actions}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
 
-              <button
-                type="submit"
-                disabled={disableSend || finished}
-                className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-border bg-card text-foreground transition hover:opacity-90 disabled:opacity-50 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] sm:h-[62px] sm:w-[62px]"
+                  {loading ? (
+                    <div className="flex w-full justify-center">
+                      <div className="w-full rounded-[30px] border border-border bg-card px-5 py-5 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8] sm:px-8 sm:py-6">
+                        Digitando...
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {finished && finishedMessage ? (
+                    <div className="flex w-full justify-center">
+                      <div className="w-full rounded-[30px] border border-border bg-card px-5 py-5 text-sm text-muted-foreground shadow-sm dark:border-[#1e2733] dark:bg-[#102033]/82 dark:text-[#9ba8b8] sm:px-8 sm:py-6">
+                        {finishedMessage}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div ref={bottomRef} />
+                </div>
+              </div>
+            </div>
+
+            <div className="pb-1 pt-4">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  onSend();
+                }}
+                className="flex items-end gap-3"
               >
-                <Send className="h-5 w-5" />
-              </button>
-            </form>
+                <textarea
+                  ref={inputRef}
+                  autoFocus
+                  value={inputValue}
+                  onChange={(event) => onInputChange(event.target.value)}
+                  onKeyDown={onKeyDown}
+                  placeholder={finished ? "Avaliação concluída." : inputPlaceholder}
+                  disabled={disableInput || finished}
+                  rows={1}
+                  className="w-full resize-none overflow-hidden rounded-[28px] border border-border bg-card px-4 py-4 text-base outline-none transition focus:border-neutral-900 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] dark:placeholder:text-[#7f8b99] dark:focus:border-[#3b4b61] disabled:bg-muted dark:disabled:bg-[#10161d] sm:px-5 sm:text-lg"
+                />
+
+                <button
+                  type="submit"
+                  disabled={disableSend || finished}
+                  className="flex h-14 w-14 items-center justify-center rounded-[20px] border border-border bg-card text-foreground transition hover:opacity-90 disabled:opacity-50 dark:border-[#202834] dark:bg-[#102033]/88 dark:text-[#f3f5f7] sm:h-[62px] sm:w-[62px]"
+                >
+                  <Send className="h-5 w-5" />
+                </button>
+              </form>
+            </div>
           </div>
-          </div>
+        )}
       </div>
-    </main>
+
+      {/* Simulador de Assinatura Local */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Simulador de Assinatura (Local)</p>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleTogglePlan("perfil_comportamental")}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "perfil_comportamental" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
+            >
+              Individual (R$ 67,90)
+            </button>
+            <button 
+              onClick={() => handleTogglePlan("start")}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "start" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
+            >
+              Completo (R$ 197)
+            </button>
+          </div>
+        </div>
+      )}
+  </main>
   );
 }

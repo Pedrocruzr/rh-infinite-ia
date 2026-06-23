@@ -95,10 +95,44 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Local/Simulation check for perfil_comportamental plan
+  const simulatedPlan = request.cookies.get("simulated_plan_code")?.value;
+  if (simulatedPlan === "perfil_comportamental") {
+    const isAgenteRoute = pathname.startsWith("/app/agentes");
+    const isAgenteApiRoute = pathname.startsWith("/api/agents");
+
+    if (isAgenteRoute) {
+      const isBypassedAgent =
+        pathname === "/app/agentes" ||
+        pathname === "/app/agentes/teste-perfil-comportamental" ||
+        pathname === "/app/agentes/clt-ia";
+
+      if (!isBypassedAgent) {
+        return NextResponse.redirect(new URL("/app/agentes?upsell=true", request.url));
+      }
+    }
+
+    if (isAgenteApiRoute) {
+      const isBypassedApi =
+        pathname === "/api/agents/teste-perfil-comportamental";
+
+      if (!isBypassedApi) {
+        return NextResponse.json(
+          {
+            ok: false,
+            stage: "plan_restriction",
+            error: "Este agente não está disponível no seu plano. Atualize sua assinatura para desbloquear todos os agentes.",
+          },
+          { status: 403 }
+        );
+      }
+    }
+  }
+
   return response;
 }
 
 export const config = {
-  // Match all internal application pages
-  matcher: ["/app/:path*"],
+  // Match all internal application pages and agent APIs
+  matcher: ["/app/:path*", "/api/agents/:path*"],
 };

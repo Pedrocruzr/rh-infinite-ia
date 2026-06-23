@@ -49,6 +49,8 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   const handleTogglePlan = (newPlan: "start" | "perfil_comportamental") => {
     setPlanCode(newPlan);
     sessionStorage.setItem("simulated_plan_code", newPlan);
+    document.cookie = `simulated_plan_code=${newPlan}; path=/; max-age=31536000`;
+    window.location.reload();
   };
 
   const filteredItems = useMemo(

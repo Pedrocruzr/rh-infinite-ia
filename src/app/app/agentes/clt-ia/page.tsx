@@ -24,6 +24,8 @@ export default function CltIaPage() {
   const handleTogglePlan = (newPlan: "start" | "perfil_comportamental") => {
     setPlanCode(newPlan);
     sessionStorage.setItem("simulated_plan_code", newPlan);
+    document.cookie = `simulated_plan_code=${newPlan}; path=/; max-age=31536000`;
+    window.location.reload();
   };
 
   const [messages, setMessages] = useState<Message[]>([
