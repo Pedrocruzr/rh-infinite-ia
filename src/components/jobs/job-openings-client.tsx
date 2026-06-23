@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, Download, Sparkles } from "lucide-react";
+import { BriefcaseBusiness, Download, Sparkles, Lock, X, ArrowRight } from "lucide-react";
 
 import type {
   JobFilters,
@@ -35,6 +35,21 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [planCode, setPlanCode] = useState<"start" | "perfil_comportamental">("perfil_comportamental");
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+
+  useEffect(() => {
+    const savedPlan = sessionStorage.getItem("simulated_plan_code") as "start" | "perfil_comportamental";
+    if (savedPlan) {
+      setPlanCode(savedPlan);
+    }
+  }, []);
+
+  const handleTogglePlan = (newPlan: "start" | "perfil_comportamental") => {
+    setPlanCode(newPlan);
+    sessionStorage.setItem("simulated_plan_code", newPlan);
+  };
 
   const filteredItems = useMemo(
     () =>
@@ -173,6 +188,10 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   }
 
   function openCreateDialog() {
+    if (planCode === "perfil_comportamental") {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
     setEditingItem(null);
     setIsDialogOpen(true);
   }
@@ -273,6 +292,82 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
         }}
         onSubmit={handleSubmit}
       />
+
+      {/* Modal Promocional / Upgrade */}
+      {isUpgradeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm transition-all duration-300">
+          <div className="relative w-full max-w-md overflow-hidden rounded-[2.2rem] border border-slate-200/80 bg-white/95 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.18)] dark:border-white/10 dark:bg-[#0c1929]/95 dark:shadow-[0_24px_80px_rgba(15,23,42,0.48)]">
+            <button 
+              onClick={() => setIsUpgradeModalOpen(false)}
+              className="absolute right-6 top-6 rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex flex-col items-center text-center text-slate-950 dark:text-white">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-sky-700 dark:text-sky-200">
+                <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                Painel Completo
+              </div>
+              
+              <h2 className="mt-6 text-2xl font-bold tracking-tight md:text-3xl leading-tight">
+                Desbloqueie o Painel de Vagas
+              </h2>
+              
+              <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                Sua assinatura atual dá acesso exclusivo ao <strong>Teste de Perfil Comportamental</strong>.
+                <br />
+                Assine o pacote completo para criar novas vagas e liberar todos os recursos da plataforma!
+              </p>
+
+              <div className="mt-6 w-full rounded-2xl border border-slate-200/60 bg-slate-50/50 p-6 dark:border-white/5 dark:bg-white/5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Oferta Especial</p>
+                <p className="mt-2 text-3xl font-extrabold">R$ 197<span className="text-lg font-medium text-slate-500">/mês</span></p>
+                <p className="mt-1 text-xs text-sky-600 dark:text-sky-300 font-semibold">Garante 120 créditos mensais</p>
+              </div>
+
+              <div className="mt-8 flex w-full flex-col gap-3">
+                <a
+                  href="https://checkout.asaas.com/..."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-500 hover:shadow-sky-500/35"
+                >
+                  Adquirir Plano Completo
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <button
+                  onClick={() => setIsUpgradeModalOpen(false)}
+                  className="w-full rounded-2xl border border-slate-200 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
+                >
+                  Continuar Visualizando
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Simulador de Assinatura Local */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/90">
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Simulador de Assinatura (Local)</p>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleTogglePlan("perfil_comportamental")}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "perfil_comportamental" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
+            >
+              Individual (R$ 67,90)
+            </button>
+            <button 
+              onClick={() => handleTogglePlan("start")}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "start" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
+            >
+              Completo (R$ 197)
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
