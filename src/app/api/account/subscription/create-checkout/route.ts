@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const { data: plan, error: planError } = await supabase
       .from("plans")
       .select("*")
-      .eq("code", "start")
+      .eq("code", requestedPlanCode)
       .eq("active", true)
       .maybeSingle();
 
@@ -74,9 +74,9 @@ export async function POST(request: Request) {
     }
 
 
-    if (plan.code !== "start") {
+    if (plan.code !== "start" && plan.code !== "perfil_comportamental") {
       return NextResponse.json(
-        { error: "Apenas o plano Start está disponível no momento." },
+        { error: "Apenas os planos Stacks Infinity e Perfil Comportamental estão disponíveis no momento." },
         { status: 400 }
       );
     }
