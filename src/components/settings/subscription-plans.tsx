@@ -25,58 +25,82 @@ type CheckoutResult = {
 
 type Props = {
   topupProducts: TopupProduct[];
+  activePlanCode?: string | null;
 };
 
 type BillingMethod = "PIX" | "CREDIT_CARD";
 
-const FIXED_TOPUP_DISPLAY = [
+const STANDARD_TOPUPS = [
   {
     code: "topup_essencial",
     name: "Essencial",
     price: "R$ 39,00",
     credits: 20,
+    estimate: "Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos",
   },
   {
     code: "topup_profissional",
     name: "Profissional",
     price: "R$ 69,00",
     credits: 50,
+    estimate: "Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos",
   },
   {
     code: "topup_intensivo",
     name: "Intensivo",
     price: "R$ 99,00",
     credits: 90,
+    estimate: "Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos",
   },
 ] as const;
 
-function formatCurrency(cents: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(cents / 100);
-}
+const INDIVIDUAL_TOPUPS = [
+  {
+    code: "topup_perfil_individual",
+    name: "Recarga Teste Comportamental",
+    price: "R$ 30,00",
+    credits: 2,
+    estimate: "Uso estimado: 1 teste de perfil comportamental",
+  },
+] as const;
 
-function getTopupDisplay(index: number, fallbackCents: number, fallbackCredits: number) {
-  const fixed = FIXED_TOPUP_DISPLAY[index];
+function getTopupDisplay(
+  itemCode: string,
+  fallbackCents: number,
+  fallbackCredits: number,
+  isIndividual: boolean
+) {
+  const list = isIndividual ? INDIVIDUAL_TOPUPS : STANDARD_TOPUPS;
+  const fixed = list.find((item) => item.code === itemCode);
 
   if (fixed) {
     return fixed;
   }
 
   return {
-    name: `Recarga ${index + 1}`,
-    price: formatCurrency(fallbackCents),
+    code: itemCode,
+    name: "Recarga Extra",
+    price: new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(fallbackCents / 100),
     credits: fallbackCredits,
+    estimate: isIndividual
+      ? "Uso estimado: 1 teste de perfil comportamental"
+      : "Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos",
   };
 }
 
 export function SubscriptionPlans({
   topupProducts,
+  activePlanCode,
 }: Props) {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CheckoutResult | null>(null);
+
+  const isIndividual = activePlanCode === "perfil_comportamental";
+  const displayList = isIndividual ? INDIVIDUAL_TOPUPS : STANDARD_TOPUPS;
 
   async function startTopupCheckout(
     topupCode: string,
@@ -133,78 +157,73 @@ export function SubscriptionPlans({
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 xl:grid-cols-3">
-        {FIXED_TOPUP_DISPLAY.map((fixedTopup, index) => {
+      <div className={`mt-6 grid gap-4 ${isIndividual ? "max-w-md xl:grid-cols-1" : "xl:grid-cols-3"}`}>
+        {displayList.map((fixedTopup) => {
           const topup =
             topupProducts.find((item) => item.code === fixedTopup.code) ?? null;
           const checkoutCode = topup?.code ?? fixedTopup.code;
+          const display = getTopupDisplay(
+            fixedTopup.code,
+            topup?.price_cents ?? 0,
+            topup?.credits ?? fixedTopup.credits,
+            isIndividual
+          );
 
           return (
-          <div
-            key={fixedTopup.name}
-            className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-          >
-            {(() => {
-              const display = getTopupDisplay(
-                index,
-                topup?.price_cents ?? 0,
-                topup?.credits ?? fixedTopup.credits
-              );
+            <div
+              key={display.code}
+              className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Recarga avulsa
+                  </p>
+                  <h3 className="mt-2 text-2xl font-semibold">{display.name}</h3>
+                </div>
+              </div>
 
-              return (
-                <>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Recarga avulsa
-                      </p>
-                      <h3 className="mt-2 text-2xl font-semibold">{display.name}</h3>
-                    </div>
-                  </div>
+              <div className="mt-6">
+                <p className="text-3xl font-semibold">{display.price}</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {display.credits} créditos
+                </p>
+              </div>
 
-                  <div className="mt-6">
-                    <p className="text-3xl font-semibold">{display.price}</p>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      {display.credits} créditos
-                    </p>
-                  </div>
+              <div className="mt-6 space-y-2 text-sm">
+                <p>Validade de {topup?.expires_in_days ?? 30} dias</p>
+                <p>Recarga extra até a renovação</p>
+                <p>{display.estimate}</p>
+              </div>
 
-                  <div className="mt-6 space-y-2 text-sm">
-                    <p>Validade de {topup?.expires_in_days ?? 30} dias</p>
-                    <p>Recarga extra até a renovação</p>
-                    <p>Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos</p>
-                  </div>
+              <div className="mt-6 grid gap-3 md:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => void startTopupCheckout(checkoutCode, "PIX")}
+                  disabled={loadingKey !== null}
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
+                >
+                  {loadingKey === `${checkoutCode}:PIX`
+                    ? "Gerando PIX..."
+                    : "Comprar com PIX"}
+                </button>
 
-                  <div className="mt-6 grid gap-3 md:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() => void startTopupCheckout(checkoutCode, "PIX")}
-                      disabled={loadingKey !== null}
-                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
-                    >
-                      {loadingKey === `${checkoutCode}:PIX`
-                        ? "Gerando PIX..."
-                        : "Comprar com PIX"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void startTopupCheckout(checkoutCode, "CREDIT_CARD")
-                      }
-                      disabled={loadingKey !== null}
-                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-                    >
-                      {loadingKey === `${checkoutCode}:CREDIT_CARD`
-                        ? "Abrindo cartão..."
-                        : "Comprar com cartão"}
-                    </button>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        )})}
+                <button
+                  type="button"
+                  onClick={() =>
+                    void startTopupCheckout(checkoutCode, "CREDIT_CARD")
+                  }
+                  disabled={loadingKey !== null}
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                >
+                  {loadingKey === `${checkoutCode}:CREDIT_CARD`
+                    ? "Abrindo cartão..."
+                    : "Comprar com cartão"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {result?.checkout?.pixCopyPaste ? (

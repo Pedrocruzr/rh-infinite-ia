@@ -252,6 +252,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
 
         <SubscriptionPlans
           topupProducts={(topupProducts ?? []) as any[]}
+          activePlanCode={plan?.code}
         />
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
