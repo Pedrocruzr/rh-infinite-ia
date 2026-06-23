@@ -43,7 +43,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const baseUrl = req.headers.get("origin") ?? process.env.NEXT_PUBLIC_APP_URL ?? "";
+    let baseUrl = req.headers.get("origin") ?? "http://localhost:3000";
+    if (process.env.NODE_ENV === "production") {
+      baseUrl = "https://app.stackercompany.com.br";
+    }
     const link = `${baseUrl}/avaliacao/${data.token}`;
 
     return NextResponse.json({ ok: true, link, token: data.token, expires_at: data.expires_at });
