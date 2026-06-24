@@ -156,7 +156,9 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
   const activePlanName =
     plan?.name || startPlan?.name || "Stacks Infinity";
   const displayPlanName = subscription?.id ? activePlanName : "Sem plano ativo";
-  const displayPlanPrice = subscription?.id ? "R$ 197,00" : "Escolha um plano para começar";
+  const displayPlanPrice = subscription?.id
+    ? (plan ? formatCurrency(plan.price_cents) : "R$ 197,00")
+    : "Escolha um plano para começar";
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_24%),linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#07111f_0%,#0b1728_100%)] dark:text-white">
@@ -325,7 +327,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
                 <p className="text-sm text-slate-500 dark:text-slate-400">Valor</p>
                 <p className="mt-2 text-lg font-semibold">
-                  R$ 197,00
+                  {plan ? formatCurrency(plan.price_cents) : "R$ 197,00"}
                 </p>
               </div>
 
@@ -347,14 +349,28 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
             <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
               <p className="text-sm text-slate-500 dark:text-slate-400">Condições do plano</p>
               <div className="mt-2 space-y-2 text-sm leading-6 text-foreground/90">
-                <p>120 créditos mensais recorrentes.</p>
-                <p>1 usuário incluído no plano.</p>
-                <p>Todos os agentes liberados durante a assinatura.</p>
-                <p>Preço travado por 12 meses.</p>
-                <p>
-                  Consumo estimado: tarefa simples 1 crédito, tarefa média 2 créditos,
-                  tarefa robusta de 3 a 4 créditos.
-                </p>
+                {plan?.code === "perfil_comportamental" ? (
+                  <>
+                    <p>6 créditos mensais recorrentes.</p>
+                    <p>1 usuário incluído no plano.</p>
+                    <p>Acesso exclusivo ao Teste de Perfil Comportamental.</p>
+                    <p>Preço travado por 12 meses.</p>
+                    <p>
+                      Consumo: cada teste comportamental consome 2 créditos (3 testes inclusos).
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>60 créditos mensais recorrentes.</p>
+                    <p>1 usuário incluído no plano.</p>
+                    <p>Todos os agentes liberados durante a assinatura.</p>
+                    <p>Preço travado por 12 meses.</p>
+                    <p>
+                      Consumo estimado: tarefa simples 1 crédito, tarefa média 2 créditos,
+                      tarefa robusta de 3 a 4 créditos.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </section>
