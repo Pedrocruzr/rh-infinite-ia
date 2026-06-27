@@ -351,7 +351,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
               <div className="mt-2 space-y-2 text-sm leading-6 text-foreground/90">
                 {plan?.code === "perfil_comportamental" ? (
                   <>
-                    <p>6 créditos · 3 testes de perfil comportamental.</p>
+                    <p>9 créditos · 3 testes de perfil comportamental.</p>
                     <p>1 usuário incluído no plano.</p>
                     <p>Acesso exclusivo ao Teste de Perfil Comportamental.</p>
                     <p>Preço travado por 12 meses.</p>
