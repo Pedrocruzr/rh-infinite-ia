@@ -104,8 +104,8 @@ export function AgentWorkspaceClient({ agent }: Props) {
 
               <div className="mt-6 w-full rounded-2xl border border-slate-200/60 bg-slate-50/50 p-6 dark:border-white/5 dark:bg-white/5">
                 <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Plano Completo</p>
-                <p className="mt-2 text-3xl font-extrabold">R$ 197<span className="text-lg font-medium text-slate-500">/mês</span></p>
-                <p className="mt-1 text-xs text-sky-600 dark:text-sky-300 font-semibold">Garante 60 créditos mensais</p>
+                <p className="mt-2 text-3xl font-extrabold">R$ 297<span className="text-lg font-medium text-slate-500">/mês</span></p>
+                <p className="mt-1 text-xs text-sky-600 dark:text-sky-300 font-semibold">Garante 29 créditos mensais</p>
               </div>
 
               <div className="mt-8 flex w-full flex-col gap-3">

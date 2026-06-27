@@ -34,33 +34,47 @@ const STANDARD_TOPUPS = [
   {
     code: "topup_essencial",
     name: "Essencial",
-    price: "R$ 39,00",
-    credits: 7,
-    estimate: "Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos",
+    price: "R$ 100,00",
+    credits: 10,
+    estimate: "10 créditos extras (R$ 10,00 / crédito)",
   },
   {
     code: "topup_profissional",
     name: "Profissional",
-    price: "R$ 69,00",
-    credits: 14,
-    estimate: "Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos",
+    price: "R$ 190,00",
+    credits: 20,
+    estimate: "20 créditos extras (R$ 9,50 / crédito)",
   },
   {
     code: "topup_intensivo",
     name: "Intensivo",
-    price: "R$ 99,00",
-    credits: 21,
-    estimate: "Uso estimado: simples 1 · média 2 · robusta 3 a 4 créditos",
+    price: "R$ 270,00",
+    credits: 30,
+    estimate: "30 créditos extras (R$ 9,00 / crédito)",
   },
 ] as const;
 
 const INDIVIDUAL_TOPUPS = [
   {
-    code: "topup_perfil_individual",
-    name: "Recarga Teste Comportamental",
+    code: "topup_individual_avulso",
+    name: "Avulso",
     price: "R$ 30,00",
-    credits: 2,
-    estimate: "Uso estimado: 1 teste de perfil comportamental",
+    credits: 3,
+    estimate: "1 teste de perfil comportamental (R$ 30,00 / teste)",
+  },
+  {
+    code: "topup_individual_dupla",
+    name: "Dupla",
+    price: "R$ 58,00",
+    credits: 6,
+    estimate: "2 testes de perfil comportamental (R$ 29,00 / teste)",
+  },
+  {
+    code: "topup_individual_trio",
+    name: "Trio",
+    price: "R$ 84,00",
+    credits: 9,
+    estimate: "3 testes de perfil comportamental (R$ 28,00 / teste)",
   },
 ] as const;
 

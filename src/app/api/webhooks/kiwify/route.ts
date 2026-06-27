@@ -90,7 +90,7 @@ export async function POST(request: Request) {
                 <h2 style="color: #0284c7; margin-top: 0; font-size: 24px;">Parabéns pela aquisição do sistema Stacker! 🚀</h2>
                 <p>Olá, <strong>${welcomeName}</strong>,</p>
                 <p>Ficamos muito felizes em ter você conosco. Sua compra foi confirmada com sucesso!</p>
-                <p>Para começar a usar a plataforma e liberar os seus <strong>60 créditos</strong> do plano Stacker, você precisa apenas concluir o seu cadastro inicial.</p>
+                <p>Para começar a usar a plataforma e liberar os seus <strong>29 créditos</strong> do plano Stacker, você precisa apenas concluir o seu cadastro inicial.</p>
                 
                 <div style="margin: 30px 0; text-align: center;">
                   <a href="https://app.stackercompany.com.br/cadastro" style="background-color: #0284c7; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Cadastrar-se na Plataforma</a>
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
                 <h2 style="color: #0284c7; margin-top: 0; font-size: 24px;">Seu plano Stacker já está ativo! 🚀</h2>
                 <p>Olá, <strong>${welcomeName}</strong>,</p>
                 <p>Sua compra foi confirmada com sucesso!</p>
-                <p>Como você já possuía uma conta cadastrada com esse e-mail na Stacker, o seu plano e os seus <strong>60 créditos</strong> já foram liberados e estão prontos para uso.</p>
+                <p>Como você já possuía uma conta cadastrada com esse e-mail na Stacker, o seu plano e os seus <strong>29 créditos</strong> já foram liberados e estão prontos para uso.</p>
                 
                 <div style="margin: 30px 0; text-align: center;">
                   <a href="https://app.stackercompany.com.br/login" style="background-color: #0284c7; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Acessar o Painel</a>

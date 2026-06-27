@@ -157,7 +157,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
     plan?.name || startPlan?.name || "Stacks Infinity";
   const displayPlanName = subscription?.id ? activePlanName : "Sem plano ativo";
   const displayPlanPrice = subscription?.id
-    ? (plan ? formatCurrency(plan.price_cents) : "R$ 197,00")
+    ? (plan ? formatCurrency(plan.price_cents) : "R$ 297,00")
     : "Escolha um plano para começar";
 
   return (
@@ -327,7 +327,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
                 <p className="text-sm text-slate-500 dark:text-slate-400">Valor</p>
                 <p className="mt-2 text-lg font-semibold">
-                  {plan ? formatCurrency(plan.price_cents) : "R$ 197,00"}
+                  {plan ? formatCurrency(plan.price_cents) : "R$ 297,00"}
                 </p>
               </div>
 
@@ -351,23 +351,22 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
               <div className="mt-2 space-y-2 text-sm leading-6 text-foreground/90">
                 {plan?.code === "perfil_comportamental" ? (
                   <>
-                    <p>6 créditos mensais recorrentes.</p>
+                    <p>6 créditos · 3 testes de perfil comportamental.</p>
                     <p>1 usuário incluído no plano.</p>
                     <p>Acesso exclusivo ao Teste de Perfil Comportamental.</p>
                     <p>Preço travado por 12 meses.</p>
                     <p>
-                      Consumo: cada teste comportamental consome 2 créditos (3 testes inclusos).
+                      Consumo: cada teste comportamental consome 3 créditos.
                     </p>
                   </>
                 ) : (
                   <>
-                    <p>60 créditos mensais recorrentes.</p>
+                    <p>29 créditos mensais recorrentes (1 crédito = R$ 10).</p>
                     <p>1 usuário incluído no plano.</p>
-                    <p>Todos os agentes liberados durante a assinatura.</p>
+                    <p>Acesso aos 18 agentes · Six Box incluso.</p>
                     <p>Preço travado por 12 meses.</p>
                     <p>
-                      Consumo estimado: tarefa simples 1 crédito, tarefa média 2 créditos,
-                      tarefa robusta de 3 a 4 créditos.
+                      Consumo estimado: tarefa operacional 1 crédito, tarefa estratégica 2 créditos, tarefa premium 3 créditos.
                     </p>
                   </>
                 )}

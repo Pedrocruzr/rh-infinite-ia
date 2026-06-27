@@ -6,7 +6,7 @@ export const agentsCatalog = [
     shortDescription: "Análise comportamental aplicada ao RH.",
     image: "/agents/teste-perfil-comportamental-light.png",
     imageDark: "/agents/teste-perfil-comportamental-dark.png",
-    creditCost: 2,
+    creditCost: 3,
     active: true,
   },
   {
@@ -16,7 +16,7 @@ export const agentsCatalog = [
     shortDescription: "Calcula aderência do candidato à vaga.",
     image: "/agents/taxa-aderencia-vaga-light.png",
     imageDark: "/agents/taxa-aderencia-vaga-dark.png",
-    creditCost: 2,
+    creditCost: 1,
     active: true,
   },
   {
@@ -36,7 +36,7 @@ export const agentsCatalog = [
     shortDescription: "Coleta insumos para análise Six Box.",
     image: "/agents/coletor-dados-six-box-light.png",
     imageDark: "/agents/coletor-dados-six-box-dark.png",
-    creditCost: 1,
+    creditCost: 0,
     active: true,
   },
   {
@@ -46,7 +46,7 @@ export const agentsCatalog = [
     shortDescription: "Interpreta dados do modelo Six Box.",
     image: "/agents/analista-diagnostico-six-box-light.png",
     imageDark: "/agents/analista-diagnostico-six-box-dark.png",
-    creditCost: 3,
+    creditCost: 0,
     active: true,
   },
   {
@@ -66,7 +66,7 @@ export const agentsCatalog = [
     shortDescription: "Analisa compatibilidade cultural.",
     image: "/agents/analista-fit-cultura-light.png",
     imageDark: "/agents/analista-fit-cultura-dark.png",
-    creditCost: 3,
+    creditCost: 2,
     active: true,
   },
   {
@@ -83,10 +83,10 @@ export const agentsCatalog = [
     slug: "mentor-dinamicas",
     name: "Mentor de Dinâmicas",
     category: "Recrutamento",
-    shortDescription: "Sugere dinâmicas para seleção.",
+    shortDescription: "Sugere dinâmicas para selection.",
     image: "/agents/mentor-dinamicas-light.png",
     imageDark: "/agents/mentor-dinamicas-dark.png",
-    creditCost: 2,
+    creditCost: 1,
     active: true,
   },
   {
@@ -96,7 +96,7 @@ export const agentsCatalog = [
     shortDescription: "Cria roteiros estruturados de entrevista.",
     image: "/agents/entrevistador-automatizado-light.png",
     imageDark: "/agents/entrevistador-automatizado-dark.png",
-    creditCost: 2,
+    creditCost: 1,
     active: true,
   },
   {
@@ -106,7 +106,7 @@ export const agentsCatalog = [
     shortDescription: "Análise comportamental com DISC.",
     image: "/agents/teste-perfil-disc-light.png",
     imageDark: "/agents/teste-perfil-disc-dark.png",
-    creditCost: 2,
+    creditCost: 3,
     active: true,
   },
   {
@@ -116,7 +116,7 @@ export const agentsCatalog = [
     shortDescription: "Avaliação psicométrica baseada no Big Five.",
     image: "/agents/analista-bigfive-light.png",
     imageDark: "/agents/analista-bigfive-dark.png",
-    creditCost: 1,
+    creditCost: 2,
     active: true,
   },
   {
@@ -176,7 +176,7 @@ export const agentsCatalog = [
     shortDescription: "Gera parecer técnico pós-entrevista.",
     image: "/agents/parecer-tecnico-entrevista-light.png",
     imageDark: "/agents/parecer-tecnico-entrevista-dark.png",
-    creditCost: 2,
+    creditCost: 1,
     active: true,
   },
 ] as const;
