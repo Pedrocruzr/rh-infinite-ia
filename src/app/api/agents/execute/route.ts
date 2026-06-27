@@ -12,17 +12,6 @@ export async function POST(request: Request) {
     const cookieStore = await cookies();
     const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
 
-    if (simulatedPlan === "perfil_comportamental" && body?.slug !== "teste-perfil-comportamental") {
-      return NextResponse.json(
-        {
-          ok: false,
-          stage: "plan_restriction",
-          error: "Este agente não está disponível no seu plano. Atualize sua assinatura para desbloquear todos os agentes.",
-        },
-        { status: 403 }
-      );
-    }
-
     const authSupabase = await createClient();
     const {
       data: { user },
@@ -62,11 +51,32 @@ export async function POST(request: Request) {
     // Validate subscription status
     const { data: subscription } = await supabase
       .from("subscriptions")
-      .select("status, current_period_end")
+      .select("status, current_period_end, plan_id")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    let actualPlanCode = simulatedPlan;
+    if (!actualPlanCode && subscription?.plan_id) {
+      const { data: plan } = await supabase
+        .from("plans")
+        .select("code")
+        .eq("id", subscription.plan_id)
+        .maybeSingle();
+      actualPlanCode = plan?.code;
+    }
+
+    if (actualPlanCode === "perfil_comportamental" && body?.slug !== "teste-perfil-comportamental") {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "plan_restriction",
+          error: "Este agente não está disponível no seu plano. Atualize sua assinatura para desbloquear todos os agentes.",
+        },
+        { status: 403 }
+      );
+    }
 
     const normalizedStatus = (subscription?.status || "").toLowerCase();
     const isMainActive = new Set(["active", "paid", "ativo"]).has(normalizedStatus);
