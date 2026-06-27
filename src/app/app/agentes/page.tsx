@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, Lock, X } from "lucide-react";
 import { agents } from "@/lib/agents";
 import { agentsCatalog } from "@/lib/catalog/agents";
+import { createClient } from "@/lib/supabase/client";
 
 const SECTION_CONFIG = [
   {
@@ -178,7 +179,38 @@ export default function AgentesPage() {
     const savedPlan = sessionStorage.getItem("simulated_plan_code") as "start" | "perfil_comportamental";
     if (savedPlan) {
       setPlanCode(savedPlan);
+      return;
     }
+
+    // Buscar plano real do usuário no banco de dados
+    const supabase = createClient();
+    supabase.auth.getUser().then((res: any) => {
+      const user = res.data?.user;
+      if (!user) return;
+      supabase
+        .from("subscriptions")
+        .select("plan_id")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then((subRes: any) => {
+          const subscription = subRes.data;
+          if (subscription?.plan_id) {
+            supabase
+              .from("plans")
+              .select("code")
+              .eq("id", subscription.plan_id)
+              .maybeSingle()
+              .then((planRes: any) => {
+                const plan = planRes.data;
+                if (plan?.code === "start" || plan?.code === "perfil_comportamental") {
+                  setPlanCode(plan.code);
+                }
+              });
+          }
+        });
+    });
   }, []);
 
   useEffect(() => {
