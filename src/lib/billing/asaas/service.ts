@@ -311,12 +311,31 @@ export async function handleAsaasWebhook(payload: AsaasWebhookPayload) {
     return captureResult;
   }
 
+  // Enrich payload with customer email and name from Asaas API
+  let enrichedPayload = payload ? { ...payload } : {};
+  const customerId = (payload as any)?.payment?.customer || (payload as any)?.subscription?.customer;
+  if (customerId) {
+    try {
+      const customer = await asaasFetch<AsaasCustomer>(`/customers/${customerId}`, {
+        method: "GET",
+      });
+      if (customer) {
+        (enrichedPayload as any).customerDetails = {
+          email: customer.email || "",
+          name: customer.name || "",
+        };
+      }
+    } catch (err) {
+      console.error(`[Asaas Webhook] Erro ao carregar dados do cliente ${customerId}:`, err);
+    }
+  }
+
   const { data: paymentData, error: paymentError } = await supabase.rpc(
     "process_asaas_payment_event",
     {
       p_event_id: eventId,
       p_event_type: eventType,
-      p_payload: payload ?? {},
+      p_payload: enrichedPayload,
     }
   );
 
@@ -329,5 +348,6 @@ export async function handleAsaasWebhook(payload: AsaasWebhookPayload) {
   return {
     ...captureResult,
     payment: paymentData ?? { ok: true, eventId, eventType },
+    customerDetails: (enrichedPayload as any).customerDetails || null,
   };
 }
