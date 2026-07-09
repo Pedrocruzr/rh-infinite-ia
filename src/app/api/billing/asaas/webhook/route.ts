@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAsaasConfig } from "@/lib/billing/asaas/config";
 import { handleAsaasWebhook } from "@/lib/billing/asaas/service";
-import { Resend } from "resend";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -25,11 +25,13 @@ export async function POST(request: Request) {
     const name = String(customer.name || "").trim();
 
     const resendApiKey = process.env.RESEND_API_KEY;
+    const smtpHost = process.env.SMTP_HOST;
     const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.com.br";
 
-    if (resendApiKey && email && (payment?.status === "saved_for_later_registration" || payment?.status === "processed_immediately")) {
+    const hasEmailConfig = !!(smtpHost || resendApiKey);
+
+    if (hasEmailConfig && email && (payment?.status === "saved_for_later_registration" || payment?.status === "processed_immediately")) {
       try {
-        const resend = new Resend(resendApiKey);
         const welcomeName = name || "Cliente";
         const isProfileTest = payment?.planCode === "perfil_comportamental";
         
@@ -107,14 +109,14 @@ export async function POST(request: Request) {
           `;
         }
 
-        await resend.emails.send({
+        await sendEmail({
           from: resendFrom,
           to: email,
           subject: emailSubject,
           html: emailHtml,
         });
       } catch (emailError) {
-        console.error("Erro ao enviar e-mail de boas-vindas via Resend (Asaas Webhook):", emailError);
+        console.error("Erro ao enviar e-mail de boas-vindas (Asaas Webhook):", emailError);
       }
     }
 
