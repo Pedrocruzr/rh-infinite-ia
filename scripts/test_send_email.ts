@@ -51,7 +51,7 @@ async function testEmail() {
         </p>
 
         <div style="margin-top: 30px; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background-color: #f8fafc;">
-          <h3 style="color: #0f172a; margin-top: 0; font-size: 16px;">🎁 Seus Bônus Exclusivos inclusos:</h3>
+          <h3 style="color: #0f172a; margin-top: 0; font-size: 16px;">🎁 \${isProfileTest ? "Seus Bônus Exclusivos inclusos:" : "Seu Bônus Exclusivo incluso:"}</h3>
           <ul style="padding-left: 20px; margin-bottom: 0; line-height: 1.6;">
             <li><strong>Bônus 1:</strong> <a href="https://app.stackercompany.com.br/downloads/ebook-recrutamento-inteligente.pdf" style="color: #0284c7;">E-book Recrutamento e Seleção Inteligente</a> (PDF)</li>
             ${isProfileTest ? `
