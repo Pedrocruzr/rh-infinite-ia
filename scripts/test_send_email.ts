@@ -16,20 +16,25 @@ async function testEmail() {
   console.log("=== Enviando E-mail de Teste (Titan Mail / SMTP) ===");
   
   const destinationEmail = process.argv[2] || "suporte@stackercompany.com.br";
+  const planArg = process.argv[3] || "perfil"; // "perfil" or "completo"
+  const isProfileTest = planArg.toLowerCase() !== "completo";
   
   console.log(`SMTP_HOST: ${process.env.SMTP_HOST}`);
   console.log(`SMTP_PORT: ${process.env.SMTP_PORT}`);
   console.log(`SMTP_USER: ${process.env.SMTP_USER}`);
+  console.log(`Plano de teste: ${isProfileTest ? "Perfil Comportamental" : "Stacks Infinity (Completo)"}`);
   console.log(`Destinatário: ${destinationEmail}`);
 
   try {
-    const isProfileTest = true;
-    const planName = "Perfil Comportamental";
-    const planCredits = "9";
+    const planName = isProfileTest ? "Perfil Comportamental" : "Stacks Infinity";
+    const planCredits = isProfileTest ? "9" : "29";
     const welcomeName = "Cliente Teste Stacker";
     const email = destinationEmail;
 
-    const emailSubject = "Bem-vindo à Stacker! Conclua o seu cadastro e resgate seus bônus 🎁";
+    const emailSubject = isProfileTest
+      ? "Bem-vindo à Stacker! Conclua o seu cadastro e resgate seus bônus 🎁"
+      : "Bem-vindo à Stacker! Conclua o seu cadastro 🚀";
+
     const emailHtml = `
       <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
         <h2 style="color: #0284c7; margin-top: 0; font-size: 24px;">Parabéns pela aquisição do plano ${planName}! 🚀</h2>
@@ -49,8 +54,10 @@ async function testEmail() {
           <h3 style="color: #0f172a; margin-top: 0; font-size: 16px;">🎁 Seus Bônus Exclusivos inclusos:</h3>
           <ul style="padding-left: 20px; margin-bottom: 0; line-height: 1.6;">
             <li><strong>Bônus 1:</strong> <a href="https://app.stackercompany.com.br/downloads/ebook-recrutamento-inteligente.pdf" style="color: #0284c7;">E-book Recrutamento e Seleção Inteligente</a> (PDF)</li>
+            ${isProfileTest ? `
             <li><strong>Bônus 2:</strong> <a href="https://app.stackercompany.com.br/downloads/10-prompts-descricao-cargo.pdf" style="color: #0284c7;">10 Prompts para Descrição de Cargo</a> (PDF)</li>
             <li><strong>Bônus 3:</strong> <a href="https://app.stackercompany.com.br/downloads/50-perguntas-entrevista.xlsx" style="color: #0284c7;">50 Perguntas para Entrevista por Competência</a> (Excel/Planilha)</li>
+            ` : ""}
           </ul>
         </div>
         
