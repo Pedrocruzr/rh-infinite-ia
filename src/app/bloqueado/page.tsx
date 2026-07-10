@@ -1,12 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LockKeyhole, LogOut, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export default function BloqueadoPage() {
+function BloqueadoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan") || "completo";
@@ -91,5 +91,17 @@ export default function BloqueadoPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function BloqueadoPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#020817] text-white flex items-center justify-center">
+        <p className="text-sm text-slate-400 animate-pulse">Carregando...</p>
+      </main>
+    }>
+      <BloqueadoContent />
+    </Suspense>
   );
 }
