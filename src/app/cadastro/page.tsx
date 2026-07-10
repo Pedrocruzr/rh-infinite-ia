@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Chrome, LockKeyhole } from "lucide-react";
 
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { validatePasswordStrength } from "@/lib/auth/password";
 import { createClient } from "@/lib/supabase/client";
 
-export default function CadastroPage() {
+function CadastroContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan") || "completo";
@@ -277,5 +277,17 @@ export default function CadastroPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function CadastroPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-[#020817] text-white flex items-center justify-center">
+        <p className="text-sm text-slate-400 animate-pulse">Carregando...</p>
+      </main>
+    }>
+      <CadastroContent />
+    </Suspense>
   );
 }
