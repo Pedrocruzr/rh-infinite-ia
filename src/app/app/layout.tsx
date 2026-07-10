@@ -126,7 +126,8 @@ export default async function InternalAppLayout({
     pathname.startsWith("/app/suporte");
 
   if (accountStatus === "Inativo" && !isBypassedPage) {
-    redirect("/bloqueado");
+    const signupPlan = user.user_metadata?.signup_plan || "completo";
+    redirect(`/bloqueado?plan=${signupPlan}`);
   }
 
   const planName =

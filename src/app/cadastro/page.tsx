@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Chrome, LockKeyhole } from "lucide-react";
 
 import { TurnstileWidget } from "@/components/auth/turnstile-widget";
@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function CadastroPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const planParam = searchParams.get("plan") || "completo";
   const supabase = useMemo(() => createClient(), []);
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -108,6 +110,7 @@ export default function CadastroPage() {
           emailRedirectTo: `${siteUrl}/auth/confirm?next=/app/agentes`,
           data: {
             full_name: name.trim(),
+            signup_plan: planParam,
           },
         },
       });
