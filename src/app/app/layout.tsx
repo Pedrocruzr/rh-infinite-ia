@@ -126,7 +126,7 @@ export default async function InternalAppLayout({
     pathname.startsWith("/app/suporte");
 
   if (accountStatus === "Inativo" && !isBypassedPage) {
-    redirect("/app/configuracoes/assinatura?blocked=true");
+    redirect("/bloqueado");
   }
 
   const planName =
