@@ -172,11 +172,12 @@ function getCategoryStyle(category: string) {
 }
 
 export default function AgentesPage() {
-  const [planCode, setPlanCode] = useState<"start" | "perfil_comportamental">("perfil_comportamental");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [planCode, setPlanCode] = useState<"start" | "perfil_comportamental" | "recrutamento_selecao">("perfil_comportamental");
 
   useEffect(() => {
-    const savedPlan = sessionStorage.getItem("simulated_plan_code") as "start" | "perfil_comportamental";
+    // Restaurar plano simulado se houver
+    const savedPlan = sessionStorage.getItem("simulated_plan_code") as "start" | "perfil_comportamental" | "recrutamento_selecao";
     if (savedPlan) {
       setPlanCode(savedPlan);
       return;
@@ -204,7 +205,7 @@ export default function AgentesPage() {
               .maybeSingle()
               .then((planRes: any) => {
                 const plan = planRes.data;
-                if (plan?.code === "start" || plan?.code === "perfil_comportamental") {
+                if (plan?.code === "start" || plan?.code === "perfil_comportamental" || plan?.code === "recrutamento_selecao") {
                   setPlanCode(plan.code);
                 }
               });
@@ -222,7 +223,7 @@ export default function AgentesPage() {
     }
   }, []);
 
-  const handleTogglePlan = (newPlan: "start" | "perfil_comportamental") => {
+  const handleTogglePlan = (newPlan: "start" | "perfil_comportamental" | "recrutamento_selecao") => {
     setPlanCode(newPlan);
     sessionStorage.setItem("simulated_plan_code", newPlan);
     document.cookie = `simulated_plan_code=${newPlan}; path=/; max-age=31536000`;
@@ -284,7 +285,11 @@ export default function AgentesPage() {
 
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                   {sectionAgents.map((agent) => {
-                    const isBlocked = planCode === "perfil_comportamental" && agent.slug !== "teste-perfil-comportamental";
+                    const isBlocked = planCode === "perfil_comportamental" 
+                      ? agent.slug !== "teste-perfil-comportamental" 
+                      : planCode === "recrutamento_selecao" 
+                        ? agent.category !== "Recrutamento & Seleção" 
+                        : false;
 
                     if (isBlocked) {
                       return (
@@ -427,7 +432,15 @@ export default function AgentesPage() {
               </h2>
               
               <p className="mt-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                Seu plano atual dá acesso exclusivo ao <strong>Teste de Perfil Comportamental</strong>.
+                {planCode === "perfil_comportamental" ? (
+                  <>
+                    Seu plano atual dá acesso exclusivo ao <strong>Teste de Perfil Comportamental</strong>.
+                  </>
+                ) : (
+                  <>
+                    Seu plano atual dá acesso exclusivo aos agentes de <strong>Recrutamento & Seleção</strong>.
+                  </>
+                )}
                 <br />
                 Assine o pacote completo para desbloquear todos os robôs da plataforma!
               </p>
@@ -469,13 +482,19 @@ export default function AgentesPage() {
               onClick={() => handleTogglePlan("perfil_comportamental")}
               className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "perfil_comportamental" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
             >
-              Individual (R$ 67,90)
+              Perfil (R$ 67,90)
+            </button>
+            <button 
+              onClick={() => handleTogglePlan("recrutamento_selecao")}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "recrutamento_selecao" ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
+            >
+              Recrutamento (R$ 147)
             </button>
             <button 
               onClick={() => handleTogglePlan("start")}
               className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "start" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
             >
-              Completo (R$ 197)
+              Completo (R$ 297)
             </button>
           </div>
         </div>

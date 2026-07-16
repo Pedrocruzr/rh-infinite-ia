@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { executeAgentRuntime } from "@/lib/agents/runtime";
+import { agents } from "@/lib/agents";
 
 export async function POST(request: Request) {
   try {
@@ -76,6 +77,20 @@ export async function POST(request: Request) {
         },
         { status: 403 }
       );
+    }
+
+    if (actualPlanCode === "recrutamento_selecao") {
+      const activeAgent = agents.find((a) => a.slug === body?.slug);
+      if (activeAgent && activeAgent.category !== "Recrutamento & Seleção") {
+        return NextResponse.json(
+          {
+            ok: false,
+            stage: "plan_restriction",
+            error: "Este agente não está disponível no seu plano de Recrutamento & Seleção. Atualize sua assinatura para desbloquear todos os agentes.",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const normalizedStatus = (subscription?.status || "").toLowerCase();

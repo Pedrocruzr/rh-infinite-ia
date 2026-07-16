@@ -59,6 +59,20 @@ function BloqueadoContent() {
                   Ativar Teste de Perfil (R$ 67,90/mês)
                 </Button>
               </a>
+            ) : plan === "recrutamento" ? (
+              <a
+                href="https://pay.hotmart.com/COLE_SEU_LINK_DE_RECRUTAMENTO_AQUI"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+              >
+                <Button
+                  type="button"
+                  className="h-12 w-full justify-center rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center gap-2"
+                >
+                  Ativar Stacker de Recrutamento & Seleção
+                </Button>
+              </a>
             ) : (
               <a
                 href="https://www.asaas.com/c/qmacegbjbnml820m"
