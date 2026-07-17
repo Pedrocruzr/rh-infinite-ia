@@ -61,7 +61,7 @@ function BloqueadoContent() {
               </a>
             ) : plan === "recrutamento" ? (
               <a
-                href="https://pay.kiwify.com.br/COLE_SEU_LINK_DE_RECRUTAMENTO_KIWIFY"
+                href="https://pay.kiwify.com.br/pt8zNzz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full"
