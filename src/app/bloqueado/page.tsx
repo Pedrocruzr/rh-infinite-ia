@@ -47,7 +47,7 @@ function BloqueadoContent() {
           <div className="mt-8 space-y-4">
             {plan === "perfil" ? (
               <a
-                href="https://www.asaas.com/c/03icg6taflmxgqp9"
+                href="https://pay.hotmart.com/E106520584A?bid=1784062638573&checkoutMode=2"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full"
@@ -61,7 +61,7 @@ function BloqueadoContent() {
               </a>
             ) : plan === "recrutamento" ? (
               <a
-                href="https://pay.hotmart.com/COLE_SEU_LINK_DE_RECRUTAMENTO_AQUI"
+                href="https://pay.kiwify.com.br/COLE_SEU_LINK_DE_RECRUTAMENTO_KIWIFY"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full"
