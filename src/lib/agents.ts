@@ -94,7 +94,7 @@ export const agents = [
     name: "Agente Teste Big Five",
     slug: "agente-teste-bigfive",
     category: "Recrutamento & Seleção",
-    shortDescription: "Avaliação Big Five de 120 questões com relatório e radar de competências.",
+    shortDescription: "Avaliação Big Five com relatório e radar de competências.",
     active: true,
   },
   {
