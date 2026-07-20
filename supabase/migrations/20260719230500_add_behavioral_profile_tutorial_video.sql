@@ -1,3 +1,6 @@
+-- Delete old video if it exists
+delete from public.tutorial_videos where youtube_url = 'https://youtu.be/2c6mkHC7mLc';
+
 -- Insert tutorial video for Teste de Perfil Comportamental
 insert into public.tutorial_videos (title, description, youtube_url, sort_order, is_published)
 values (
