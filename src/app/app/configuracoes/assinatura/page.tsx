@@ -143,6 +143,34 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
       .eq("code", simulatedPlan)
       .maybeSingle();
     plan = data;
+
+    if (!plan) {
+      if (simulatedPlan.startsWith("perfil_") || simulatedPlan === "perfil_comportamental") {
+        plan = {
+          code: simulatedPlan,
+          name: "Teste de Perfil Comportamental",
+          monthly_credits: 3,
+          price_cents: 12900,
+          active: true
+        };
+      } else if (simulatedPlan === "recrutamento_selecao") {
+        plan = {
+          code: "recrutamento_selecao",
+          name: "Recrutamento e Seleção",
+          monthly_credits: 15,
+          price_cents: 14700,
+          active: true
+        };
+      } else {
+        plan = {
+          code: "start",
+          name: "Stacks Infinity",
+          monthly_credits: 29,
+          price_cents: 29700,
+          active: true
+        };
+      }
+    }
   } else if (subscription?.plan_id) {
     const { data } = await supabase
       .from("plans")

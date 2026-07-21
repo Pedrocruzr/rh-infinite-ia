@@ -152,14 +152,12 @@ export function UserAccountMenu({
               {isAdmin ? (
                 <div className="mt-1 flex flex-col">
                   <select
-                    value={planCode || "start"}
+                    value={planCode?.startsWith("perfil_") ? "perfil_start" : (planCode || "start")}
                     onChange={(e) => handleTogglePlan(e.target.value)}
                     className="w-full rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs font-semibold text-neutral-900 shadow-sm focus:border-sky-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
                   >
                     <option value="start">Completo (Infinity)</option>
-                    <option value="perfil_start">Perfil Start (1 teste)</option>
-                    <option value="perfil_essencial">Perfil Essencial (5 testes)</option>
-                    <option value="perfil_profissional">Perfil Profissional (12 testes)</option>
+                    <option value="perfil_start">Teste de Perfil Comportamental</option>
                     <option value="recrutamento_selecao">Recrutamento & Seleção</option>
                   </select>
                 </div>
