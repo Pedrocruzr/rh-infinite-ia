@@ -146,9 +146,10 @@ export function SubscriptionPlans({
     } catch {}
   }
 
-  async function handleUpgradePlan(planCode: string) {
+  async function handleUpgradePlan(planCode: string, method: "PIX" | "CREDIT_CARD") {
     try {
-      setLoadingKey(`upgrade:${planCode}`);
+      const key = `upgrade:${planCode}:${method}`;
+      setLoadingKey(key);
       setError(null);
 
       const response = await fetch("/api/account/subscription/create-checkout", {
@@ -156,7 +157,7 @@ export function SubscriptionPlans({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ planCode, method: "PIX" }),
+        body: JSON.stringify({ planCode, method }),
       });
 
       const payload = await response.json().catch(() => null);
@@ -178,118 +179,116 @@ export function SubscriptionPlans({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
-        <div className="max-w-3xl">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {isIndividual ? "Avaliações extras" : "Créditos extras"}
-          </h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            {isIndividual
-              ? "Recargas avulsas para usar até a próxima renovação. As avaliações extras têm validade de 30 dias."
-              : "Recargas avulsas para usar até a próxima renovação. Os créditos extras têm validade de 30 dias."}
-          </p>
-        </div>
+      {!isIndividual && (
+        <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+          <div className="max-w-3xl">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              Créditos extras
+            </h2>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              Recargas avulsas para usar até a próxima renovação. Os créditos extras têm validade de 30 dias.
+            </p>
+          </div>
 
-        <div className={`mt-6 grid gap-4 ${isIndividual ? "max-w-md xl:grid-cols-1" : "xl:grid-cols-3"}`}>
-          {displayList.map((fixedTopup) => {
-            const topup =
-              topupProducts.find((item) => item.code === fixedTopup.code) ?? null;
-            const checkoutCode = topup?.code ?? fixedTopup.code;
-            const display = getTopupDisplay(
-              fixedTopup.code,
-              topup?.price_cents ?? 0,
-              topup?.credits ?? fixedTopup.credits,
-              isIndividual
-            );
+          <div className="mt-6 grid gap-4 xl:grid-cols-3">
+            {displayList.map((fixedTopup) => {
+              const topup =
+                topupProducts.find((item) => item.code === fixedTopup.code) ?? null;
+              const checkoutCode = topup?.code ?? fixedTopup.code;
+              const display = getTopupDisplay(
+                fixedTopup.code,
+                topup?.price_cents ?? 0,
+                topup?.credits ?? fixedTopup.credits,
+                isIndividual
+              );
 
-            return (
-              <div
-                key={display.code}
-                className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {isIndividual ? "Avaliação avulsa" : "Recarga avulsa"}
-                    </p>
-                    <h3 className="mt-2 text-2xl font-semibold">{display.name}</h3>
+              return (
+                <div
+                  key={display.code}
+                  className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        Recarga avulsa
+                      </p>
+                      <h3 className="mt-2 text-2xl font-semibold">{display.name}</h3>
+                    </div>
                   </div>
-                </div>
 
-                <div className="mt-6">
-                  <p className="text-3xl font-semibold">{display.price}</p>
-                  {!isIndividual && (
+                  <div className="mt-6">
+                    <p className="text-3xl font-semibold">{display.price}</p>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       {display.credits} créditos
                     </p>
-                  )}
+                  </div>
+
+                  <div className="mt-6 space-y-2 text-sm">
+                    <p>Validade de {topup?.expires_in_days ?? 30} dias</p>
+                    <p>Recarga extra até a renovação</p>
+                    <p>{display.estimate}</p>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 md:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => void startTopupCheckout(checkoutCode, "PIX")}
+                      disabled={loadingKey !== null}
+                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
+                    >
+                      {loadingKey === `${checkoutCode}:PIX`
+                        ? "Gerando PIX..."
+                        : "Comprar com PIX"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void startTopupCheckout(checkoutCode, "CREDIT_CARD")
+                      }
+                      disabled={loadingKey !== null}
+                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                    >
+                      {loadingKey === `${checkoutCode}:CREDIT_CARD`
+                        ? "Abrindo cartão..."
+                        : "Comprar com cartão"}
+                    </button>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="mt-6 space-y-2 text-sm">
-                  <p>Validade de {topup?.expires_in_days ?? 30} dias</p>
-                  <p>{isIndividual ? "Avaliação extra até a renovação" : "Recarga extra até a renovação"}</p>
-                  <p>{display.estimate}</p>
-                </div>
-
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => void startTopupCheckout(checkoutCode, "PIX")}
-                    disabled={loadingKey !== null}
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-4 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
-                  >
-                    {loadingKey === `${checkoutCode}:PIX`
-                      ? "Gerando PIX..."
-                      : "Comprar com PIX"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void startTopupCheckout(checkoutCode, "CREDIT_CARD")
-                    }
-                    disabled={loadingKey !== null}
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-                  >
-                    {loadingKey === `${checkoutCode}:CREDIT_CARD`
-                      ? "Abrindo cartão..."
-                      : "Comprar com cartão"}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {result?.checkout?.pixCopyPaste ? (
-          <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5">
-            <h3 className="text-lg font-semibold">PIX gerado</h3>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Se a janela da cobrança abriu, você também pode concluir por lá.
-            </p>
-
-            <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
-              <p className="break-all text-sm leading-6">
-                {result.checkout.pixCopyPaste}
+          {result?.checkout?.pixCopyPaste ? (
+            <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-white/5">
+              <h3 className="text-lg font-semibold">PIX gerado</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Se a janela da cobrança abriu, você também pode concluir por lá.
               </p>
 
-              <button
-                type="button"
-                onClick={() => void copy(result.checkout.pixCopyPaste!)}
-                className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
-              >
-                Copiar código PIX
-              </button>
-            </div>
-          </div>
-        ) : null}
+              <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className="break-all text-sm leading-6">
+                  {result.checkout.pixCopyPaste}
+                </p>
 
-        {error ? (
-          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
-            {error}
-          </div>
-        ) : null}
-      </section>
+                <button
+                  type="button"
+                  onClick={() => void copy(result.checkout.pixCopyPaste!)}
+                  className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                >
+                  Copiar código PIX
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {error ? (
+            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
+              {error}
+            </div>
+          ) : null}
+        </section>
+      )}
 
       {isIndividual && (
         <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
@@ -315,18 +314,34 @@ export function SubscriptionPlans({
                   <li>• Acesso ao painel completo</li>
                 </ul>
               </div>
-              <button
-                type="button"
-                onClick={() => void handleUpgradePlan("perfil_start")}
-                disabled={activePlanCode === "perfil_start" || loadingKey !== null}
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-sky-600 px-4 text-xs font-semibold text-white transition hover:bg-sky-500 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/5 dark:disabled:text-neutral-500"
-              >
-                {activePlanCode === "perfil_start"
-                  ? "Plano Ativo"
-                  : loadingKey === "upgrade:perfil_start"
-                  ? "Iniciando..."
-                  : "Contratar com Asaas"}
-              </button>
+
+              {activePlanCode === "perfil_start" ? (
+                <button
+                  disabled
+                  className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-400 dark:bg-white/5 dark:text-neutral-500"
+                >
+                  Plano Ativo
+                </button>
+              ) : (
+                <div className="mt-6 grid gap-2 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("perfil_start", "PIX")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
+                  >
+                    {loadingKey === "upgrade:perfil_start:PIX" ? "Gerando..." : "Comprar com PIX"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("perfil_start", "CREDIT_CARD")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-2 text-xs font-semibold text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                  >
+                    {loadingKey === "upgrade:perfil_start:CREDIT_CARD" ? "Abrindo..." : "Comprar com cartão"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Essencial Plan Card */}
@@ -341,18 +356,34 @@ export function SubscriptionPlans({
                   <li>• Acesso ao painel completo</li>
                 </ul>
               </div>
-              <button
-                type="button"
-                onClick={() => void handleUpgradePlan("perfil_essencial")}
-                disabled={activePlanCode === "perfil_essencial" || loadingKey !== null}
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-sky-600 px-4 text-xs font-semibold text-white transition hover:bg-sky-500 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/5 dark:disabled:text-neutral-500"
-              >
-                {activePlanCode === "perfil_essencial"
-                  ? "Plano Ativo"
-                  : loadingKey === "upgrade:perfil_essencial"
-                  ? "Iniciando..."
-                  : "Contratar com Asaas"}
-              </button>
+
+              {activePlanCode === "perfil_essencial" ? (
+                <button
+                  disabled
+                  className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-400 dark:bg-white/5 dark:text-neutral-500"
+                >
+                  Plano Ativo
+                </button>
+              ) : (
+                <div className="mt-6 grid gap-2 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("perfil_essencial", "PIX")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
+                  >
+                    {loadingKey === "upgrade:perfil_essencial:PIX" ? "Gerando..." : "Comprar com PIX"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("perfil_essencial", "CREDIT_CARD")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-2 text-xs font-semibold text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                  >
+                    {loadingKey === "upgrade:perfil_essencial:CREDIT_CARD" ? "Abrindo..." : "Comprar com cartão"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Profissional Plan Card */}
@@ -367,18 +398,34 @@ export function SubscriptionPlans({
                   <li>• Acesso ao painel completo</li>
                 </ul>
               </div>
-              <button
-                type="button"
-                onClick={() => void handleUpgradePlan("perfil_profissional")}
-                disabled={activePlanCode === "perfil_profissional" || loadingKey !== null}
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-sky-600 px-4 text-xs font-semibold text-white transition hover:bg-sky-500 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/5 dark:disabled:text-neutral-500"
-              >
-                {activePlanCode === "perfil_profissional"
-                  ? "Plano Ativo"
-                  : loadingKey === "upgrade:perfil_profissional"
-                  ? "Iniciando..."
-                  : "Contratar com Asaas"}
-              </button>
+
+              {activePlanCode === "perfil_profissional" ? (
+                <button
+                  disabled
+                  className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-400 dark:bg-white/5 dark:text-neutral-500"
+                >
+                  Plano Ativo
+                </button>
+              ) : (
+                <div className="mt-6 grid gap-2 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("perfil_profissional", "PIX")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
+                  >
+                    {loadingKey === "upgrade:perfil_profissional:PIX" ? "Gerando..." : "Comprar com PIX"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("perfil_profissional", "CREDIT_CARD")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-2 text-xs font-semibold text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
+                  >
+                    {loadingKey === "upgrade:perfil_profissional:CREDIT_CARD" ? "Abrindo..." : "Comprar com cartão"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Corporativo Plan Card */}
