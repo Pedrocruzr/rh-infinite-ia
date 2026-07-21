@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         agent: ENTREVISTADOR_AUTOMATIZADO_AGENT,
         reply: getInitialQuestion(),
         retentionNotice:
-          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+          "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       });
     }
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         reply: result.error,
         repeatQuestion: result.currentQuestion,
         retentionNotice:
-          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+          "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       });
     }
 
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         agent: ENTREVISTADOR_AUTOMATIZADO_AGENT,
         reply: result.nextQuestion,
         retentionNotice:
-          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+          "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       });
     }
 
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
           "Roteiro e relatório gerados com sucesso. O salvamento em Relatórios Stackers não foi realizado porque as variáveis do Supabase não estão configuradas.",
         reportHtml,
         retentionNotice:
-          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+          "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       });
     }
 
@@ -148,10 +148,10 @@ export async function POST(req: NextRequest) {
       session: finalSession,
       agent: ENTREVISTADOR_AUTOMATIZADO_AGENT,
       reply:
-        "Roteiro e relatório gerados com sucesso. Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+        "Roteiro e relatório gerados com sucesso. Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       reportHtml,
       retentionNotice:
-        "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+        "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
     });
   } catch (error) {
     console.error("Erro na rota do Entrevistador Automatizado:", error);

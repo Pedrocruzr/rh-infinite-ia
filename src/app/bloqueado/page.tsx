@@ -56,7 +56,7 @@ function BloqueadoContent() {
                   type="button"
                   className="h-12 w-full justify-center rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center gap-2"
                 >
-                  Ativar Teste de Perfil (R$ 67,90/mês)
+                  Ativar Teste de Perfil (A partir de R$ 129,00/mês)
                 </Button>
               </a>
             ) : plan === "recrutamento" ? (

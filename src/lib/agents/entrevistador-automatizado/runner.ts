@@ -243,7 +243,7 @@ export function buildEntrevistadorAutomatizadoReport(
   return `
 <h1>Relatório Técnico - Entrevistador Automatizado</h1>
 
-<p><strong>Aviso:</strong> esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.</p>
+<p><strong>Aviso:</strong> esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.</p>
 
 <h2>Identificação da solicitação</h2>
 <table border="1" cellpadding="8" cellspacing="0" width="100%">

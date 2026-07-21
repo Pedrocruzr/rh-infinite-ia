@@ -259,7 +259,7 @@ export default function ParecerTecnicoChat() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm leading-6 text-amber-900">
-          <strong>Aviso:</strong> esta avaliação ficará disponível por <strong>3 dias</strong> para consulta do recrutador.
+          <strong>Aviso:</strong> esta avaliação ficará disponível em <strong>"Relatórios Stackers"</strong> para consulta do recrutador.
           Recomendamos salvar ou copiar o relatório depois que ele for gerado.
         </div>
 

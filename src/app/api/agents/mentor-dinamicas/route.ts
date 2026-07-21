@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         reply: getInitialQuestion(),
         reportHtml: null,
         retentionNotice:
-          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+          "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       });
     }
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         reply: result.error,
         reportHtml: null,
         retentionNotice:
-          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+          "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       });
     }
 
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         reply: "",
         reportHtml: null,
         retentionNotice:
-          "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+          "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
       });
     }
 
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       reply: "",
       reportHtml: null,
       retentionNotice:
-        "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+        "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
     });
   } catch (error) {
     console.error("Erro na rota do Mentor de Dinâmicas:", error);

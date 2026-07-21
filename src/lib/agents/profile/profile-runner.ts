@@ -598,7 +598,7 @@ export function generateProfileReport(session: ProfileSession & Record<string, u
   })()}
 
   <p style="font-size:11px;color:#6b7280;border-left:3px solid #ddd;padding-left:10px;margin:20px 0 0;">
-    Esta avaliação ficará disponível por 3 dias para consulta do recrutador.
+    Esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador.
   </p>
 
   <!-- PAGE BREAK: capa → sumário -->

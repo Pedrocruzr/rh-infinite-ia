@@ -465,7 +465,7 @@ export function generateBigFiveReport(session: BigFiveSession & Record<string, u
   ${headerCards}
 
   <p style="font-size:11px;color:#94a3b8;border-left:3px solid #e2e8f0;padding-left:10px;margin:20px 0 0;">
-    Esta avaliação ficará disponível por 3 dias para consulta do recrutador.
+    Esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador.
   </p>
 
 </section>

@@ -26,6 +26,8 @@ type InternalTopbarProps = {
   planName: string;
   creditBalance: number;
   avatarUrl: string | null;
+  planCode: string;
+  email: string;
 };
 
 export function InternalTopbar({
@@ -35,6 +37,8 @@ export function InternalTopbar({
   planName,
   creditBalance,
   avatarUrl,
+  planCode,
+  email,
 }: InternalTopbarProps) {
   const pathname = usePathname();
   const hideTopbar = pathname.startsWith("/app/agentes/");
@@ -96,6 +100,8 @@ export function InternalTopbar({
             planName={planName}
             creditBalance={creditBalance}
             avatarUrl={avatarUrl}
+            planCode={planCode}
+            email={email}
           />
         </div>
       </div>

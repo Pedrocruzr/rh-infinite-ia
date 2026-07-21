@@ -74,7 +74,8 @@ export async function POST(request: Request) {
     }
 
 
-    if (plan.code !== "start" && plan.code !== "perfil_comportamental") {
+    const isProfilePlan = plan.code === "perfil_comportamental" || plan.code.startsWith("perfil_");
+    if (plan.code !== "start" && !isProfilePlan) {
       return NextResponse.json(
         { error: "Apenas os planos Stacks Infinity e Perfil Comportamental estão disponíveis no momento." },
         { status: 400 }

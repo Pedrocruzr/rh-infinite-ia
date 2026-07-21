@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -130,9 +131,19 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
     .eq("active", true)
     .order("credits", { ascending: true });
 
+  const cookieStore = await cookies();
+  const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+
   let plan: any = null;
 
-  if (subscription?.plan_id) {
+  if (simulatedPlan) {
+    const { data } = await supabase
+      .from("plans")
+      .select("*")
+      .eq("code", simulatedPlan)
+      .maybeSingle();
+    plan = data;
+  } else if (subscription?.plan_id) {
     const { data } = await supabase
       .from("plans")
       .select("*")
@@ -141,6 +152,8 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
 
     plan = data;
   }
+
+  const isProfilePlan = plan?.code === "perfil_comportamental" || (plan?.code ? plan.code.startsWith("perfil_") : false);
 
   const activeBalance =
     (creditGrants ?? []).reduce((sum, item: any) => {
@@ -246,12 +259,14 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
           </div>
 
           <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Créditos disponíveis</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {isProfilePlan ? "Avaliações disponíveis" : "Créditos disponíveis"}
+            </p>
             <p className="mt-3 text-2xl font-semibold tracking-tight">
-              {activeBalance}
+              {isProfilePlan ? Math.floor(activeBalance / 3) : activeBalance}
             </p>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Saldo atual da sua carteira
+              {isProfilePlan ? "Saldo atual de avaliações" : "Saldo atual da sua carteira"}
             </p>
           </div>
 
@@ -318,9 +333,11 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
               </div>
 
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
-                <p className="text-sm text-slate-500 dark:text-slate-400">Créditos mensais</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {isProfilePlan ? "Avaliações mensais" : "Créditos mensais"}
+                </p>
                 <p className="mt-2 text-lg font-semibold">
-                  {plan?.monthly_credits ?? 0}
+                  {isProfilePlan ? Math.floor((plan?.monthly_credits ?? 0) / 3) : (plan?.monthly_credits ?? 0)}
                 </p>
               </div>
 
@@ -349,15 +366,12 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
             <div className="mt-6 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-white/5">
               <p className="text-sm text-slate-500 dark:text-slate-400">Condições do plano</p>
               <div className="mt-2 space-y-2 text-sm leading-6 text-foreground/90">
-                {plan?.code === "perfil_comportamental" ? (
+                {isProfilePlan ? (
                   <>
-                    <p>9 créditos · 3 testes de perfil comportamental.</p>
+                    <p>{Math.floor((plan?.monthly_credits ?? 0) / 3)} avaliações de perfil comportamental inclusas por mês.</p>
                     <p>1 usuário incluído no plano.</p>
                     <p>Acesso exclusivo ao Teste de Perfil Comportamental.</p>
                     <p>Preço travado por 12 meses.</p>
-                    <p>
-                      Consumo: cada teste comportamental consome 3 créditos.
-                    </p>
                   </>
                 ) : (
                   <>

@@ -36,17 +36,17 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [planCode, setPlanCode] = useState<"start" | "perfil_comportamental">("perfil_comportamental");
+  const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   useEffect(() => {
-    const savedPlan = sessionStorage.getItem("simulated_plan_code") as "start" | "perfil_comportamental";
+    const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
     if (savedPlan) {
       setPlanCode(savedPlan);
     }
   }, []);
 
-  const handleTogglePlan = (newPlan: "start" | "perfil_comportamental") => {
+  const handleTogglePlan = (newPlan: string) => {
     setPlanCode(newPlan);
     sessionStorage.setItem("simulated_plan_code", newPlan);
     document.cookie = `simulated_plan_code=${newPlan}; path=/; max-age=31536000`;
@@ -190,7 +190,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   }
 
   function openCreateDialog() {
-    if (planCode === "perfil_comportamental") {
+    if (planCode === "perfil_comportamental" || planCode.startsWith("perfil_")) {
       setIsUpgradeModalOpen(true);
       return;
     }
@@ -356,10 +356,10 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Simulador de Assinatura (Local)</p>
           <div className="flex gap-2">
             <button 
-              onClick={() => handleTogglePlan("perfil_comportamental")}
-              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "perfil_comportamental" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
+              onClick={() => handleTogglePlan("perfil_start")}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode.startsWith("perfil_") ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
             >
-              Individual (R$ 67,90)
+              Perfil Start (R$ 129)
             </button>
             <button 
               onClick={() => handleTogglePlan("start")}

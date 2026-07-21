@@ -375,7 +375,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
 <section>
   <h1>Relatório de Taxa de Aderência com a Vaga</h1>
 
-  <p>Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.</p>
+  <p>Aviso: esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.</p>
 
   <h2>1. Resumo da Cultura da Empresa</h2>
   <p>A empresa apresenta uma cultura orientada para organização, proatividade, responsabilidade e foco em resultados, dentro do contexto informado pelo recrutador.</p>

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ReactNode } from "react";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import {
   Bot,
   BriefcaseBusiness,
@@ -67,9 +67,19 @@ export default async function InternalAppLayout({
 
   const wallet = (rawWallet ?? null) as any;
 
+  const cookieStore = await cookies();
+  const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+
   let plan: any = null;
 
-  if (subscription?.plan_id) {
+  if (simulatedPlan) {
+    const { data } = await supabase
+      .from("plans")
+      .select("*")
+      .eq("code", simulatedPlan)
+      .maybeSingle();
+    plan = data;
+  } else if (subscription?.plan_id) {
     const { data } = await supabase
       .from("plans")
       .select("*")
@@ -193,6 +203,8 @@ export default async function InternalAppLayout({
             planName={planName}
             creditBalance={creditBalance}
             avatarUrl={avatarUrl}
+            planCode={plan?.code ?? ""}
+            email={user.email ?? ""}
           />
 
           {children}

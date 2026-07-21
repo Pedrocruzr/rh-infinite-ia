@@ -445,7 +445,7 @@ export function generateDiscReport(session: DiscReportSession): string {
   ${headerCards}
 
   <p style="font-size:11px;color:#999;border-left:3px solid #ddd;padding-left:10px;margin:20px 0 0;">
-    Esta avaliação ficará disponível por 3 dias para consulta do recrutador.
+    Esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador.
   </p>
 
 </section>

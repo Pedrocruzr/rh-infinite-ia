@@ -239,7 +239,7 @@ export default function ColetorDadosSixBoxPage() {
 
         <div className="mt-4">
           <div className="inline-flex max-w-full rounded-2xl border border-amber-300/50 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-[#7a4a00] dark:bg-[#231500] dark:text-[#f0c56b] sm:px-5">
-            esta avaliação ficará disponível por 3 dias para consulta. Recomendamos salvar, copiar ou baixar o relatório depois que ele for gerado.
+            Aviso: esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.
           </div>
         </div>
 

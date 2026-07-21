@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { createClient } from "@/lib/supabase/client";
 
 type UserAccountMenuProps = {
   fullName: string;
@@ -10,6 +11,8 @@ type UserAccountMenuProps = {
   planName: string;
   creditBalance: number;
   avatarUrl?: string | null;
+  planCode: string;
+  email: string;
 };
 
 function getInitials(fullName: string) {
@@ -31,10 +34,38 @@ export function UserAccountMenu({
   planName,
   creditBalance,
   avatarUrl,
+  planCode,
+  email,
 }: UserAccountMenuProps) {
   const initials = getInitials(fullName);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          setUserEmail(user.email);
+        }
+      } catch (err) {
+        console.error("Erro ao obter user no client:", err);
+      }
+    }
+    loadUser();
+  }, []);
+
+  const handleTogglePlan = (newPlan: string) => {
+    sessionStorage.setItem("simulated_plan_code", newPlan);
+    document.cookie = `simulated_plan_code=${newPlan}; path=/; max-age=31536000`;
+    window.location.reload();
+  };
+
+  const isProfilePlan = planCode === "perfil_comportamental" || planCode.startsWith("perfil_");
+  const activeEmail = (userEmail || email || "").trim().toLowerCase();
+  const isAdmin = activeEmail === "pedrocruzr@gmail.com";
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -118,17 +149,33 @@ export function UserAccountMenu({
               <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-[#7f8ea3]">
                 Assinatura
               </p>
-              <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                {planName}
-              </p>
+              {isAdmin ? (
+                <div className="mt-1 flex flex-col">
+                  <select
+                    value={planCode || "start"}
+                    onChange={(e) => handleTogglePlan(e.target.value)}
+                    className="w-full rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs font-semibold text-neutral-900 shadow-sm focus:border-sky-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                  >
+                    <option value="start">Completo (Infinity)</option>
+                    <option value="perfil_start">Perfil Start (1 teste)</option>
+                    <option value="perfil_essencial">Perfil Essencial (5 testes)</option>
+                    <option value="perfil_profissional">Perfil Profissional (12 testes)</option>
+                    <option value="recrutamento_selecao">Recrutamento & Seleção</option>
+                  </select>
+                </div>
+              ) : (
+                <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  {planName}
+                </p>
+              )}
             </div>
 
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-[#7f8ea3]">
-                Saldo de crédito
+                {isProfilePlan ? "Saldo de Avaliações" : "Saldo de crédito"}
               </p>
               <p className="mt-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                {formatCredits(creditBalance)}
+                {isProfilePlan ? formatCredits(Math.floor(creditBalance / 3)) : formatCredits(creditBalance)}
               </p>
             </div>
           </div>

@@ -84,8 +84,7 @@ export default async function RecruiterAssessmentsPage() {
         </section>
 
         <div className="mt-6 rounded-[1.75rem] border border-amber-300/50 bg-amber-500/10 px-4 py-4 text-sm leading-7 text-amber-900 sm:px-5 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-          <strong>Aviso:</strong> este relatório ficará disponível por <strong>3 dias</strong> a partir da data de criação.
-          Para evitar perda de informações, recomendamos que o recrutador <strong>copie, salve ou baixe o conteúdo</strong> para consulta posterior antes do prazo de expiração.
+          <strong>Aviso:</strong> esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.
         </div>
 
         <div className="mt-8 hidden overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/85 shadow-[0_24px_80px_rgba(15,23,42,0.08)] md:block dark:border-white/10 dark:bg-[#102033]/72">

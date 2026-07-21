@@ -68,7 +68,8 @@ export async function POST(request: Request) {
       actualPlanCode = plan?.code;
     }
 
-    if (actualPlanCode === "perfil_comportamental" && body?.slug !== "teste-perfil-comportamental") {
+    const isProfilePlan = actualPlanCode === "perfil_comportamental" || (actualPlanCode ? actualPlanCode.startsWith("perfil_") : false);
+    if (isProfilePlan && body?.slug !== "teste-perfil-comportamental") {
       return NextResponse.json(
         {
           ok: false,

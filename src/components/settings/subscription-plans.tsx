@@ -56,25 +56,11 @@ const STANDARD_TOPUPS = [
 
 const INDIVIDUAL_TOPUPS = [
   {
-    code: "topup_individual_avulso",
-    name: "Avulso",
-    price: "R$ 30,00",
+    code: "topup_perfil_avulso",
+    name: "Avaliação Avulsa Extra",
+    price: "R$ 129,00",
     credits: 3,
-    estimate: "1 teste de perfil comportamental (R$ 30,00 / teste)",
-  },
-  {
-    code: "topup_individual_dupla",
-    name: "Dupla",
-    price: "R$ 58,00",
-    credits: 6,
-    estimate: "2 testes de perfil comportamental (R$ 29,00 / teste)",
-  },
-  {
-    code: "topup_individual_trio",
-    name: "Trio",
-    price: "R$ 84,00",
-    credits: 9,
-    estimate: "3 testes de perfil comportamental (R$ 28,00 / teste)",
+    estimate: "1 teste de perfil comportamental extra (R$ 129,00 / teste)",
   },
 ] as const;
 
@@ -113,7 +99,7 @@ export function SubscriptionPlans({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CheckoutResult | null>(null);
 
-  const isIndividual = activePlanCode === "perfil_comportamental";
+  const isIndividual = activePlanCode === "perfil_comportamental" || (activePlanCode ? activePlanCode.startsWith("perfil_") : false);
   const displayList = isIndividual ? INDIVIDUAL_TOPUPS : STANDARD_TOPUPS;
 
   async function startTopupCheckout(

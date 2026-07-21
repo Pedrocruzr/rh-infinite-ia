@@ -108,7 +108,7 @@ export default function StandardAgentLayout({
   stackerName,
   title,
   subtitle,
-  retentionNotice = "Aviso: esta avaliação ficará disponível por 3 dias para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
+  retentionNotice = "Aviso: esta avaliação ficará disponível em \"Relatórios Stackers\" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.",
   panelTopSpacingClass = "mt-5",
   headerExtra,
   messages,
@@ -129,23 +129,23 @@ export default function StandardAgentLayout({
   const hasUserMessages = messages.some((message) => message.role === "user");
   const agentImageSrc = AGENT_IMAGE_BY_TITLE[title] ?? null;
 
-  const [planCode, setPlanCode] = useState<"start" | "perfil_comportamental">("perfil_comportamental");
+  const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
 
   useEffect(() => {
-    const savedPlan = sessionStorage.getItem("simulated_plan_code") as "start" | "perfil_comportamental";
+    const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
     if (savedPlan) {
       setPlanCode(savedPlan);
     }
   }, []);
 
-  const handleTogglePlan = (newPlan: "start" | "perfil_comportamental") => {
+  const handleTogglePlan = (newPlan: string) => {
     setPlanCode(newPlan);
     sessionStorage.setItem("simulated_plan_code", newPlan);
     document.cookie = `simulated_plan_code=${newPlan}; path=/; max-age=31536000`;
     window.location.reload();
   };
 
-  const isAgentBlocked = planCode === "perfil_comportamental" && title !== "Teste de Perfil Comportamental";
+  const isAgentBlocked = (planCode === "perfil_comportamental" || planCode.startsWith("perfil_")) && title !== "Teste de Perfil Comportamental";
 
   useEffect(() => {
     const textarea = inputRef?.current;
@@ -358,10 +358,10 @@ export default function StandardAgentLayout({
           <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Simulador de Assinatura (Local)</p>
           <div className="flex gap-2">
             <button 
-              onClick={() => handleTogglePlan("perfil_comportamental")}
-              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode === "perfil_comportamental" ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
+              onClick={() => handleTogglePlan("perfil_start")}
+              className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${planCode.startsWith("perfil_") ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"}`}
             >
-              Individual (R$ 67,90)
+              Perfil Start (R$ 129)
             </button>
             <button 
               onClick={() => handleTogglePlan("start")}
