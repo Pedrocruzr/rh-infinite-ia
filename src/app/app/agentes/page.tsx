@@ -447,20 +447,14 @@ export default function AgentesPage() {
                 Assine o pacote completo para desbloquear todos os robôs da plataforma!
               </p>
 
-              <div className="mt-6 w-full rounded-2xl border border-slate-200/60 bg-slate-50/50 p-6 dark:border-white/5 dark:bg-white/5">
-                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Oferta Especial</p>
-                <p className="mt-2 text-3xl font-extrabold text-slate-950 dark:text-white">R$ 297<span className="text-lg font-medium text-slate-500">/mês</span></p>
-                <p className="mt-1 text-xs text-sky-600 dark:text-sky-300 font-semibold">Garante 29 créditos mensais</p>
-              </div>
-
               <div className="mt-8 flex w-full flex-col gap-3">
                 <a
-                  href="https://checkout.asaas.com/..."
+                  href="https://wa.me/5561995071297?text=Olá!%20Gostaria%20de%20desbloquear%20todos%20os%20agentes%20e%20fazer%20o%20upgrade%20para%20o%20Plano%20Completo."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-sky-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-500 hover:shadow-sky-500/35"
                 >
-                  Adquirir Plano Completo
+                  Falar no WhatsApp
                   <ArrowRight className="h-4 w-4" />
                 </a>
                 <button
