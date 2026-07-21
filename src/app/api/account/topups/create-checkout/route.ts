@@ -42,14 +42,31 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: topup, error: topupError } = await supabase
-      .from("topup_products")
-      .select("*")
-      .eq("code", topupCode)
-      .eq("active", true)
-      .maybeSingle();
+    let topup: any = null;
 
-    if (topupError || !topup) {
+    if (topupCode === "topup_perfil_avulso") {
+      topup = {
+        id: "topup_perfil_avulso_mock_id",
+        code: "topup_perfil_avulso",
+        name: "Avaliação Avulsa Extra",
+        price_cents: 12900,
+        credits: 3,
+        expires_in_days: 30
+      };
+    } else {
+      const { data, error: topupError } = await supabase
+        .from("topup_products")
+        .select("*")
+        .eq("code", topupCode)
+        .eq("active", true)
+        .maybeSingle();
+
+      if (!topupError && data) {
+        topup = data;
+      }
+    }
+
+    if (!topup) {
       return NextResponse.json(
         { error: "Pacote de créditos não encontrado." },
         { status: 404 }

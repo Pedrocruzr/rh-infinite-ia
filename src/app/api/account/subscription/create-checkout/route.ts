@@ -39,14 +39,43 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Plano não informado." }, { status: 400 });
     }
 
-    const { data: plan, error: planError } = await supabase
-      .from("plans")
-      .select("*")
-      .eq("code", requestedPlanCode)
-      .eq("active", true)
-      .maybeSingle();
+    let plan: any = null;
 
-    if (planError || !plan) {
+    if (requestedPlanCode.startsWith("perfil_")) {
+      let simulatedName = "Perfil Start";
+      let simulatedCredits = 3;
+      let simulatedPrice = 12900;
+      if (requestedPlanCode === "perfil_essencial") {
+        simulatedName = "Perfil Essencial";
+        simulatedCredits = 15;
+        simulatedPrice = 44700;
+      } else if (requestedPlanCode === "perfil_profissional") {
+        simulatedName = "Perfil Profissional";
+        simulatedCredits = 36;
+        simulatedPrice = 89700;
+      }
+      plan = {
+        id: `plan_${requestedPlanCode}_mock_id`,
+        code: requestedPlanCode,
+        name: simulatedName,
+        monthly_credits: simulatedCredits,
+        price_cents: simulatedPrice,
+        active: true
+      };
+    } else {
+      const { data, error: planError } = await supabase
+        .from("plans")
+        .select("*")
+        .eq("code", requestedPlanCode)
+        .eq("active", true)
+        .maybeSingle();
+
+      if (!planError && data) {
+        plan = data;
+      }
+    }
+
+    if (!plan) {
       return NextResponse.json({ error: "Plano não encontrado." }, { status: 404 });
     }
 
