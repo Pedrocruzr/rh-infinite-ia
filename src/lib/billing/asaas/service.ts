@@ -182,13 +182,18 @@ async function createSubscription(
   customerId: string,
   input: CreateCheckoutInput
 ){
+  const isProfilePlan = input.planCode.startsWith("perfil_") || input.planCode === "perfil_comportamental";
+  const evaluationCount = Math.floor(input.monthlyCredits / 3);
+  const evaluationText = evaluationCount === 1 ? "1 avaliação/mês" : `${evaluationCount} avaliações/mês`;
+  const planCapacity = isProfilePlan ? evaluationText : `${input.monthlyCredits} créditos/mês`;
+
   const subscriptionPayload: Record<string, unknown> = {
     customer: customerId,
     billingType: input.method,
     value: centsToCurrencyValue(input.priceCents),
     nextDueDate: buildDueDate(1),
     cycle: "MONTHLY",
-    description: `${input.planName} - ${input.monthlyCredits} créditos/mês · 1 usuário · todos os agentes liberados · preço travado por 12 meses`,
+    description: `${input.planName} - ${planCapacity} · 1 usuário · todos os agentes liberados · preço travado por 12 meses`,
     externalReference: buildSubscriptionExternalReference(input),
   };
 
