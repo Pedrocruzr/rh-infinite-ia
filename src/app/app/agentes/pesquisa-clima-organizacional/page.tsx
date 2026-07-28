@@ -180,52 +180,6 @@ export default function PesquisaClimaOrganizacionalPage() {
   }
 
 
-  async function regenerateReport() {
-    if (!session || loading) return;
-
-    setLoading(true);
-
-    try {
-      const finalAnswer = session.observacoes?.trim() || "não";
-
-      const response = await fetch("/api/agents/pesquisa-clima-organizacional", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          session,
-          message: finalAnswer,
-          answer: finalAnswer,
-          currentField: "observacoes",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.reply || data.error || "Erro ao gerar novamente o relatório.");
-      }
-
-      setSession(data.session ?? session);
-      setFinished(Boolean(data.done || data.completed || true));
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content:
-            error instanceof Error
-              ? `Erro ao gerar novamente o relatório: ${error.message}`
-              : "Erro ao gerar novamente o relatório.",
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();

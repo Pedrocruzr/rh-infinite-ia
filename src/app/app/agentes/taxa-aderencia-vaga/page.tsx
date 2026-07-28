@@ -16,6 +16,7 @@ type Message = {
   role: "assistant" | "user";
   content: string;
   sessionSnapshot?: GenericSession | null;
+  fieldSnapshot?: string | null;
 };
 
 function cloneSession<T>(value: T): T {
@@ -101,6 +102,7 @@ export default function TaxaAderenciaVagaPage() {
       if (target.role !== "user") return prev;
 
       setSession(target.sessionSnapshot ?? null);
+      setCurrentField(target.fieldSnapshot ?? null);
       setInput(target.content);
       setFinished(false);
 
@@ -132,6 +134,7 @@ export default function TaxaAderenciaVagaPage() {
       role: "user",
       content: answer,
       sessionSnapshot: cloneSession(session),
+      fieldSnapshot: currentField,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -158,20 +161,22 @@ export default function TaxaAderenciaVagaPage() {
         throw new Error(data.reply || data.error || "Erro ao processar resposta.");
       }
 
+      const completed = Boolean(data.done || data.completed);
+
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: data.done || data.completed
-            ? "Relatório gerado com sucesso e disponível em Relatórios Stackers."
-            : data.reply,
-        },
-      ]);
+      setFinished(completed);
 
-      setFinished(Boolean(data.done || data.completed));
+      if (!completed && String(data.reply || "").trim()) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply,
+          },
+        ]);
+      }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -201,7 +206,9 @@ export default function TaxaAderenciaVagaPage() {
       stackerName="Recrutamento & Seleção"
       title="Taxa de Aderência com a Vaga"
       subtitle="Responda uma pergunta por vez. Ao final, a avaliação ficará disponível em Relatórios Stackers."
-      messages={messages.map((message) => ({
+      messages={messages
+        .filter((message) => String(message.content || "").trim() !== "")
+        .map((message) => ({
         id: message.id,
         role: message.role,
         content: message.content,

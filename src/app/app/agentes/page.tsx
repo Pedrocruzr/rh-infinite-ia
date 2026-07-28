@@ -79,7 +79,6 @@ const TITLE_OVERRIDES: Record<string, string> = {
 const CATALOG_ALIASES: Record<string, string> = {
   "analista-fit-cultural": "analista-fit-cultura",
   "custo-contratacao": "custo-por-contratacao",
-  "clt-ia": "teste-perfil-comportamental",
 };
 
 const CATEGORY_STYLES: Record<

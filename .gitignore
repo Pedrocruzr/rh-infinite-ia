@@ -44,6 +44,9 @@ diagnostico-*.txt
 supabase-status.txt
 diagnostico-auth-etapa-2.txt
 
+# backups locais (*.bak e *.bak.TIMESTAMP)
+*.bak
+
 # logs e diagnosticos locais
 diagnostico-*.txt
 supabase-status.txt

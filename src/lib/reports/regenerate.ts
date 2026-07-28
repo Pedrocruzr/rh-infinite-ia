@@ -16,7 +16,6 @@ import { generateDiscReport as reportBuilder_disc } from "@/lib/disc-runner";
 import { buildColetorSixBoxReport } from "@/lib/agents/coletor-dados-six-box/runner";
 import { buildAnalistaDiagnosticoSixBoxReport } from "@/lib/agents/analista-diagnostico-six-box/runner";
 import { buildCustoContratacaoReport } from "@/lib/agents/custo-contratacao/runner";
-import { buildProdutividadeReport } from "@/lib/agents/taxa-aderencia-vaga/runner";
 import { buildProdutividadeColaboradorReport } from "@/lib/agents/taxa-produtividade-colaborador/runner";
 import { generateBigFiveReport } from "@/lib/agente-teste-bigfive-runner";
 export function regenerateReportBySlug(slug: string, rawAnswers: unknown): string {

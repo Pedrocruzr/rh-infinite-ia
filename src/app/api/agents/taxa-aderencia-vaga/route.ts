@@ -4,28 +4,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/auth/session";
 import {
-  initializeProdutividadeSession,
-  runProdutividadeStep,
-  type ProdutividadeField,
-  type ProdutividadeSession,
+  FIRST_FIELD,
+  initializeAderenciaVagaSession,
+  runAderenciaVagaStep,
+  type AderenciaVagaField,
+  type AderenciaVagaSession,
 } from "@/lib/agents/taxa-aderencia-vaga/flow";
-import { buildProdutividadeReport } from "@/lib/agents/taxa-aderencia-vaga/runner";
+import { buildAderenciaVagaReport } from "@/lib/agents/taxa-aderencia-vaga/runner";
 
 type RequestBody = {
-  session?: ProdutividadeSession;
+  session?: AderenciaVagaSession;
   answer?: string;
   message?: string;
-  currentField?: ProdutividadeField | string | null;
+  currentField?: AderenciaVagaField | string | null;
 };
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json().catch(() => ({}))) as RequestBody;
-    const session = body.session ?? initializeProdutividadeSession();
+    const session = body.session ?? initializeAderenciaVagaSession();
     const answer = body.answer ?? body.message ?? "";
-    const currentField = body.currentField ?? "nomeColaborador";
+    const currentField = body.currentField ?? FIRST_FIELD;
 
-    const step = runProdutividadeStep(session, answer, currentField);
+    const step = runAderenciaVagaStep(session, answer, currentField);
 
     if (!step.completed) {
       return NextResponse.json({
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const reportMarkdown = buildProdutividadeReport(step.session);
+    const reportMarkdown = buildAderenciaVagaReport(step.session);
     const supabase = createAdminClient();
     const now = new Date().toISOString();
     const sessionUser = await getSessionUser();
@@ -46,9 +47,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from("profile_assessments")
       .insert({
-        candidate_name: "Análise de Produtividade",
-        target_role: "Taxa de Produtividade por Colaborador",
-        agent_name: "Taxa de Produtividade por Colaborador",
+        candidate_name: step.session.candidateName || "Candidato não informado",
+        target_role: step.session.targetRole || "Cargo não informado",
+        agent_name: "Taxa de Aderência com a Vaga",
         agent_slug: "taxa-aderencia-vaga",
         raw_answers: step.session,
         report_markdown: reportMarkdown,
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         completed: false,
-        reply: `Falha interna ao processar o agente Taxa de Produtividade por Colaborador. ${message}`,
+        reply: `Falha interna ao processar o agente Taxa de Aderência com a Vaga. ${message}`,
       },
       { status: 500 }
     );

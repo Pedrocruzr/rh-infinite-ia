@@ -1,34 +1,50 @@
-export type ProdutividadeField =
-  | "nomeColaborador"
-  | "cargo"
-  | "setor"
-  | "periodo"
-  | "tipoIndicador"
-  | "horasTrabalhadas"
-  | "entregas"
-  | "receitaGerada"
-  | "custoColaborador"
-  | "metaEsperada"
-  | "observacoes";
+export type AderenciaVagaField =
+  | "culturalMission"
+  | "culturalVision"
+  | "culturalValues"
+  | "culturalContext"
+  | "targetRole"
+  | "recruiterName"
+  | "validatorName"
+  | "approverName"
+  | "candidateName"
+  | "candidateExperience"
+  | "behavioralTestInput";
 
-export type ProdutividadeSession = {
-  nomeColaborador?: string;
-  cargo?: string;
-  setor?: string;
-  periodo?: string;
-  tipoIndicador?: string;
-  horasTrabalhadas?: number;
-  entregas?: number;
-  receitaGerada?: number;
-  custoColaborador?: number;
-  metaEsperada?: number;
-  observacoes?: string;
+export type AderenciaVagaSession = {
+  culturalMission?: string;
+  culturalVision?: string;
+  culturalValues?: string;
+  culturalContext?: string;
+  targetRole?: string;
+  recruiterName?: string;
+  validatorName?: string;
+  approverName?: string;
+  candidateName?: string;
+  candidateExperience?: string;
+  behavioralTestInput?: string;
   status?: "in_progress" | "completed";
   reportStatus?: "pending" | "generated";
   reportMarkdown?: string | null;
 };
 
-export function initializeProdutividadeSession(): ProdutividadeSession {
+export const FIRST_FIELD: AderenciaVagaField = "culturalMission";
+
+const ORDER: AderenciaVagaField[] = [
+  "culturalMission",
+  "culturalVision",
+  "culturalValues",
+  "culturalContext",
+  "targetRole",
+  "recruiterName",
+  "validatorName",
+  "approverName",
+  "candidateName",
+  "candidateExperience",
+  "behavioralTestInput",
+];
+
+export function initializeAderenciaVagaSession(): AderenciaVagaSession {
   return {
     status: "in_progress",
     reportStatus: "pending",
@@ -37,299 +53,223 @@ export function initializeProdutividadeSession(): ProdutividadeSession {
 }
 
 function normalize(text: unknown) {
-  return String(text ?? "").trim();
-}
-
-function parseNumber(input: string) {
-  const cleaned = input
-    .toLowerCase()
-    .replace(/r\$/g, "")
-    .replace(/horas?/g, "")
-    .replace(/\./g, "")
-    .replace(",", ".")
+  return String(text ?? "")
+    .replace(/[ \t]+/g, " ")
     .trim();
-
-  const match = cleaned.match(/-?\d+(\.\d+)?/);
-  if (!match) return null;
-  return Number(match[0]);
 }
 
-function nextField(current: ProdutividadeField): ProdutividadeField | null {
-  const order: ProdutividadeField[] = [
-    "nomeColaborador",
-    "cargo",
-    "setor",
-    "periodo",
-    "tipoIndicador",
-    "horasTrabalhadas",
-    "entregas",
-    "receitaGerada",
-    "custoColaborador",
-    "metaEsperada",
-    "observacoes",
-  ];
-
-  const idx = order.indexOf(current);
-  if (idx === -1 || idx === order.length - 1) return null;
-  return order[idx + 1];
+function titleCase(text: string) {
+  return text
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
-function ask(field: ProdutividadeField, session: ProdutividadeSession) {
+function nextField(current: AderenciaVagaField): AderenciaVagaField | null {
+  const idx = ORDER.indexOf(current);
+  if (idx === -1 || idx === ORDER.length - 1) return null;
+  return ORDER[idx + 1];
+}
+
+function ask(field: AderenciaVagaField, session: AderenciaVagaSession) {
   switch (field) {
-    case "nomeColaborador":
+    case "culturalMission":
       return `Vamos começar.
 
-Etapa 1: identificação do colaborador
+Etapa 1: cultura da empresa — missão
 
 Pergunta:
-Qual é o nome do colaborador que será analisado?
+Qual é a missão da organização?
+
+Exemplo:
+Levar soluções simples de gestão para pequenas e médias empresas.`;
+    case "culturalVision":
+      return `Perfeito.
+
+Confirmação da resposta anterior:
+Missão: ${session.culturalMission ?? "Não informado"}
+
+Etapa 2: cultura da empresa — visão
+
+Pergunta:
+Qual é a visão da empresa?
+
+Exemplo:
+Ser referência regional em atendimento até 2030.`;
+    case "culturalValues":
+      return `Perfeito.
+
+Confirmação da resposta anterior:
+Visão: ${session.culturalVision ?? "Não informado"}
+
+Etapa 3: cultura da empresa — valores
+
+Pergunta:
+Quais são os valores da empresa? Separe por vírgula ou por linha.
+
+Exemplo:
+Organização, transparência, foco no cliente, responsabilidade`;
+    case "culturalContext":
+      return `Perfeito.
+
+Confirmação da resposta anterior:
+Valores: ${session.culturalValues ?? "Não informado"}
+
+Etapa 4: contexto cultural
+
+Pergunta:
+Além da missão, visão e valores, há algo crucial sobre o fit cultural?
+
+Exemplos:
+Estilo de trabalho e ritmo do dia a dia
+Ambiente da equipe e rituais
+Comportamentos valorizados
+Comportamentos não tolerados`;
+    case "targetRole":
+      return `Perfeito.
+
+Confirmação da resposta anterior:
+Contexto cultural: ${session.culturalContext ?? "Não informado"}
+
+Etapa 5: a vaga
+
+Pergunta:
+Para qual cargo você está recrutando?
+
+Exemplos:
+Auxiliar Administrativo
+Recepcionista
+Vendedor`;
+    case "recruiterName":
+      return `Perfeito.
+
+Confirmação da resposta anterior:
+Cargo da vaga: ${session.targetRole ?? "Não informado"}
+
+Etapa 6: responsável pela avaliação
+
+Pergunta:
+Qual é o nome do recrutador responsável pela avaliação?
 
 Exemplo:
 Pedro Neto`;
-    case "cargo":
+    case "validatorName":
       return `Perfeito.
 
 Confirmação da resposta anterior:
-Nome do colaborador: ${session.nomeColaborador ?? "Não informado"}
+Recrutador: ${session.recruiterName ?? "Não informado"}
 
-Etapa 2: cargo
-
-Pergunta:
-Qual é o cargo desse colaborador?
-
-Exemplos:
-Recepcionista
-Vendedor
-Assistente Administrativo
-Analista de RH`;
-    case "setor":
-      return `Perfeito.
-
-Confirmação da resposta anterior:
-Cargo: ${session.cargo ?? "Não informado"}
-
-Etapa 3: setor
+Etapa 7: validação
 
 Pergunta:
-Em qual setor esse colaborador atua?
-
-Exemplos:
-Comercial
-Administrativo
-RH
-Atendimento
-Operações`;
-    case "periodo":
-      return `Perfeito.
-
-Confirmação da resposta anterior:
-Setor: ${session.setor ?? "Não informado"}
-
-Etapa 4: período de análise
-
-Pergunta:
-Qual período vamos analisar?
-
-Exemplos:
-Janeiro de 2026
-1ª quinzena de março
-Janeiro a Março de 2026`;
-    case "tipoIndicador":
-      return `Perfeito.
-
-Confirmação da resposta anterior:
-Período: ${session.periodo ?? "Não informado"}
-
-Etapa 5: tipo de indicador
-
-Pergunta:
-Qual indicador principal será usado para medir a produtividade?
-
-Exemplos:
-Quantidade de atendimentos
-Quantidade de vendas
-Quantidade de processos finalizados
-Receita gerada`;
-    case "horasTrabalhadas":
-      return `Perfeito.
-
-Confirmação da resposta anterior:
-Indicador principal: ${session.tipoIndicador ?? "Não informado"}
-
-Etapa 6: horas trabalhadas
-
-Pergunta:
-Quantas horas trabalhadas vamos considerar no período?
-
-Exemplo detalhado:
-Se o colaborador trabalhou 8 horas por dia durante 20 dias:
-8 × 20 = 160 horas
-
-Quantas horas vamos considerar?`;
-    case "entregas":
-      return `Perfeito.
-
-Confirmação da resposta anterior:
-Horas trabalhadas: ${session.horasTrabalhadas ?? "Não informado"}
-
-Etapa 7: entregas realizadas
-
-Pergunta:
-Quantas entregas o colaborador realizou no período?
-
-Exemplos:
-320 atendimentos
-45 vendas
-80 processos concluídos`;
-    case "receitaGerada":
-      return `Perfeito.
-
-Confirmação da resposta anterior:
-Entregas realizadas: ${session.entregas ?? "Não informado"}
-
-Etapa 8: receita gerada
-
-Pergunta:
-Houve receita diretamente atribuída ao colaborador? Se sim, qual foi o valor?
-
-Exemplos:
-0
-45000
-120000`;
-    case "custoColaborador":
-      return `Perfeito.
-
-Confirmação da resposta anterior:
-Receita gerada: ${session.receitaGerada ?? "Não informado"}
-
-Etapa 9: custo do colaborador
-
-Pergunta:
-Qual foi o custo total do colaborador no período?
-
-Exemplo detalhado:
-Salário + encargos + benefícios
+Quem é o responsável pela validação (gestor direto ou liderança)?
 
 Exemplo:
-3500
-5200
-7800`;
-    case "metaEsperada":
+Ana Paula Souza`;
+    case "approverName":
       return `Perfeito.
 
 Confirmação da resposta anterior:
-Custo do colaborador: ${session.custoColaborador ?? "Não informado"}
+Validação: ${session.validatorName ?? "Não informado"}
 
-Etapa 10: meta esperada
+Etapa 8: aprovação final
 
 Pergunta:
-Qual era a meta de produtividade esperada para esse colaborador no período?
+Quem é o responsável pela aprovação final (diretoria ou RH)?
 
-Exemplos:
-300 atendimentos
-40 vendas
-70 processos`;
-    case "observacoes":
+Exemplo:
+Carla Menezes`;
+    case "candidateName":
       return `Perfeito.
 
 Confirmação da resposta anterior:
-Meta esperada: ${session.metaEsperada ?? "Não informado"}
+Aprovação final: ${session.approverName ?? "Não informado"}
 
-Etapa 11: contexto e observações
+Etapa 9: candidato
 
 Pergunta:
-Existe algum contexto importante que pode impactar a produtividade?
+Qual é o nome completo do candidato avaliado?
 
-Exemplos:
-Novo na função
-Falta de sistema
-Sobrecarga da equipe
-Treinamento em andamento
-Sem observações`;
+Exemplo:
+João Ricardo da Silva`;
+    case "candidateExperience":
+      return `Perfeito.
+
+Confirmação da resposta anterior:
+Candidato: ${session.candidateName ?? "Não informado"}
+
+Etapa 10: experiências e evidências
+
+Pergunta:
+Resuma as experiências e principais evidências profissionais do candidato.
+Você pode separar por vírgula ou por linha.
+
+Exemplo:
+Rotinas administrativas por 3 anos
+Contas a pagar e a receber
+Emissão de notas fiscais
+Excel intermediário`;
+    case "behavioralTestInput":
+      return `Perfeito.
+
+Confirmação da resposta anterior:
+Experiências: ${session.candidateExperience ?? "Não informado"}
+
+Etapa 11: perfil comportamental
+
+Pergunta:
+Cole aqui o teste de perfil comportamental (DISC, Eneagrama e Perfil de Competências).
+Se não tiver o teste completo, descreva os principais traços observados.
+
+Exemplo:
+Perfil CS, Eneagrama tipo 6, organizado, responsável, atenção aos detalhes`;
     default:
       return `Informe o dado solicitado.`;
   }
 }
 
-export function runProdutividadeStep(
-  session: ProdutividadeSession,
+export function runAderenciaVagaStep(
+  session: AderenciaVagaSession,
   answer?: string,
-  currentField?: ProdutividadeField | string | null
+  currentField?: AderenciaVagaField | string | null
 ) {
-  const current = (currentField ?? "nomeColaborador") as ProdutividadeField;
+  const current = (currentField ?? FIRST_FIELD) as AderenciaVagaField;
   const text = normalize(answer);
 
-  if (!answer && current === "nomeColaborador") {
+  if (!text) {
+    const field = ORDER.includes(current) ? current : FIRST_FIELD;
     return {
       session,
-      currentField: "nomeColaborador" as const,
-      nextField: "nomeColaborador" as const,
+      currentField: field,
+      nextField: field,
       completed: false,
       finished: false,
-      reply: ask("nomeColaborador", session),
+      reply: ask(field, session),
     };
   }
 
-  const numericFields: ProdutividadeField[] = [
-    "horasTrabalhadas",
-    "entregas",
-    "receitaGerada",
-    "custoColaborador",
-    "metaEsperada",
+  const nameFields: AderenciaVagaField[] = [
+    "recruiterName",
+    "validatorName",
+    "approverName",
+    "candidateName",
   ];
 
-  if (numericFields.includes(current)) {
-    const value = parseNumber(text);
-    if (value === null) {
-      return {
-        session,
-        currentField: current,
-        nextField: current,
-        completed: false,
-        finished: false,
-        reply: `Não consegui entender o valor informado.
+  const updated: AderenciaVagaSession = {
+    ...session,
+    [current]: nameFields.includes(current) ? titleCase(text) : text,
+  };
 
-${ask(current, session)}`,
-      };
-    }
-
-    const updated = { ...session, [current]: value };
-    const next = nextField(current);
-
-    if (!next) {
-      return {
-        session: {
-          ...updated,
-          status: "completed",
-          reportStatus: "generated",
-        },
-        currentField: null,
-        nextField: null,
-        completed: true,
-        finished: true,
-        reply: "",
-      };
-    }
-
-    return {
-      session: updated,
-      currentField: next,
-      nextField: next,
-      completed: false,
-      finished: false,
-      reply: ask(next, updated),
-    };
-  }
-
-  const updated = { ...session, [current]: text };
   const next = nextField(current);
 
   if (!next) {
     return {
       session: {
         ...updated,
-        status: "completed",
-        reportStatus: "generated",
+        status: "completed" as const,
+        reportStatus: "generated" as const,
       },
       currentField: null,
       nextField: null,

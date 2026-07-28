@@ -205,6 +205,7 @@ export default function ColetorDadosSixBoxPage() {
 
       setInput(target.content);
       setSession(target.sessionSnapshot ?? session ?? null);
+      setCurrentField(target.fieldSnapshot ?? null);
 
       return prev.filter((_, i) => i < index);
     });

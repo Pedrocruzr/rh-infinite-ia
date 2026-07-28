@@ -16,6 +16,7 @@ type Message = {
   role: "assistant" | "user";
   content: string;
   sessionSnapshot?: GenericSession | null;
+  fieldSnapshot?: string | null;
 };
 
 function cloneSession<T>(value: T): T {
@@ -108,6 +109,7 @@ export default function CustoContratacaoPage() {
       if (target.role !== "user") return prev;
 
       setSession(target.sessionSnapshot ?? null);
+      setCurrentField(target.fieldSnapshot ?? null);
       setInput(target.content);
       setFinished(false);
 
@@ -125,6 +127,7 @@ export default function CustoContratacaoPage() {
       role: "user",
       content: answer,
       sessionSnapshot: cloneSession(session),
+      fieldSnapshot: currentField,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -198,22 +201,20 @@ export default function CustoContratacaoPage() {
       title="Custo de Contratação"
       subtitle="Responda uma pergunta por vez. Ao final, a análise ficará disponível em Relatórios Stackers."
       messages={
-        finished
-          ? []
-          : messages
-              .filter((message) => String(message.content || "").trim() !== "")
-              .map((message) => ({
-                id: message.id,
-                role: message.role,
-                content: message.content,
-                actions:
-                  message.role === "user" ? (
-                    <UserMessageActions
-                      onCopy={() => void copyMessage(message.content)}
-                      onEdit={() => editMessage(message.id)}
-                    />
-                  ) : undefined,
-              }))
+        messages
+          .filter((message) => String(message.content || "").trim() !== "")
+          .map((message) => ({
+            id: message.id,
+            role: message.role,
+            content: message.content,
+            actions:
+              message.role === "user" ? (
+                <UserMessageActions
+                  onCopy={() => void copyMessage(message.content)}
+                  onEdit={() => editMessage(message.id)}
+                />
+              ) : undefined,
+          }))
       }
       loading={loading}
       finished={finished}
