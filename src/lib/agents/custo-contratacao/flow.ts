@@ -66,9 +66,9 @@ function parseNumber(input: string) {
     .replace(",", ".")
     .trim();
 
-  const match = cleaned.match(/-?\d+(\.\d+)?/);
-  if (!match) return null;
-  return Number(match[0]);
+  const matches = cleaned.match(/-?\d+(\.\d+)?/g);
+  if (!matches || matches.length === 0) return null;
+  return Number(matches[matches.length - 1]);
 }
 
 function brMoney(value: number) {
