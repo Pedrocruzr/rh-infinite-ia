@@ -194,6 +194,8 @@ export function buildEntrevistadorAutomatizadoReport(
   const principaisDesafiosRaw = session.principaisDesafios?.trim() || "Não informado";
   const estiloCulturaRaw = session.estiloCultura?.trim() || "Não informado";
 
+  const dateStr = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
   const uniqueCompetencies = Array.from(
     new Map(
       splitCompetencies(competenciasRaw)
@@ -207,16 +209,16 @@ export function buildEntrevistadorAutomatizadoReport(
   const competencyRows = uniqueCompetencies
     .map((competency) => {
       const questionsHtml = competency.questions
-        .map((question, index) => `${index + 1}. ${escapeHtml(question)}`)
-        .join("<br />");
+        .map((question, index) => `<div style="margin-bottom:4px;"><strong>${index + 1}.</strong> ${escapeHtml(question)}</div>`)
+        .join("");
 
       return `
-<tr>
-  <td><strong>${escapeHtml(competency.canonical)}</strong></td>
-  <td>${escapeHtml(competency.description)}</td>
-  <td>${questionsHtml}</td>
-  <td>${escapeHtml(competency.whatToLookFor)}</td>
-  <td style="text-align:center;">${competency.idealLevel}</td>
+<tr style="border-bottom:1px solid #f1f5f9;">
+  <td style="padding:12px 10px; font-weight:700; color:#0f172a;">${escapeHtml(competency.canonical)}</td>
+  <td style="padding:12px 10px; color:#475569; font-size:13px;">${escapeHtml(competency.description)}</td>
+  <td style="padding:12px 10px; font-size:13px;">${questionsHtml}</td>
+  <td style="padding:12px 10px; color:#475569; font-size:13px;">${escapeHtml(competency.whatToLookFor)}</td>
+  <td style="padding:12px 10px; text-align:center; font-weight:700; color:#0284c7;">${competency.idealLevel}</td>
 </tr>`;
     })
     .join("");
@@ -224,12 +226,12 @@ export function buildEntrevistadorAutomatizadoReport(
   const gapsRows = uniqueCompetencies
     .map(
       (competency) => `
-<tr>
-  <td><strong>${escapeHtml(competency.canonical)}</strong></td>
-  <td style="text-align:center;">${competency.idealLevel}</td>
-  <td style="text-align:center;">Preencher após entrevista</td>
-  <td style="text-align:center;">Nota obtida – ${competency.idealLevel}</td>
-  <td>Até -1: aceitável | Menor que -1: atenção | Positivo: potencial acima do esperado</td>
+<tr style="border-bottom:1px solid #f1f5f9;">
+  <td style="padding:10px; font-weight:600; color:#0f172a;">${escapeHtml(competency.canonical)}</td>
+  <td style="padding:10px; text-align:center; font-weight:700; color:#0284c7;">${competency.idealLevel}</td>
+  <td style="padding:10px; text-align:center; color:#94a3b8; font-style:italic;">Preencher após entrevista</td>
+  <td style="padding:10px; text-align:center; font-weight:600;">Nota obtida – ${competency.idealLevel}</td>
+  <td style="padding:10px; font-size:12px; color:#64748b;">Até -1: aceitável | Menor que -1: atenção | Positivo: potencial acima do esperado</td>
 </tr>`
     )
     .join("");
@@ -244,85 +246,153 @@ export function buildEntrevistadorAutomatizadoReport(
   const roleNotesHtml = roleNotes.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
 
   return `
-<h1>Relatório Técnico - Entrevistador Automatizado</h1>
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+</style>
 
-<p><strong>Aviso:</strong> esta avaliação ficará disponível em "Relatórios Stackers" para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.</p>
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
 
-<h2>Identificação da solicitação</h2>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr><td><strong>Agente</strong></td><td>Entrevistador Automatizado</td></tr>
-  <tr><td><strong>Candidato</strong></td><td>${safe(candidatoNomeRaw)}</td></tr>
-  <tr><td><strong>Vaga solicitada</strong></td><td>${safe(vagaAlvoRaw)}</td></tr>
-  <tr><td><strong>Nível de senioridade</strong></td><td>${safe(nivelSenioridadeRaw)}</td></tr>
-  <tr><td><strong>Competências informadas</strong></td><td>${safe(competenciasRaw)}</td></tr>
-  <tr><td><strong>Desafios e entregas da vaga</strong></td><td>${safe(principaisDesafiosRaw)}</td></tr>
-  <tr><td><strong>Cultura e ambiente</strong></td><td>${safe(estiloCulturaRaw)}</td></tr>
-  <tr><td><strong>Status do relatório</strong></td><td>Gerado e pronto para uso em entrevista</td></tr>
-</table>
+  <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Relatório Técnico - Entrevistador Automatizado</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${safe(candidatoNomeRaw)}</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Vaga Alvo: <strong style="color:#ffffff !important;">${safe(vagaAlvoRaw)}</strong> • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: #0284c7 !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      Roteiro de Entrevista Estruturado
+    </div>
+  </div>
 
-<h2>Leitura técnica da vaga</h2>
-<ul>${roleNotesHtml}</ul>
+  <p style="font-size:11px; color:#94a3b8; border-left:3px solid #0284c7; padding-left:12px; margin: 0 0 28px;">
+    Aviso: esta avaliação ficará disponível em <strong>"Relatórios Stackers"</strong> para consulta do recrutador. Recomendamos salvar ou copiar o relatório depois que ele for gerado.
+  </p>
 
-<h2>Roteiro estruturado para vaga: ${safe(vagaAlvoRaw)}</h2>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr>
-    <td><strong>Competência</strong></td>
-    <td><strong>Objetivo de avaliação</strong></td>
-    <td><strong>Perguntas por competência</strong></td>
-    <td><strong>Sinais de boa resposta</strong></td>
-    <td><strong>Nível ideal</strong></td>
-  </tr>
-  ${competencyRows}
-</table>
+  <!-- IDENTIFICAÇÃO DA SOLICITAÇÃO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Identificação da solicitação</h2>
+  <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
+    <thead>
+      <tr style="background:#f8fafc !important; border-bottom:2px solid #e2e8f0; text-align:left; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+        <th style="padding:10px; width:220px;">Campo</th>
+        <th style="padding:10px;">Informação</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px; font-weight:600;">Agente</td><td style="padding:10px;">Entrevistador Automatizado</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px; font-weight:600;">Candidato</td><td style="padding:10px;">${safe(candidatoNomeRaw)}</td></tr>
+      <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px; font-weight:600;">Vaga solicitada</td><td style="padding:10px;">${safe(vagaAlvoRaw)}</td></tr>
+      ${session.nivelSenioridade ? `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px; font-weight:600;">Nível de senioridade</td><td style="padding:10px;">${safe(nivelSenioridadeRaw)}</td></tr>` : ""}
+      <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px; font-weight:600;">Competências informadas</td><td style="padding:10px;">${safe(competenciasRaw)}</td></tr>
+      ${session.principaisDesafios ? `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px; font-weight:600;">Desafios e entregas da vaga</td><td style="padding:10px;">${safe(principaisDesafiosRaw)}</td></tr>` : ""}
+      ${session.estiloCultura ? `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px; font-weight:600;">Cultura e ambiente</td><td style="padding:10px;">${safe(estiloCulturaRaw)}</td></tr>` : ""}
+      <tr><td style="padding:10px; font-weight:600;">Status do relatório</td><td style="padding:10px; color:#10b981; font-weight:700;">Gerado e pronto para uso em entrevista</td></tr>
+    </tbody>
+  </table>
 
-<h2>Scorecard (0-2)</h2>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr><td><strong>Nota</strong></td><td><strong>Interpretação</strong></td></tr>
-  <tr><td style="text-align:center;"><strong>0</strong></td><td>Resposta vaga.</td></tr>
-  <tr><td style="text-align:center;"><strong>1</strong></td><td>Resposta genérica.</td></tr>
-  <tr><td style="text-align:center;"><strong>2</strong></td><td>Resposta com evidência concreta, ações claras e resultado observável.</td></tr>
-</table>
+  <!-- LEITURA TÉCNICA DA VAGA -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Leitura técnica da vaga</h2>
+  <div style="background:#f8fafc !important; border-left:4px solid #0284c7; padding:18px; border-radius:0 12px 12px 0; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <ul style="margin:0; padding-left:18px; font-size:14px; color:#334155; line-height:1.7;">${roleNotesHtml}</ul>
+  </div>
 
-<h2>Avaliação por Competências (1-5)</h2>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr><td><strong>Grau</strong></td><td><strong>Significado</strong></td></tr>
-  <tr><td style="text-align:center;"><strong>1</strong></td><td>Mínimo</td></tr>
-  <tr><td style="text-align:center;"><strong>3</strong></td><td>Médio</td></tr>
-  <tr><td style="text-align:center;"><strong>5</strong></td><td>Excelente</td></tr>
-</table>
+  <!-- ROTEIRO ESTRUTURADO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Roteiro estruturado para vaga: ${safe(vagaAlvoRaw)}</h2>
+  <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
+    <thead>
+      <tr style="background:#f8fafc !important; border-bottom:2px solid #e2e8f0; text-align:left; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+        <th style="padding:10px; width:140px;">Competência</th>
+        <th style="padding:10px; width:200px;">Objetivo de avaliação</th>
+        <th style="padding:10px;">Perguntas por competência</th>
+        <th style="padding:10px; width:200px;">Sinais de boa resposta</th>
+        <th style="padding:10px; width:90px; text-align:center;">Nível ideal</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${competencyRows}
+    </tbody>
+  </table>
 
-<h2>Análise de Gaps</h2>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr>
-    <td><strong>Competência</strong></td>
-    <td><strong>Nível ideal</strong></td>
-    <td><strong>Nível obtido</strong></td>
-    <td><strong>Gap</strong></td>
-    <td><strong>Leitura</strong></td>
-  </tr>
-  ${gapsRows}
-</table>
+  <!-- SCORECARD E AVALIAÇÃO POR COMPETÊNCIAS -->
+  <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:260px; background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <h3 style="font-size:15px; margin:0 0 12px; color:#0f172a; font-weight:700;">Scorecard (0-2)</h3>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:2px solid #e2e8f0; text-align:left;">
+            <th style="padding:6px; width:50px; text-align:center;">Nota</th>
+            <th style="padding:6px;">Interpretação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px; text-align:center; font-weight:700;">0</td><td style="padding:6px;">Resposta vaga ou ausente.</td></tr>
+          <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px; text-align:center; font-weight:700;">1</td><td style="padding:6px;">Resposta genérica sem detalhes.</td></tr>
+          <tr><td style="padding:6px; text-align:center; font-weight:700;">2</td><td style="padding:6px;">Evidência concreta e resultado observável.</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-<h2>Resumo Executivo</h2>
-<p>Candidato com nível geral [X], com destaque em [competências fortes].</p>
+    <div style="flex:1; min-width:260px; background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <h3 style="font-size:15px; margin:0 0 12px; color:#0f172a; font-weight:700;">Grau de Avaliação (1-5)</h3>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:2px solid #e2e8f0; text-align:left;">
+            <th style="padding:6px; width:50px; text-align:center;">Grau</th>
+            <th style="padding:6px;">Significado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px; text-align:center; font-weight:700;">1</td><td style="padding:6px;">Mínimo / Não atende.</td></tr>
+          <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:6px; text-align:center; font-weight:700;">3</td><td style="padding:6px;">Médio / Atende parcialmente.</td></tr>
+          <tr><td style="padding:6px; text-align:center; font-weight:700;">5</td><td style="padding:6px;">Excelente / Atende plenamente.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<h2>Pontos Fortes</h2>
-<ul>${strengthsList}</ul>
+  <!-- ANÁLISE DE GAPS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Análise de Gaps</h2>
+  <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
+    <thead>
+      <tr style="background:#f8fafc !important; border-bottom:2px solid #e2e8f0; text-align:left; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+        <th style="padding:10px;">Competência</th>
+        <th style="padding:10px; width:90px; text-align:center;">Nível ideal</th>
+        <th style="padding:10px; width:160px; text-align:center;">Nível obtido</th>
+        <th style="padding:10px; width:120px; text-align:center;">Gap</th>
+        <th style="padding:10px;">Critério de leitura</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${gapsRows}
+    </tbody>
+  </table>
 
-<h2>Gaps Identificados</h2>
-<p>Exemplo: Proatividade abaixo do esperado.</p>
+  <!-- RESUMO EXECUTIVO E DICAS -->
+  <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:260px; background:#f0fdf4 !important; border:1px solid #bbf7d0; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <h4 style="margin:0 0 10px; color:#166534; font-size:14px; font-weight:700;">Pontos Fortes Mapeados</h4>
+      <ul style="margin:0; padding-left:18px; font-size:13px; color:#15803d; line-height:1.6;">
+        ${strengthsList}
+      </ul>
+    </div>
 
-<h2>Recomendação</h2>
-<p>Aprovar / Aprovar com ressalvas / Não aprovar</p>
+    <div style="flex:1; min-width:260px; background:#fffbeb !important; border:1px solid #fde68a; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <h4 style="margin:0 0 10px; color:#92400e; font-size:14px; font-weight:700;">Dicas para o Entrevistador</h4>
+      <ul style="margin:0; padding-left:18px; font-size:13px; color:#b45309; line-height:1.6;">
+        <li>Sempre peça exemplos reais: “me conte uma situação”.</li>
+        <li>Busque evidências concretas: números, ações e resultados.</li>
+        <li>Aprofunde com: “o que você fez?”, “qual foi o resultado?”.</li>
+      </ul>
+    </div>
+  </div>
 
-<h2>Dicas para o entrevistador</h2>
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
-  <tr><td>Sempre peça exemplos reais: “me conte uma situação”.</td></tr>
-  <tr><td>Busque evidências concretas: números, ações e resultados.</td></tr>
-  <tr><td>Aprofunde com: “o que você fez?”, “qual foi o resultado?”.</td></tr>
-</table>
+  <!-- ENCERRAMENTO TÉCNICO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Encerramento Técnico</h2>
+  <p style="line-height:1.6; color:#475569; margin-bottom:28px;">Este material foi estruturado para apoiar a condução da entrevista e o registro final da avaliação em <strong>"Relatórios Stackers"</strong>.</p>
 
-<h2>Encerramento técnico</h2>
-<p>Este material foi estruturado para apoiar a condução da entrevista e o registro final da avaliação em Relatórios Stackers.</p>
-`.trim();
+</section>
+  `.trim();
 }
