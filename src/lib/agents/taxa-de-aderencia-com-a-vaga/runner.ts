@@ -325,7 +325,7 @@ function buildInterviewQuestions(targetRole: string): string[] {
   ];
 }
 
-// ─── SVG VISUAL CHARTS ────────────────────────────────────────────────────────
+// ─── SVG VISUAL CHARTS (SEM EMOJIS) ──────────────────────────────────────────
 
 function generateAderenciaChartSvg(culturalFit: number, jobFit: number, overallFit: number): string {
   const width = 480;
@@ -344,7 +344,7 @@ function generateAderenciaChartSvg(culturalFit: number, jobFit: number, overallF
 
   return `
   <svg viewBox="0 0 ${width} ${height}" width="100%" style="max-width:520px; font-family: system-ui, -apple-system, sans-serif;" xmlns="http://www.w3.org/2000/svg">
-    <!-- Eixo de Fundo / Grinalda -->
+    <!-- Eixo de Fundo -->
     <line x1="140" y1="15" x2="140" y2="135" stroke="#cbd5e1" stroke-width="1.5" />
     <line x1="215" y1="15" x2="215" y2="135" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="4,4" />
     <line x1="290" y1="15" x2="290" y2="135" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="4,4" />
@@ -402,9 +402,9 @@ function generateMapaAderenciaSvg(culturalFit: number, jobFit: number): string {
     <line x1="${padding + chartW / 2}" y1="${padding}" x2="${padding + chartW / 2}" y2="${height - padding}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" />
     <line x1="${padding}" y1="${padding + chartH / 2}" x2="${width - padding}" y2="${padding + chartH / 2}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" />
 
-    <!-- Rótulos dos Quadrantes -->
+    <!-- Rótulos dos Quadrantes (sem emojis) -->
     <text x="${padding + 6}" y="${padding + 14}" font-size="8" fill="#b45309" font-weight="bold">Potencial Cultural</text>
-    <text x="${width - padding - 6}" y="${padding + 14}" font-size="8" fill="#047857" font-weight="bold" text-anchor="end">Match Ideal ★</text>
+    <text x="${width - padding - 6}" y="${padding + 14}" font-size="8" fill="#047857" font-weight="bold" text-anchor="end">Match Ideal</text>
     <text x="${padding + 6}" y="${height - padding - 8}" font-size="8" fill="#b91c1c" font-weight="bold">Baixa Aderência</text>
     <text x="${width - padding - 6}" y="${height - padding - 8}" font-size="8" fill="#0369a1" font-weight="bold" text-anchor="end">Técnico Funcional</text>
 
@@ -515,7 +515,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
 
   <!-- GRÁFICOS VISUAIS E MAPA DE ADERÊNCIA -->
   <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:24px; margin-bottom:32px;">
-    <h3 style="font-size:16px; margin:0 0 18px; color:#0f172a; font-weight:700;">📊 Mapa Visual e Gráfico de Aderência</h3>
+    <h3 style="font-size:16px; margin:0 0 18px; color:#0f172a; font-weight:700;">Mapa Visual e Gráfico de Aderência</h3>
     <div style="display:flex; gap:24px; align-items:center; justify-content:space-around; flex-wrap:wrap;">
       <div style="flex:1; min-width:280px; text-align:center;">
         <p style="font-size:12px; font-weight:600; color:#64748b; margin-bottom:12px;">Comparativo dos Indicadores de Aderência</p>
@@ -529,7 +529,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </div>
 
   <!-- 1. CULTURA DA EMPRESA -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">🏢 1. Resumo da Cultura da Empresa</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">1. Resumo da Cultura da Empresa</h2>
   <p style="line-height:1.6;">A empresa apresenta uma cultura orientada para organização, proatividade, responsabilidade e foco em resultados, dentro do contexto informado pelo recrutador.</p>
   <p style="margin: 6px 0;"><strong>Missão:</strong> ${escapeHtml(culturalMission)}</p>
   <p style="margin: 6px 0 16px;"><strong>Visão:</strong> ${escapeHtml(culturalVision)}</p>
@@ -547,7 +547,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </table>
 
   <!-- 2. PERFIL DA VAGA -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">🎯 2. Resumo do Perfil da Vaga — ${escapeHtml(roleProfile.title)}</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. Resumo do Perfil da Vaga — ${escapeHtml(roleProfile.title)}</h2>
   <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
     <thead>
       <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
@@ -572,19 +572,19 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </table>
 
   <!-- 3. FIT CULTURAL -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">🌿 3. Análise do Candidato — Fit Cultural</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. Análise do Candidato — Fit Cultural</h2>
   <p style="line-height:1.6;">O candidato <strong>${escapeHtml(candidateName)}</strong> demonstra aderência cultural compatível com o contexto informado pela empresa, especialmente ao cruzarmos os traços comportamentais enviados com os valores e o estilo de trabalho descritos.</p>
 
   <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
     <div style="flex:1; min-width:260px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:18px;">
-      <h4 style="margin:0 0 10px; color:#166534; font-size:14px; font-weight:700;">✓ Pontos Fortes de Fit Cultural</h4>
+      <h4 style="margin:0 0 10px; color:#166534; font-size:14px; font-weight:700;">Pontos Fortes de Fit Cultural</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#15803d; line-height:1.6;">
         ${fitCulturalStrengths.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
       </ul>
     </div>
 
     <div style="flex:1; min-width:260px; background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:18px;">
-      <h4 style="margin:0 0 10px; color:#92400e; font-size:14px; font-weight:700;">⚠️ Pontos de Atenção</h4>
+      <h4 style="margin:0 0 10px; color:#92400e; font-size:14px; font-weight:700;">Pontos de Atenção</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#b45309; line-height:1.6;">
         ${fitCulturalAttention.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
       </ul>
@@ -592,7 +592,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </div>
 
   <!-- 4. JOB FIT -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">💼 4. Análise do Candidato — Job Fit</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. Análise do Candidato — Job Fit</h2>
   <p style="line-height:1.6;">Em relação ao cargo, o candidato apresenta compatibilidade funcional com os requisitos centrais da função. As evidências enviadas mostram conexão com responsabilidades e competências exigidas pela vaga.</p>
 
   <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
@@ -609,14 +609,14 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
 
   <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
     <div style="flex:1; min-width:260px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:18px;">
-      <h4 style="margin:0 0 10px; color:#166534; font-size:14px; font-weight:700;">✓ Forças no Job Fit</h4>
+      <h4 style="margin:0 0 10px; color:#166534; font-size:14px; font-weight:700;">Forças no Job Fit</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#15803d; line-height:1.6;">
         ${jobStrengths.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
       </ul>
     </div>
 
     <div style="flex:1; min-width:260px; background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:18px;">
-      <h4 style="margin:0 0 10px; color:#92400e; font-size:14px; font-weight:700;">⚠️ Riscos no Job Fit</h4>
+      <h4 style="margin:0 0 10px; color:#92400e; font-size:14px; font-weight:700;">Riscos no Job Fit</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#b45309; line-height:1.6;">
         ${jobRisks.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
       </ul>
@@ -624,7 +624,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </div>
 
   <!-- 5. TAXA DE ADERÊNCIA ESTIMADA (TABELA DETALHADA) -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">📈 5. Taxa de Aderência Estimada (Detalhamento)</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. Taxa de Aderência Estimada (Detalhamento)</h2>
   <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
     <thead>
       <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
@@ -665,7 +665,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </table>
 
   <!-- 6. PARECER FINAL -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">📝 6. Parecer Final e Recomendação</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. Parecer Final e Recomendação</h2>
   <div style="background:#f8fafc; border-left:4px solid ${statusColor}; padding:18px; border-radius:0 12px 12px 0; margin-bottom:28px;">
     <p style="font-weight:600; font-size:15px; margin:0 0 10px; color:#0f172a;">${escapeHtml(finalRecommendation)}</p>
     <p style="margin:0 0 8px; font-size:13px; color:#475569;">Seu maior potencial tende a aparecer em funções que exigem organização, controle, responsabilidade e suporte operacional consistente.</p>
@@ -673,7 +673,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </div>
 
   <!-- 7. PERGUNTAS DE ENTREVISTA -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">💬 7. Perguntas Recomendadas para Entrevista Final</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">7. Perguntas Recomendadas para Entrevista Final</h2>
   <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
     <thead>
       <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
@@ -687,11 +687,11 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </table>
 
   <!-- 8. ENCERRAMENTO TÉCNICO -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">⚙️ 8. Encerramento Técnico</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">8. Encerramento Técnico</h2>
   <p style="line-height:1.6; color:#475569; margin-bottom:28px;">Para aumentar a precisão da análise, recomenda-se que o recrutador envie o teste de perfil comportamental do candidato sempre que disponível. Esse material complementa a leitura de fit cultural e fortalece a tomada de decisão final.</p>
 
   <!-- ASSINATURA E VALIDAÇÃO -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">✍️ Assinatura e validação</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Assinatura e validação</h2>
   <p style="margin-bottom:32px;"><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${escapeHtml(recruiterName)}</p>
   <p style="margin-bottom:32px;"><strong>Validação (Gestor Direto/Liderança):</strong> ${escapeHtml(validatorName)}</p>
   <p style="margin-bottom:32px;"><strong>Aprovação Final (Diretoria/RH):</strong> ${escapeHtml(approverName)}</p>
