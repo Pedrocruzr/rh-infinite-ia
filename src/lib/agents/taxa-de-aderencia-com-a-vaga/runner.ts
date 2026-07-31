@@ -526,9 +526,9 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   <p>Para aumentar a precisão da análise, recomenda-se que o recrutador envie o teste de perfil comportamental do candidato sempre que disponível. Esse material complementa a leitura de fit cultural e fortalece a tomada de decisão final.</p>
 
   <h2>Assinatura e validação</h2>
-  <p><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${escapeHtml(recruiterName)}</p>
-  <p><strong>Validação (Gestor Direto/Liderança):</strong> ${escapeHtml(validatorName)}</p>
-  <p><strong>Aprovação Final (Diretoria/RH):</strong> ${escapeHtml(approverName)}</p>
+  <p style="margin-bottom:32px;"><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${escapeHtml(recruiterName)}</p>
+  <p style="margin-bottom:32px;"><strong>Validação (Gestor Direto/Liderança):</strong> ${escapeHtml(validatorName)}</p>
+  <p style="margin-bottom:32px;"><strong>Aprovação Final (Diretoria/RH):</strong> ${escapeHtml(approverName)}</p>
 </section>
   `.trim();
 }
