@@ -325,7 +325,7 @@ function buildInterviewQuestions(targetRole: string): string[] {
   ];
 }
 
-// ─── SVG VISUAL CHARTS (SEM EMOJIS) ──────────────────────────────────────────
+// ─── SVG VISUAL CHARTS ────────────────────────────────────────────────────────
 
 function generateAderenciaChartSvg(culturalFit: number, jobFit: number, overallFit: number): string {
   const width = 480;
@@ -402,7 +402,7 @@ function generateMapaAderenciaSvg(culturalFit: number, jobFit: number): string {
     <line x1="${padding + chartW / 2}" y1="${padding}" x2="${padding + chartW / 2}" y2="${height - padding}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" />
     <line x1="${padding}" y1="${padding + chartH / 2}" x2="${width - padding}" y2="${padding + chartH / 2}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,3" />
 
-    <!-- Rótulos dos Quadrantes (sem emojis) -->
+    <!-- Rótulos dos Quadrantes -->
     <text x="${padding + 6}" y="${padding + 14}" font-size="8" fill="#b45309" font-weight="bold">Potencial Cultural</text>
     <text x="${width - padding - 6}" y="${padding + 14}" font-size="8" fill="#047857" font-weight="bold" text-anchor="end">Match Ideal</text>
     <text x="${padding + 6}" y="${height - padding - 8}" font-size="8" fill="#b91c1c" font-weight="bold">Baixa Aderência</text>
@@ -470,14 +470,24 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   const mapaSvg = generateMapaAderenciaSvg(culturalFit, jobFit);
 
   return `
-<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif;">
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+</style>
+
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
 
   <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
-  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 14px; padding: 32px 24px; color: #ffffff; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15);">
-    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; margin: 0 0 8px; font-weight:600;">Relatório de Taxa de Aderência com a Vaga</p>
-    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff; letter-spacing: -0.5px;">${escapeHtml(candidateName)}</h1>
-    <p style="font-size: 14px; color: #cbd5e1; margin: 0 0 18px;">Vaga Alvo: <strong style="color:#ffffff;">${escapeHtml(roleProfile.title)}</strong> • Gerado em ${dateStr}</p>
-    <div style="display: inline-block; background: ${statusColor}; color: #ffffff; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Relatório de Taxa de Aderência com a Vaga</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${escapeHtml(candidateName)}</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Vaga Alvo: <strong style="color:#ffffff !important;">${escapeHtml(roleProfile.title)}</strong> • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: ${statusColor} !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       Taxa de Aderência Geral: ${overallFit}%
     </div>
   </div>
@@ -488,27 +498,27 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
 
   <!-- CARDS DE METRICAS (KPIS) -->
   <div style="display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap;">
-    <div style="flex: 1; min-width: 140px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+    <div style="flex: 1; min-width: 140px; background: #f8fafc !important; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 1px;">Fit Cultural</span>
-      <div style="font-size: 32px; font-weight: 800; color: ${culturalFit >= 80 ? '#10b981' : culturalFit >= 70 ? '#0284c7' : '#f59e0b'}; margin: 6px 0;">${culturalFit}%</div>
-      <div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px;">
-        <div style="background: ${culturalFit >= 80 ? '#10b981' : culturalFit >= 70 ? '#0284c7' : '#f59e0b'}; width: ${culturalFit}%; height: 100%;"></div>
+      <div style="font-size: 32px; font-weight: 800; color: ${culturalFit >= 80 ? '#10b981' : culturalFit >= 70 ? '#0284c7' : '#f59e0b'} !important; margin: 6px 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${culturalFit}%</div>
+      <div style="background: #e2e8f0 !important; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px;">
+        <div style="background: ${culturalFit >= 80 ? '#10b981' : culturalFit >= 70 ? '#0284c7' : '#f59e0b'} !important; width: ${culturalFit}%; height: 100%;"></div>
       </div>
     </div>
 
-    <div style="flex: 1; min-width: 140px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+    <div style="flex: 1; min-width: 140px; background: #f8fafc !important; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 1px;">Fit com a Vaga</span>
-      <div style="font-size: 32px; font-weight: 800; color: ${jobFit >= 80 ? '#10b981' : jobFit >= 70 ? '#0284c7' : '#f59e0b'}; margin: 6px 0;">${jobFit}%</div>
-      <div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px;">
-        <div style="background: ${jobFit >= 80 ? '#10b981' : jobFit >= 70 ? '#0284c7' : '#f59e0b'}; width: ${jobFit}%; height: 100%;"></div>
+      <div style="font-size: 32px; font-weight: 800; color: ${jobFit >= 80 ? '#10b981' : jobFit >= 70 ? '#0284c7' : '#f59e0b'} !important; margin: 6px 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${jobFit}%</div>
+      <div style="background: #e2e8f0 !important; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px;">
+        <div style="background: ${jobFit >= 80 ? '#10b981' : jobFit >= 70 ? '#0284c7' : '#f59e0b'} !important; width: ${jobFit}%; height: 100%;"></div>
       </div>
     </div>
 
-    <div style="flex: 1; min-width: 140px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center;">
+    <div style="flex: 1; min-width: 140px; background: #f8fafc !important; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; text-align: center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 1px;">Aderência Geral</span>
-      <div style="font-size: 32px; font-weight: 800; color: ${statusColor}; margin: 6px 0;">${overallFit}%</div>
-      <div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px;">
-        <div style="background: ${statusColor}; width: ${overallFit}%; height: 100%;"></div>
+      <div style="font-size: 32px; font-weight: 800; color: ${statusColor} !important; margin: 6px 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${overallFit}%</div>
+      <div style="background: #e2e8f0 !important; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px;">
+        <div style="background: ${statusColor} !important; width: ${overallFit}%; height: 100%;"></div>
       </div>
     </div>
   </div>
@@ -536,7 +546,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
 
   <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
     <thead>
-      <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
+      <tr style="background:#f8fafc !important; border-bottom:2px solid #e2e8f0; text-align:left; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
         <th style="padding:10px; width:50px;">Nº</th>
         <th style="padding:10px;">Valores declarados</th>
       </tr>
@@ -550,7 +560,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. Resumo do Perfil da Vaga — ${escapeHtml(roleProfile.title)}</h2>
   <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
     <thead>
-      <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
+      <tr style="background:#f8fafc !important; border-bottom:2px solid #e2e8f0; text-align:left; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
         <th style="padding:10px; width:220px;">Categoria</th>
         <th style="padding:10px;">Detalhamento</th>
       </tr>
@@ -576,14 +586,14 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   <p style="line-height:1.6;">O candidato <strong>${escapeHtml(candidateName)}</strong> demonstra aderência cultural compatível com o contexto informado pela empresa, especialmente ao cruzarmos os traços comportamentais enviados com os valores e o estilo de trabalho descritos.</p>
 
   <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
-    <div style="flex:1; min-width:260px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:18px;">
+    <div style="flex:1; min-width:260px; background:#f0fdf4 !important; border:1px solid #bbf7d0; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       <h4 style="margin:0 0 10px; color:#166534; font-size:14px; font-weight:700;">Pontos Fortes de Fit Cultural</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#15803d; line-height:1.6;">
         ${fitCulturalStrengths.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
       </ul>
     </div>
 
-    <div style="flex:1; min-width:260px; background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:18px;">
+    <div style="flex:1; min-width:260px; background:#fffbeb !important; border:1px solid #fde68a; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       <h4 style="margin:0 0 10px; color:#92400e; font-size:14px; font-weight:700;">Pontos de Atenção</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#b45309; line-height:1.6;">
         ${fitCulturalAttention.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
@@ -597,7 +607,7 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
 
   <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
     <thead>
-      <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
+      <tr style="background:#f8fafc !important; border-bottom:2px solid #e2e8f0; text-align:left; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
         <th style="padding:10px; width:50px;">Nº</th>
         <th style="padding:10px;">Evidências observadas na trajetória do candidato</th>
       </tr>
@@ -608,14 +618,14 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
   </table>
 
   <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
-    <div style="flex:1; min-width:260px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:18px;">
+    <div style="flex:1; min-width:260px; background:#f0fdf4 !important; border:1px solid #bbf7d0; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       <h4 style="margin:0 0 10px; color:#166534; font-size:14px; font-weight:700;">Forças no Job Fit</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#15803d; line-height:1.6;">
         ${jobStrengths.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
       </ul>
     </div>
 
-    <div style="flex:1; min-width:260px; background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:18px;">
+    <div style="flex:1; min-width:260px; background:#fffbeb !important; border:1px solid #fde68a; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
       <h4 style="margin:0 0 10px; color:#92400e; font-size:14px; font-weight:700;">Riscos no Job Fit</h4>
       <ul style="margin:0; padding-left:18px; font-size:13px; color:#b45309; line-height:1.6;">
         ${jobRisks.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
@@ -623,60 +633,19 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
     </div>
   </div>
 
-  <!-- 5. TAXA DE ADERÊNCIA ESTIMADA (TABELA DETALHADA) -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. Taxa de Aderência Estimada (Detalhamento)</h2>
-  <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
-    <thead>
-      <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
-        <th style="padding:10px;">Indicador de Aderência</th>
-        <th style="padding:10px; text-align:center; width:120px;">Percentual</th>
-        <th style="padding:10px; width:200px;">Barra Visual</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr style="border-bottom:1px solid #f1f5f9;">
-        <td style="padding:10px; font-weight:600;">Fit Cultural</td>
-        <td style="padding:10px; text-align:center; font-weight:700; color:${culturalFit >= 80 ? '#10b981' : culturalFit >= 70 ? '#0284c7' : '#f59e0b'};">${culturalFit}%</td>
-        <td style="padding:10px;">
-          <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
-            <div style="background:${culturalFit >= 80 ? '#10b981' : culturalFit >= 70 ? '#0284c7' : '#f59e0b'}; width:${culturalFit}%; height:100%;"></div>
-          </div>
-        </td>
-      </tr>
-      <tr style="border-bottom:1px solid #f1f5f9;">
-        <td style="padding:10px; font-weight:600;">Fit com a Vaga</td>
-        <td style="padding:10px; text-align:center; font-weight:700; color:${jobFit >= 80 ? '#10b981' : jobFit >= 70 ? '#0284c7' : '#f59e0b'};">${jobFit}%</td>
-        <td style="padding:10px;">
-          <div style="background:#e2e8f0; height:8px; border-radius:4px; overflow:hidden;">
-            <div style="background:${jobFit >= 80 ? '#10b981' : jobFit >= 70 ? '#0284c7' : '#f59e0b'}; width:${jobFit}%; height:100%;"></div>
-          </div>
-        </td>
-      </tr>
-      <tr style="background:#f8fafc;">
-        <td style="padding:10px; font-weight:700; color:#0f172a;">Taxa de Aderência Geral</td>
-        <td style="padding:10px; text-align:center; font-weight:800; font-size:16px; color:${statusColor};">${overallFit}%</td>
-        <td style="padding:10px;">
-          <div style="background:#cbd5e1; height:10px; border-radius:5px; overflow:hidden;">
-            <div style="background:${statusColor}; width:${overallFit}%; height:100%;"></div>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- 6. PARECER FINAL -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. Parecer Final e Recomendação</h2>
-  <div style="background:#f8fafc; border-left:4px solid ${statusColor}; padding:18px; border-radius:0 12px 12px 0; margin-bottom:28px;">
+  <!-- 5. PARECER FINAL -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. Parecer Final e Recomendação</h2>
+  <div style="background:#f8fafc !important; border-left:4px solid ${statusColor} !important; padding:18px; border-radius:0 12px 12px 0; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
     <p style="font-weight:600; font-size:15px; margin:0 0 10px; color:#0f172a;">${escapeHtml(finalRecommendation)}</p>
     <p style="margin:0 0 8px; font-size:13px; color:#475569;">Seu maior potencial tende a aparecer em funções que exigem organização, controle, responsabilidade e suporte operacional consistente.</p>
     <p style="margin:0; font-size:13px; color:#475569;">Como ponto de atenção, recomenda-se validar em entrevista a capacidade do candidato de lidar com cobrança, mudanças de prioridade e autonomia em dias mais corridos.</p>
   </div>
 
-  <!-- 7. PERGUNTAS DE ENTREVISTA -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">7. Perguntas Recomendadas para Entrevista Final</h2>
+  <!-- 6. PERGUNTAS DE ENTREVISTA -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. Perguntas Recomendadas para Entrevista Final</h2>
   <table style="width:100%; border-collapse:collapse; margin-bottom:28px;">
     <thead>
-      <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
+      <tr style="background:#f8fafc !important; border-bottom:2px solid #e2e8f0; text-align:left; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
         <th style="padding:10px; width:50px;">Nº</th>
         <th style="padding:10px;">Pergunta de Investigação</th>
       </tr>
@@ -686,12 +655,12 @@ export function generateTaxaAderenciaReport(answers: Answers): string {
     </tbody>
   </table>
 
-  <!-- 8. ENCERRAMENTO TÉCNICO -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">8. Encerramento Técnico</h2>
+  <!-- 7. ENCERRAMENTO TÉCNICO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">7. Encerramento Técnico</h2>
   <p style="line-height:1.6; color:#475569; margin-bottom:28px;">Para aumentar a precisão da análise, recomenda-se que o recrutador envie o teste de perfil comportamental do candidato sempre que disponível. Esse material complementa a leitura de fit cultural e fortalece a tomada de decisão final.</p>
 
   <!-- ASSINATURA E VALIDAÇÃO -->
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Assinatura e validação</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px; margin-bottom:28px;">Assinatura e validação</h2>
   <p style="margin-bottom:32px;"><strong>Responsável pela Avaliação (RH/Recrutador):</strong> ${escapeHtml(recruiterName)}</p>
   <p style="margin-bottom:32px;"><strong>Validação (Gestor Direto/Liderança):</strong> ${escapeHtml(validatorName)}</p>
   <p style="margin-bottom:32px;"><strong>Aprovação Final (Diretoria/RH):</strong> ${escapeHtml(approverName)}</p>
