@@ -148,16 +148,17 @@ export default function EntrevistadorAutomatizadoPage() {
 
       setSession(data.session ?? {});
       setCurrentField(data.nextField ?? data.currentField ?? null);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: data.done || data.completed
-            ? "Relatório gerado com sucesso e disponível em Relatórios Stackers."
-            : data.reply,
-        },
-      ]);
+
+      if (!data.done && !data.completed && data.reply) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: data.reply,
+          },
+        ]);
+      }
 
       setFinished(Boolean(data.done || data.completed));
     } catch (error) {

@@ -1,7 +1,10 @@
 export type EntrevistadorAutomatizadoSession = {
   candidatoNome?: string;
   vagaAlvo?: string;
+  nivelSenioridade?: string;
   competenciasDesejadas?: string;
+  principaisDesafios?: string;
+  estiloCultura?: string;
   historicoConversaEntrevistador?: { role: "user" | "assistant"; content: string }[];
 };
 
@@ -51,11 +54,6 @@ function looksLikeGibberish(value: string): boolean {
   if (!text) return true;
 
   const blocked = new Set([
-    "jrga",
-    "rera",
-    "erar",
-    "dageasr",
-    "rejg",
     "kkhjjpe",
     "qwe",
     "asd",

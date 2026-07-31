@@ -189,7 +189,10 @@ export function buildEntrevistadorAutomatizadoReport(
 ): string {
   const candidatoNomeRaw = session.candidatoNome?.trim() || "Não informado";
   const vagaAlvoRaw = session.vagaAlvo?.trim() || "Não informado";
+  const nivelSenioridadeRaw = session.nivelSenioridade?.trim() || "Não informado";
   const competenciasRaw = session.competenciasDesejadas?.trim() || "Não informado";
+  const principaisDesafiosRaw = session.principaisDesafios?.trim() || "Não informado";
+  const estiloCulturaRaw = session.estiloCultura?.trim() || "Não informado";
 
   const uniqueCompetencies = Array.from(
     new Map(
@@ -250,7 +253,10 @@ export function buildEntrevistadorAutomatizadoReport(
   <tr><td><strong>Agente</strong></td><td>Entrevistador Automatizado</td></tr>
   <tr><td><strong>Candidato</strong></td><td>${safe(candidatoNomeRaw)}</td></tr>
   <tr><td><strong>Vaga solicitada</strong></td><td>${safe(vagaAlvoRaw)}</td></tr>
+  <tr><td><strong>Nível de senioridade</strong></td><td>${safe(nivelSenioridadeRaw)}</td></tr>
   <tr><td><strong>Competências informadas</strong></td><td>${safe(competenciasRaw)}</td></tr>
+  <tr><td><strong>Desafios e entregas da vaga</strong></td><td>${safe(principaisDesafiosRaw)}</td></tr>
+  <tr><td><strong>Cultura e ambiente</strong></td><td>${safe(estiloCulturaRaw)}</td></tr>
   <tr><td><strong>Status do relatório</strong></td><td>Gerado e pronto para uso em entrevista</td></tr>
 </table>
 
