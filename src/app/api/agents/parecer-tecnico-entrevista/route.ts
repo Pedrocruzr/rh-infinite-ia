@@ -62,7 +62,12 @@ function isBlockedAnswer(value: string): boolean {
 }
 
 function looksLikeGibberish(value: string): boolean {
-  const normalized = normalizeText(value)
+  const text = value.trim();
+
+  // Se contiver qualquer número ou barra/traço de data (ex: 01/01/2026, 2026, 12), não é gibberish
+  if (/\d/.test(text)) return false;
+
+  const normalized = normalizeText(text)
     .replace(/[^a-z0-9\s/-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -93,6 +98,14 @@ function looksLikeGibberish(value: string): boolean {
 function validateAnswer(field: ParecerField, answer: string): string | null {
   const normalized = answer.trim();
   const normalizedText = normalizeText(normalized);
+
+  // Validação imediata para dataEntrevista
+  if (field === "dataEntrevista") {
+    if (normalized.length < 2) {
+      return "Preciso da data da entrevista de forma clara para continuar.";
+    }
+    return null;
+  }
 
   if (isBlockedAnswer(normalized) || looksLikeGibberish(normalized)) {
     return "Não consegui interpretar sua resposta com segurança. Pode escrever de forma mais clara?";
@@ -156,13 +169,6 @@ function validateAnswer(field: ParecerField, answer: string): string | null {
   if (field === "formacao") {
     if (normalized.length < 2) {
       return "Por favor, informe a formação acadêmica do candidato (ex.: Administração, RH, Engenharia).";
-    }
-    return null;
-  }
-
-  if (field === "dataEntrevista") {
-    if (normalized.length < 4) {
-      return "Preciso da data da entrevista de forma mais clara para continuar.";
     }
     return null;
   }

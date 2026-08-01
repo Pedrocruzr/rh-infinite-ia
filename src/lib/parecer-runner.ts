@@ -395,20 +395,37 @@ function buildFallbackParecer(session: ParecerSession): string {
     <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Recomendação Final</span><strong style="color:#0284c7; font-size:14px;">${escapeHtml(recomendacao)}</strong></div>
   </div>
 
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Resumo Técnico</h2>
-  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">${escapeHtml(session.trajetoria)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">1. RESUMO EXECUTIVO E DADOS PESSOAIS</h2>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Candidato(a):</strong> ${escapeHtml(session.candidato)} | <strong>Experiência acumulada:</strong> ${escapeHtml(session.experienciaTotalENivel)}</p>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Residência e disponibilidade:</strong> ${escapeHtml(session.residenciaDisponibilidade)}</p>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Contexto da contratação:</strong> ${escapeHtml(session.contextoContratacao)}</p>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;"><strong>Motivação apresentada:</strong> ${escapeHtml(session.motivacao)}</p>
 
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Competências Técnicas</h2>
-  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">${escapeHtml(session.competenciasTecnicas)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. FORMAÇÃO ACADÊMICA E DESENVOLVIMENTO</h2>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Formação acadêmica principal:</strong> ${escapeHtml(session.formacao)}</p>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Certificações e cursos complementares:</strong></p>
+  <div style="margin:0 0 12px 0;">${bulletList(session.certificacoes)}</div>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;"><strong>Idiomas:</strong> ${escapeHtml(session.idiomas)}</p>
 
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Competências Comportamentais</h2>
-  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">${escapeHtml(session.competenciasComportamentais)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. TRAJETÓRIA PROFISSIONAL E CONHECIMENTO TÉCNICO</h2>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Resumo da trajetória:</strong> ${escapeHtml(session.trajetoria)}</p>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;"><strong>Conhecimento do setor e função:</strong> ${escapeHtml(session.conhecimentoNegocioSetor)}</p>
 
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Pontos de Atenção</h2>
-  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">${escapeHtml(session.pontosDesenvolvimento)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. AVALIAÇÃO DE COMPETÊNCIAS TÉCNICAS E COMPORTAMENTAIS</h2>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Competências técnicas:</strong> ${escapeHtml(session.competenciasTecnicas)}</p>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Competências comportamentais:</strong> ${escapeHtml(session.competenciasComportamentais)}</p>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Comunicação observada:</strong> ${escapeHtml(session.comunicacao)}</p>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;"><strong>Foco em resultados e produtividade:</strong> ${escapeHtml(session.focoResultados)}</p>
 
-  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Recomendação Final</h2>
-  <p style="margin:0 0 24px 0; color:#0284c7; font-size:16px; font-weight:700;">${escapeHtml(recomendacao)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. ADERÊNCIA CULTURAL, TESTES E REFERÊNCIAS</h2>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Ferramentas / testes de avaliação:</strong> ${escapeHtml(session.testes)}</p>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Referências profissionais:</strong> ${escapeHtml(session.referencias)}</p>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;"><strong>Aderência cultural e ao contexto:</strong> ${escapeHtml(session.aderenciaCultural)}</p>
+
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. PONTOS DE DESENVOLVIMENTO E RECOMENDAÇÃO FINAL</h2>
+  <p style="margin:0 0 12px 0; color:#334155; line-height:1.6;"><strong>Pontos de atenção / desenvolvimento:</strong> ${escapeHtml(session.pontosDesenvolvimento)}</p>
+  <p style="margin:0 0 8px 0; color:#0284c7; font-size:16px; font-weight:700;">Recomendação: ${escapeHtml(recomendacao)}</p>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;"><strong>Parecer técnico:</strong> O candidato apresentou respostas coerentes com as exigências da função, indicando repertório adequado para o nível avaliado e aderência aos requisitos da vaga.</p>
 
   <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:36px; margin-bottom:24px;">Assinatura e Validação</h2>
   <div style="margin-top:24px; color:#334155; font-size:14px; line-height:2.2;">
