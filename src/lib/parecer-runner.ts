@@ -422,7 +422,7 @@ function buildFallbackParecer(session: ParecerSession): string {
 `.trim();
 }
 
-export async function generateParecer(session: ParecerSession): Promise<string> {
+export function generateParecer(session: ParecerSession): string {
   if (session.nivelVaga === "gerencial") {
     return buildGerencialParecer(session);
   }
