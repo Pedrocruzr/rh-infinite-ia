@@ -497,27 +497,29 @@ export async function runFitCulturalStep(
     };
   }
 
-  // Intelligent conversational doubts and complaints analysis using OpenAI
-  const analise = await analisarMensagemUsuarioFit(raw, currentField as FitCulturalField, session.historicoConversaFit ?? []);
+  // Intelligent conversational doubts and complaints analysis using OpenAI only if the input looks like a question or confusion
+  if (isConfusedOrAsking(raw)) {
+    const analise = await analisarMensagemUsuarioFit(raw, currentField as FitCulturalField, session.historicoConversaFit ?? []);
 
-  if (analise.isDoubt) {
-    const novoHistorico = [
-      ...(session.historicoConversaFit ?? []),
-      { role: "user" as const, content: raw },
-      { role: "assistant" as const, content: analise.reply }
-    ];
+    if (analise.isDoubt) {
+      const novoHistorico = [
+        ...(session.historicoConversaFit ?? []),
+        { role: "user" as const, content: raw },
+        { role: "assistant" as const, content: analise.reply }
+      ];
 
-    return {
-      session: {
-        ...session,
-        historicoConversaFit: novoHistorico,
-      },
-      completed: false,
-      currentField,
-      nextField: currentField,
-      question: current?.question ?? null,
-      reply: analise.reply,
-    };
+      return {
+        session: {
+          ...session,
+          historicoConversaFit: novoHistorico,
+        },
+        completed: false,
+        currentField,
+        nextField: currentField,
+        question: current?.question ?? null,
+        reply: analise.reply,
+      };
+    }
   }
 
   if (currentField === "objetivo") {

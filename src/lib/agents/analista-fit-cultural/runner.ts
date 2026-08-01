@@ -263,75 +263,183 @@ function buildDynamicSuggestions(session: FitCulturalSession) {
 
 export function buildFitCulturalReport(session: FitCulturalSession): string {
   const suggestions = buildDynamicSuggestions(session);
+  const signals = inferSignals(session);
+  const dateStr = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+  const scorePerformance = signals.performance ? 90 : 70;
+  const scoreCollaboration = signals.collaboration ? 92 : 75;
+  const scoreDevelopment = signals.development ? 88 : 65;
+  const scoreInnovation = signals.innovation ? 85 : 60;
+  const scoreOrganization = signals.organization ? 86 : 70;
 
   return `
-<section>
-  <h1 style="font-size:32px; font-weight:800; margin:0 0 20px 0;">Análise de Fit Cultural</h1>
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+  .bar-container {
+    background: #e2e8f0;
+    border-radius: 8px;
+    height: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #0284c7 0%, #06b6d4 100%) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+</style>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">1. Objetivo da análise</h2>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.objetivo ?? "Não informado"))}</p>
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">2. Cultura atual da organização</h2>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.culturaAtual ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">3. Valores que guiam as decisões</h2>
-  <p style="margin:0 0 12px 0;">Os valores compartilhados representam os princípios que orientam decisões, prioridades e escolhas no dia a dia da empresa.</p>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.valoresDecisoes ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">4. Discrepâncias entre cultura declarada e praticada</h2>
-  <p style="margin:0 0 12px 0;">Esta etapa identifica diferenças entre o discurso institucional e os comportamentos realmente vividos na prática.</p>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.discrepancia ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">5. Comportamentos recompensados</h2>
-  <p style="margin:0 0 12px 0;">Os comportamentos recompensados mostram quais atitudes a organização reforça, valoriza e tende a perpetuar culturalmente.</p>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.comportamentosRecompensados ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">6. Evolução cultural desejada</h2>
-  <p style="margin:0 0 12px 0;">Aqui se registra como a cultura deve amadurecer para sustentar estratégia, crescimento e coerência organizacional.</p>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.evolucaoDesejada ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">7. Diferenciais culturais da empresa</h2>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.diferenciaisCulturais ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">8. Propósito organizacional</h2>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.proposito ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">9. Definição de sucesso além do resultado financeiro</h2>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.sucesso ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">10. Comportamentos inaceitáveis</h2>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.comportamentosInaceitaveis ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">11. Papel da liderança na cultura</h2>
-  <p style="margin:0 0 20px 0;">${escapeHtml(normalizeSentence(session.lideranca ?? "Não informado"))}</p>
-
-  <h2 style="font-size:22px; font-weight:700; margin:20px 0 12px 0;">12. Sugestões de Missão, Visão e Valores</h2>
-  <p style="margin:0 0 16px 0;">
-    Com base no padrão das respostas fornecidas, o sistema gerou três direções estratégicas possíveis para estruturar ou evoluir a identidade cultural da empresa.
-  </p>
-
-  ${suggestions.map((s, i) => `
-    <div style="margin:0 0 20px 0; padding:16px; border:1px solid #e5e7eb; border-radius:8px;">
-      <p style="margin:0 0 10px 0;"><strong>Opção ${i + 1}</strong></p>
-
-      <p style="margin:0 0 8px 0;"><strong>Missão:</strong></p>
-      <p style="margin:0 0 12px 0;">${escapeHtml(s.mission)}</p>
-
-      <p style="margin:0 0 8px 0;"><strong>Visão:</strong></p>
-      <p style="margin:0 0 12px 0;">${escapeHtml(s.vision)}</p>
-
-      <p style="margin:0 0 8px 0;"><strong>Valores:</strong></p>
-      <p style="margin:0 0 12px 0;">${escapeHtml(s.values)}</p>
-
-      <p style="margin:0 0 8px 0;"><strong>Por que essa sugestão:</strong></p>
-      <p style="margin:0;">${escapeHtml(s.explanation)}</p>
+  <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Diagnóstico & Identidade Organizacional</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Relatório de Fit Cultural</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Análise Estratégica de Valores & Comportamentos • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: #0284c7 !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      Objetivo: ${escapeHtml(normalizeSentence(session.objetivo ?? "Mapeamento Cultural"))}
     </div>
-  `).join("")}
+  </div>
 
-  <h2 style="font-size:22px; font-weight:700; margin:20px 0 12px 0;">Resumo executivo</h2>
-  <p style="margin:0;">
-    A análise de fit cultural considera o alinhamento entre valores, crenças e comportamentos da organização, buscando compatibilidade com seus valores centrais e não homogeneidade. A leitura deve considerar artefatos, valores compartilhados e pressupostos básicos da cultura, além dos impactos esperados em engajamento, clima e retenção.
-  </p>
+  <!-- INDICADORES / PILARES CULTURAIS MAPEADOS -->
+  <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <h3 style="font-size:14px; font-weight:700; color:#0f172a; margin:0 0 16px 0; text-transform:uppercase; letter-spacing:0.5px;">Pilares Culturais Observados (Intensidade das Evidências)</h3>
+    
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#334155;">
+          <span>Colaboração & Pessoas</span>
+          <span>${scoreCollaboration}%</span>
+        </div>
+        <div class="bar-container"><div class="bar-fill" style="width:${scoreCollaboration}%;"></div></div>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#334155;">
+          <span>Performance & Entregas</span>
+          <span>${scorePerformance}%</span>
+        </div>
+        <div class="bar-container"><div class="bar-fill" style="width:${scorePerformance}%;"></div></div>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#334155;">
+          <span>Desenvolvimento & Aprendizado</span>
+          <span>${scoreDevelopment}%</span>
+        </div>
+        <div class="bar-container"><div class="bar-fill" style="width:${scoreDevelopment}%;"></div></div>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#334155;">
+          <span>Inovação & Adaptabilidade</span>
+          <span>${scoreInnovation}%</span>
+        </div>
+        <div class="bar-container"><div class="bar-fill" style="width:${scoreInnovation}%;"></div></div>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; color:#334155;">
+          <span>Clareza & Estrutura</span>
+          <span>${scoreOrganization}%</span>
+        </div>
+        <div class="bar-container"><div class="bar-fill" style="width:${scoreOrganization}%;"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 1: DIAGNÓSTICO COMPARATIVO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">1. DIAGNÓSTICO E EVOLUÇÃO DA CULTURA</h2>
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:16px; margin-bottom:24px;">
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+      <h3 style="font-size:14px; color:#0f172a; margin:0 0 10px 0; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Cultura Atual Mapeada</h3>
+      <p style="margin:0; color:#334155; line-height:1.6; font-size:14px;">${escapeHtml(normalizeSentence(session.culturaAtual ?? "Não informado"))}</p>
+    </div>
+    <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:20px;">
+      <h3 style="font-size:14px; color:#0284c7; margin:0 0 10px 0; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Evolução Desejada (Visão de Futuro)</h3>
+      <p style="margin:0; color:#0369a1; line-height:1.6; font-size:14px;">${escapeHtml(normalizeSentence(session.evolucaoDesejada ?? "Não informado"))}</p>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 2: VALORES E RECOMPENSAS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. PRINCÍPIOS GUIA E COMPORTAMENTOS RECOMPENSADOS</h2>
+  <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-top:16px; margin-bottom:24px;">
+    <p style="margin:0 0 12px 0; color:#334155; line-height:1.6;"><strong>Valores que guiam decisões:</strong> ${escapeHtml(normalizeSentence(session.valoresDecisoes ?? "Não informado"))}</p>
+    <p style="margin:0 0 12px 0; color:#334155; line-height:1.6;"><strong>Comportamentos recompensados na prática:</strong> ${escapeHtml(normalizeSentence(session.comportamentosRecompensados ?? "Não informado"))}</p>
+    <p style="margin:0; color:#334155; line-height:1.6;"><strong>Discrepâncias identificadas (Discurso vs. Prática):</strong> ${escapeHtml(normalizeSentence(session.discrepancia ?? "Não informado"))}</p>
+  </div>
+
+  <!-- SEÇÃO 3: PROPÓSITO, SUCESSO E LIMITES INEGOCIÁVEIS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. PROPÓSITO, CONCEITO DE SUCESSO E LIMITES CULTURAIS</h2>
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:16px; margin-bottom:24px;">
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+      <h4 style="font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; margin:0 0 8px 0;">Propósito Fundamental</h4>
+      <p style="margin:0; color:#0f172a; font-weight:600; font-size:14px; line-height:1.5;">${escapeHtml(normalizeSentence(session.proposito ?? "Não informado"))}</p>
+    </div>
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+      <h4 style="font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; margin:0 0 8px 0;">Sucesso além dos Números</h4>
+      <p style="margin:0; color:#0f172a; font-weight:600; font-size:14px; line-height:1.5;">${escapeHtml(normalizeSentence(session.sucesso ?? "Não informado"))}</p>
+    </div>
+    <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:12px; padding:18px;">
+      <h4 style="font-size:12px; color:#991b1b; font-weight:700; text-transform:uppercase; margin:0 0 8px 0;">Comportamentos Inaceitáveis</h4>
+      <p style="margin:0; color:#7f1d1d; font-weight:600; font-size:14px; line-height:1.5;">${escapeHtml(normalizeSentence(session.comportamentosInaceitaveis ?? "Não informado"))}</p>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 4: LIDERANÇA E DIFERENCIAIS CULTURAIS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. PAPEL DA LIDERANÇA E DIFERENCIAIS COMPETITIVOS</h2>
+  <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-top:16px; margin-bottom:24px;">
+    <p style="margin:0 0 12px 0; color:#334155; line-height:1.6;"><strong>Papel da liderança no exemplo diário:</strong> ${escapeHtml(normalizeSentence(session.lideranca ?? "Não informado"))}</p>
+    <p style="margin:0; color:#334155; line-height:1.6;"><strong>Diferenciais culturais em relação ao mercado:</strong> ${escapeHtml(normalizeSentence(session.diferenciaisCulturais ?? "Não informado"))}</p>
+  </div>
+
+  <!-- SEÇÃO 5: SUGESTÕES ESTRATÉGICAS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. DIRETRIZES RECOMENDADAS PARA MISSÃO, VISÃO E VALORES</h2>
+  <p style="margin:8px 0 20px 0; color:#64748b; font-size:14px;">Com base nas declarações coletadas, foram estruturadas três propostas estratégicas para consolidar a identidade cultural da empresa:</p>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px; margin-bottom:28px;">
+    ${suggestions.map((s, i) => {
+      const themes = [
+        { bg: "#f0f9ff", border: "#0284c7", badgeBg: "#0284c7", badgeColor: "#ffffff", title: "Opção 1: Alta Performance & Execução" },
+        { bg: "#f0fdf4", border: "#10b981", badgeBg: "#10b981", badgeColor: "#ffffff", title: "Opção 2: Relações Humanas & Aprendizado" },
+        { bg: "#fffbeb", border: "#d97706", badgeBg: "#d97706", badgeColor: "#ffffff", title: "Opção 3: Inovação & Agilidade Cultural" }
+      ];
+      const t = themes[i % 3];
+      return `
+        <div style="background:${t.bg} !important; border:1.5px solid ${t.border} !important; border-radius:14px; padding:20px; display:flex; flex-direction:column; justify-content:space-between; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+          <div>
+            <div style="display:inline-block; background:${t.badgeBg} !important; color:${t.badgeColor} !important; padding:4px 12px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:12px;">
+              ${t.title}
+            </div>
+            
+            <p style="margin:0 0 4px 0; font-size:11px; text-transform:uppercase; font-weight:700; color:#64748b;">Missão Sugerida</p>
+            <p style="margin:0 0 12px 0; font-size:13px; font-weight:600; color:#0f172a; line-height:1.5;">${escapeHtml(s.mission)}</p>
+
+            <p style="margin:0 0 4px 0; font-size:11px; text-transform:uppercase; font-weight:700; color:#64748b;">Visão Sugerida</p>
+            <p style="margin:0 0 12px 0; font-size:13px; font-weight:600; color:#0f172a; line-height:1.5;">${escapeHtml(s.vision)}</p>
+
+            <p style="margin:0 0 4px 0; font-size:11px; text-transform:uppercase; font-weight:700; color:#64748b;">Valores-Chave</p>
+            <p style="margin:0 0 12px 0; font-size:13px; font-weight:700; color:${t.border}; line-height:1.5;">${escapeHtml(s.values)}</p>
+          </div>
+          <div style="border-top:1px solid rgba(0,0,0,0.08); padding-top:10px; margin-top:8px;">
+            <p style="margin:0; font-size:12px; color:#475569; line-height:1.4;"><strong>Racional:</strong> ${escapeHtml(s.explanation)}</p>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  </div>
+
+  <!-- SÍNTESE FINAL -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. SÍNTESE DA ANÁLISE CULTURAL</h2>
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-top:16px;">
+    <p style="margin:0; color:#334155; line-height:1.6; font-size:14px;">
+      O mapeamento de fit cultural evidencia uma organização consciente da importância de alinhar discurso e prática. A transição da cultura atual para a visão de futuro exige reforçar rituais de liderança pelo exemplo, comunicação clara de expectativas e mensuração contínua de indicadores de clima, engajamento e bem-estar, garantindo sustentabilidade ao longo do crescimento da equipe.
+    </p>
+  </div>
 </section>
   `.trim();
 }
