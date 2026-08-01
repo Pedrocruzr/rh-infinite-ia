@@ -114,15 +114,15 @@ const COMMON_PREFIX: FlowQuestion[] = [
   },
   {
     field: "entrevistadores",
-    question: "Quem conduziu a entrevista?",
+    question: "Qual é o nome e o cargo dos entrevistadores que conduziram esta avaliação?",
   },
   {
     field: "validacaoGestor",
-    question: "Qual é o nome do responsável pela Validação (Gestor Direto/Liderança)?",
+    question: "Qual é o nome e o cargo do responsável pela Validação (Gestor Direto/Liderança)?",
   },
   {
     field: "aprovacaoFinalRh",
-    question: "Qual é o nome do responsável pela Aprovação Final (Diretoria/RH)?",
+    question: "Qual é o nome e o cargo do responsável pela Aprovação Final (Diretoria/RH)?",
   },
 ];
 

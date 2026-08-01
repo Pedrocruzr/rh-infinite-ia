@@ -92,14 +92,51 @@ function looksLikeGibberish(value: string): boolean {
 
 function validateAnswer(field: ParecerField, answer: string): string | null {
   const normalized = answer.trim();
+  const normalizedText = normalizeText(normalized);
 
   if (isBlockedAnswer(normalized) || looksLikeGibberish(normalized)) {
     return "Não consegui interpretar sua resposta com segurança. Pode escrever de forma mais clara?";
   }
 
-  if (field === "empresa") {
-    if (normalized.length < 4) {
-      return "Preciso de uma resposta mais completa para seguir com segurança. Pode detalhar melhor?";
+  // Aceitar respostas negativas ou curtas de acompanhamento ("não", "não teve", "N/A", "nenhum", etc.)
+  const shortNegatives = new Set([
+    "nao",
+    "não",
+    "nao teve",
+    "não teve",
+    "nao possui",
+    "não possui",
+    "nenhum",
+    "nenhuma",
+    "sem",
+    "n/a",
+    "nao se aplica",
+    "não se aplica",
+    "nada",
+    "nao informado",
+    "não informado",
+    "nao relata",
+    "não relata",
+    "sem evidencias",
+    "sem evidências",
+    "sem dados",
+    "nao consta",
+    "não consta",
+    "sem indicacao",
+    "sem indicação",
+    "sem referencias",
+    "sem referências",
+    "sem certificacao",
+    "sem certificação",
+  ]);
+
+  if (shortNegatives.has(normalizedText)) {
+    return null;
+  }
+
+  if (field === "empresa" || field === "vaga") {
+    if (normalized.length < 2) {
+      return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
     }
     return null;
   }
@@ -110,23 +147,22 @@ function validateAnswer(field: ParecerField, answer: string): string | null {
     field === "validacaoGestor" ||
     field === "aprovacaoFinalRh"
   ) {
-    const parts = normalized.split(/\s+/).filter(Boolean);
-    if (parts.length < 2) {
-      return "Preciso de uma resposta mais completa para seguir com segurança. Pode detalhar melhor?";
+    if (normalized.length < 2) {
+      return "Preciso de um nome ou nome e cargo válidos para continuar.";
+    }
+    return null;
+  }
+
+  if (field === "formacao") {
+    if (normalized.length < 2) {
+      return "Por favor, informe a formação acadêmica do candidato (ex.: Administração, RH, Engenharia).";
     }
     return null;
   }
 
   if (field === "dataEntrevista") {
-    if (normalized.length < 6) {
-      return "Preciso da data da entrevista de forma mais clara para continuar.";
-    }
-    return null;
-  }
-
-  if (field === "vaga") {
     if (normalized.length < 4) {
-      return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
+      return "Preciso da data da entrevista de forma mais clara para continuar.";
     }
     return null;
   }
@@ -139,8 +175,8 @@ function validateAnswer(field: ParecerField, answer: string): string | null {
       value.includes("aprovado com restrições") ||
       value.includes("reprovado");
 
-    if (!hasStatus || normalized.length < 20) {
-      return "Preciso da recomendação final com status e justificativa técnica. Pode escrever de forma mais completa?";
+    if (!hasStatus || normalized.length < 8) {
+      return "Preciso da recomendação final com status (Aprovado, Aprovado com Restrições ou Reprovado) e uma breve justificativa.";
     }
     return null;
   }
@@ -160,19 +196,13 @@ function validateAnswer(field: ParecerField, answer: string): string | null {
       "troca de colaborador",
     ];
 
-    const normalizedFieldAnswer = normalizeText(normalized);
-
-    if (acceptedShortAnswers.includes(normalizedFieldAnswer)) {
+    if (acceptedShortAnswers.includes(normalizedText) || normalized.length >= 3) {
       return null;
     }
   }
 
-  if (normalized.length < 12) {
-    return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
-  }
-
-  const words = normalized.split(/\s+/).filter(Boolean);
-  if (words.length < 3) {
+  // Aceita qualquer resposta legítima com pelo menos 3 caracteres
+  if (normalized.length < 3) {
     return "Sua resposta ficou curta e ainda não consigo analisar com segurança. Pode detalhar um pouco mais?";
   }
 
