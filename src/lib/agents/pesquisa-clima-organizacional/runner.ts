@@ -847,36 +847,78 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
     return results.slice(0, 10);
   }
 
+  function cleanThemePhrase(line: string): string {
+    let cleaned = String(line ?? "").trim();
+    cleaned = cleaned.replace(/^(\d+[\.\)\-]\s*)+/, "").trim();
+    cleaned = cleaned.replace(/^[\-\•\*\–\—]\s*/, "").trim();
+    cleaned = cleaned.replace(/[\.,;:!\?]+$/, "").trim();
+
+    const ignorePatterns = [
+      /^lideran[cç]a$/i,
+      /^comunica[cç][aã]o$/i,
+      /^reconhecimento(\s+e\s+valoriza[cç][aã]o)?$/i,
+      /^trabalho\s+em\s+equipe$/i,
+      /^condi[cç][oõ]es\s+de\s+trabalho$/i,
+      /^desenvolvimento(\s+e\s+crescimento)?$/i,
+      /^organiza[cç][aã]o(\s+e\s+processos)?$/i,
+      /^engajamento(\s+e\s+pertencimento)?$/i,
+      /^perguntas\s+(abertas|de\s+perfil)$/i,
+      /^escala\s+de\s+resposta$/i,
+      /^orienta[cç][oõ]es\s+de\s+aplica[cç][aã]o$/i,
+      /^como\s+interpretar$/i,
+      /^[0-9]+[.,][0-9]+\s*a\s*[0-9]+[.,][0-9]+\s*:\s*/i,
+      /^objetivo\s*:\s*/i,
+      /^que\s+sugest[aã]o\s+voc[eê]\s+daria/i
+    ];
+
+    if (ignorePatterns.some((p) => p.test(cleaned))) {
+      return "";
+    }
+
+    return cleaned;
+  }
+
+  function cleanThemeList(items: string[]): string[] {
+    const result: string[] = [];
+    for (const item of items) {
+      const c = cleanThemePhrase(item);
+      if (c && c.length >= 5 && !result.includes(c)) {
+        result.push(c);
+      }
+    }
+    return result;
+  }
+
   function findThemeLines() {
     const lines = material
       .split(/\n/)
       .map((line) => line.trim())
       .filter(Boolean);
 
-    const positive = [];
-    const negative = [];
-    const suggestions = [];
+    const positiveRaw: string[] = [];
+    const negativeRaw: string[] = [];
+    const suggestionsRaw: string[] = [];
 
     for (const line of lines) {
-      if (line.length < 10) continue;
+      if (line.length < 8) continue;
 
-      if (/relacionamento|apoio entre colegas|coopera[cç][aã]o|respeito|flexibilidade|ambiente f[ií]sico|orgulho|pertencimento|lideran[cç]a/i.test(line)) {
-        positive.push(line);
+      if (/relacionamento|apoio entre colegas|coopera[cç][aã]o|respeito|flexibilidade|ambiente f[ií]sico|orgulho|pertencimento|respeito nas rela[cç][oõ]es/i.test(line)) {
+        positiveRaw.push(line);
       }
 
-      if (/comunica[cç][aã]o entre [aá]reas|promo[cç][aã]o|reconhecimento|sobrecarga|processos desorganizados|desorganiza[cç][aã]o|ferramentas|feedback|carreira|crescimento|mudan[cç]as|decis[oõ]es/i.test(line)) {
-        negative.push(line);
+      if (/comunica[cç][aã]o entre [aá]reas|promo[cç][aã]o|reconhecimento|sobrecarga|processos desorganizados|desorganiza[cç][aã]o|ferramentas|feedback|carreira|crescimento|mudan[cç]as|decis[oõ]es|crit[eé]rios/i.test(line)) {
+        negativeRaw.push(line);
       }
 
       if (/plano de carreira|alinhamentos inter[aá]reas|ferramentas|feedbacks estruturados|melhoria|sugest[aã]o|trilhas/i.test(line)) {
-        suggestions.push(line);
+        suggestionsRaw.push(line);
       }
     }
 
     return {
-      positive: positive.slice(0, 5),
-      negative: negative.slice(0, 5),
-      suggestions: suggestions.slice(0, 5),
+      positive: cleanThemeList(positiveRaw).slice(0, 5),
+      negative: cleanThemeList(negativeRaw).slice(0, 5),
+      suggestions: cleanThemeList(suggestionsRaw).slice(0, 5),
     };
   }
 
@@ -923,9 +965,9 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
   let summary = "A pesquisa indica um clima moderadamente positivo, com forças importantes na convivência e fragilidades mais concentradas na estrutura de gestão.";
   if (overallAverage !== null) {
     if (overallAverage >= 4.1) {
-      summary = `A pesquisa indica um clima positivo, com média geral de ${fmt(overallAverage)}. Ainda assim, a leitura executiva mostra que o desafio da empresa não é apenas preservar boas relações, mas consolidar maturidade de gestão, previsibilidade e justiça organizacional.`;
+      summary = `A pesquisa aponta um clima organizacional positivo, com média geral de ${fmt(overallAverage)}, sustentado por forte maturidade relacional.`;
     } else if (overallAverage >= 3.1) {
-      summary = `A pesquisa indica um clima moderadamente positivo, com média geral de ${fmt(overallAverage)}. O ambiente não está deteriorado, mas a empresa já apresenta sinais claros de tensão em fatores de reconhecimento, estrutura, integração e crescimento.`;
+      summary = `A pesquisa aponta um clima razoavelmente positivo, com média geral de ${fmt(overallAverage)}, mas com sinais claros de fragilidade em temas estruturais.`;
     } else {
       summary = `A pesquisa indica um clima fragilizado, com média geral de ${fmt(overallAverage)}, exigindo atenção prioritária da liderança para fatores centrais da experiência do colaborador.`;
     }
@@ -941,7 +983,7 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
   }
 
   const quantitativeHtml = dimensionScores.length
-    ? `<ul style="margin:0 0 24px 22px; padding:0;">
+    ? `<ul style="margin:0 0 24px 22px; padding:0; color:#334155; line-height:1.6;">
         ${dimensionScores
           .sort((a, b) => b.score - a.score)
           .map((item) => `<li><strong>${escapeHtml(item.name)}</strong>: ${fmt(item.score)}</li>`)
@@ -950,7 +992,7 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
     : `<p style="margin:0 0 24px 0;">Os resultados quantitativos não estavam estruturados o suficiente para consolidação por dimensão.</p>`;
 
   const strengthsHtml = strengths.length
-    ? `<ul style="margin:0 0 24px 22px; padding:0;">
+    ? `<ul style="margin:0 0 24px 22px; padding:0; color:#334155; line-height:1.6;">
         ${strengths.map((item) => {
           let explanation = "Ativo relevante da experiência do colaborador.";
           if (item.name === "Trabalho em Equipe") explanation = "Indica cooperação, apoio entre colegas e respeito mútuo.";
@@ -968,27 +1010,38 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
         if (item.name === "Comunicação") explanation = "Aponta ruído entre áreas, circulação frágil de informação e desalinhamento.";
         if (item.name === "Desenvolvimento e Crescimento") explanation = "Mostra falta de clareza sobre trilhas de carreira e evolução profissional.";
         if (item.name === "Organização e Processos") explanation = "Indica percepção de improviso, baixa previsibilidade e mudanças mal conduzidas.";
-        return `<p style="margin:0 0 14px 0;"><strong>${escapeHtml(item.name)}</strong> (${fmt(item.score)}) — ${escapeHtml(explanation)}</p>`;
+        return `<p style="margin:0 0 14px 0; color:#334155; line-height:1.6;"><strong>${escapeHtml(item.name)}</strong> (${fmt(item.score)}) — ${escapeHtml(explanation)}</p>`;
       }).join("")
     : `<p style="margin:0 0 24px 0;">As fragilidades não aparecem concentradas em uma única dimensão, mas ainda assim exigem leitura integrada.</p>`;
 
-  const qualitativeSummary = (() => {
-    const parts = [];
-    if (themes.positive.length) {
-      parts.push(`Os aspectos mais valorizados foram ${themes.positive.map((x) => x.toLowerCase()).join(", ")}.`);
+  const qualitativeSummaryHtml = (() => {
+    const pos = themes.positive;
+    const neg = themes.negative;
+    const sug = themes.suggestions;
+
+    if (!pos.length && !neg.length && !sug.length) {
+      return `<p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">As respostas qualitativas reforçam o diagnóstico quantitativo e ajudam a explicar por que certas dimensões se sustentam e outras exigem atenção prioritária.</p>`;
     }
-    if (themes.negative.length) {
-      parts.push(`Os principais pedidos de melhoria se concentraram em ${themes.negative.map((x) => x.toLowerCase()).join(", ")}.`);
-    }
-    if (themes.suggestions.length) {
-      parts.push(`As sugestões mais recorrentes incluíram ${themes.suggestions.map((x) => x.toLowerCase()).join(", ")}.`);
-    }
-    if (blockAnalyses.length) {
-      parts.push(`As análises descritivas por bloco reforçam essa leitura, destacando que ${blockAnalyses.slice(0, 3).join(" ")}`);
-    }
-    return parts.length
-      ? parts.join(" ")
-      : "As respostas qualitativas reforçam o diagnóstico quantitativo e ajudam a explicar por que certas dimensões se sustentam e outras se fragilizam.";
+
+    const posBlock = pos.length
+      ? `<div style="margin-bottom:14px;"><strong style="color:#0f172a; font-size:14px;">Aspectos mais valorizados pelos colaboradores:</strong><ul style="margin:6px 0 0 20px; padding:0; color:#334155; font-size:14px; line-height:1.6;">${pos.map((x) => `<li>${escapeHtml(normalizeSentence(x))}</li>`).join("")}</ul></div>`
+      : "";
+
+    const negBlock = neg.length
+      ? `<div style="margin-bottom:14px;"><strong style="color:#0f172a; font-size:14px;">Principais pontos de melhoria solicitados:</strong><ul style="margin:6px 0 0 20px; padding:0; color:#334155; font-size:14px; line-height:1.6;">${neg.map((x) => `<li>${escapeHtml(normalizeSentence(x))}</li>`).join("")}</ul></div>`
+      : "";
+
+    const sugBlock = sug.length
+      ? `<div><strong style="color:#0f172a; font-size:14px;">Sugestões mais recorrentes da equipe:</strong><ul style="margin:6px 0 0 20px; padding:0; color:#334155; font-size:14px; line-height:1.6;">${sug.map((x) => `<li>${escapeHtml(normalizeSentence(x))}</li>`).join("")}</ul></div>`
+      : "";
+
+    return `
+      <div style="background:#f8fafc !important; border-left:4px solid #0284c7; padding:20px; border-radius:0 12px 12px 0; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+        ${posBlock}
+        ${negBlock}
+        ${sugBlock}
+      </div>
+    `;
   })();
 
   let executiveInterpretation = "O diagnóstico aponta uma organização com bom clima social e maturidade organizacional em desenvolvimento.";
@@ -1035,57 +1088,78 @@ function buildRelatorioExecutivoReport(session: ClimaSession) {
       text: "Definir prioridades, responsáveis, prazo e indicadores para que o diagnóstico gere ação concreta.",
     }
   ]).map((item, index) => `
-    <p style="margin:0 0 14px 0;"><strong>${index + 1}. ${escapeHtml(item.title)}</strong><br />${escapeHtml(item.text)}</p>
+    <p style="margin:0 0 14px 0; color:#334155; line-height:1.6;"><strong>${index + 1}. ${escapeHtml(item.title)}</strong><br />${escapeHtml(item.text)}</p>
   `).join("");
 
   const criticalItemsHtml = criticalItems.length
-    ? `<p style="margin:0 0 24px 0;">Os itens mais sensíveis da pesquisa foram: ${criticalItems.map((item) => `${escapeHtml(item.label)}: ${fmt(item.score)}`).join("; ")}.</p>`
-    : `<p style="margin:0 0 24px 0;">Os itens críticos mais baixos devem ser identificados e acompanhados, porque costumam revelar o ponto de maior frustração do colaborador.</p>`;
+    ? `<p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">Os itens mais sensíveis da pesquisa foram: ${criticalItems.map((item) => `${escapeHtml(item.label)}: ${fmt(item.score)}`).join("; ")}.</p>`
+    : `<p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">Os itens críticos mais baixos devem ser identificados e acompanhados, porque costumam revelar o ponto de maior frustração do colaborador.</p>`;
+
+  const dateStr = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
   return `
-<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
-  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">RELATÓRIO EXECUTIVO — PESQUISA DE CLIMA ORGANIZACIONAL</h1>
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+</style>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Objetivo</h2>
-  <p style="margin:0 0 24px 0;">Avaliar a percepção dos colaboradores sobre o ambiente de trabalho, identificar pontos fortes e fragilidades do clima organizacional e orientar prioridades de ação para a liderança.${companySize ? ` O levantamento considerou ${companySize} colaboradores.` : ""}</p>
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Resumo executivo</h2>
-  <p style="margin:0 0 8px 0;">${escapeHtml(summary)}</p>
-  <p style="margin:0 0 24px 0;">${escapeHtml(integratedReading)}</p>
+  <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Relatório Executivo — Pesquisa de Clima Organizacional</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Diagnóstico de Clima Organizacional</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Mapeamento Integrado de Clima • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: #0284c7 !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      Relatório de Clima & Engajamento
+    </div>
+  </div>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">3. Perfil da amostra</h2>
-  <p style="margin:0 0 8px 0;">Participaram ${companySize ?? "os"} colaboradores analisados no material enviado.</p>
-  ${areas.length ? `<p style="margin:0 0 8px 0;"><strong>Áreas:</strong> ${escapeHtml(areas.join(" | "))}</p>` : ""}
-  ${tenure.length ? `<p style="margin:0 0 8px 0;"><strong>Tempo de empresa:</strong> ${escapeHtml(tenure.join(" | "))}</p>` : ""}
-  ${levels.length ? `<p style="margin:0 0 24px 0;"><strong>Níveis:</strong> ${escapeHtml(levels.join(" | "))}</p>` : `<p style="margin:0 0 24px 0;">A distribuição da amostra mostra presença de diferentes grupos organizacionais, o que amplia a utilidade do diagnóstico para leitura mais abrangente.</p>`}
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">1. Objetivo</h2>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">Avaliar a percepção dos colaboradores sobre o ambiente de trabalho, identificar pontos fortes e fragilidades do clima organizacional e orientar prioridades de ação para a liderança.${companySize ? ` O levantamento considerou ${companySize} colaboradores.` : ""}</p>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">4. Principais resultados quantitativos</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. Resumo executivo</h2>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;">${escapeHtml(summary)}</p>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">${escapeHtml(integratedReading)}</p>
+
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. Perfil da amostra</h2>
+  <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;">Participaram ${companySize ?? "os"} colaboradores analisados no material enviado.</p>
+  ${areas.length ? `<p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Áreas:</strong> ${escapeHtml(areas.join(" | "))}</p>` : ""}
+  ${tenure.length ? `<p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Tempo de empresa:</strong> ${escapeHtml(tenure.join(" | "))}</p>` : ""}
+  ${levels.length ? `<p style="margin:0 0 24px 0; color:#334155; line-height:1.6;"><strong>Níveis:</strong> ${escapeHtml(levels.join(" | "))}</p>` : `<p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">A distribuição da amostra mostra presença de diferentes grupos organizacionais, o que amplia a utilidade do diagnóstico para leitura mais abrangente.</p>`}
+
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. Principais resultados quantitativos</h2>
   ${quantitativeHtml}
   ${criticalItemsHtml}
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">5. Principais pontos fortes</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. Principais pontos fortes</h2>
   ${strengthsHtml}
 
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">6. Principais fragilidades</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. Principais fragilidades</h2>
   ${weaknessesHtml}
 
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">7. Síntese das respostas qualitativas</h2>
-  <p style="margin:0 0 24px 0;">${escapeHtml(qualitativeSummary)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">7. Síntese das respostas qualitativas</h2>
+  ${qualitativeSummaryHtml}
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">8. Interpretação executiva</h2>
-  <p style="margin:0 0 24px 0;">${escapeHtml(executiveInterpretation)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">8. Interpretação executiva</h2>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">${escapeHtml(executiveInterpretation)}</p>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">9. Riscos organizacionais</h2>
-  <p style="margin:0 0 24px 0;">${escapeHtml(riskText)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">9. Riscos organizacionais</h2>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">${escapeHtml(riskText)}</p>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">10. Prioridades estratégicas recomendadas</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">10. Prioridades estratégicas recomendadas</h2>
   ${prioritiesHtml}
 
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">11. Conclusão</h2>
-  <p style="margin:0 0 24px 0;">A empresa possui um ativo valioso: ${escapeHtml(strongestDimension ? strongestDimension.name.toLowerCase() : "relações saudáveis, cooperação interna e senso de pertencimento")}. Isso cria uma base favorável para evolução. O próximo passo não é apenas preservar esse clima positivo, mas transformá-lo em uma experiência mais estruturada, justa e previsível. O diagnóstico mostra que o clima não está fragilizado nas relações humanas; ele está pedindo amadurecimento de gestão.</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">11. Conclusão</h2>
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">A empresa possui um ativo valioso: ${escapeHtml(strongestDimension ? strongestDimension.name.toLowerCase() : "relações saudáveis, cooperação interna e senso de pertencimento")}. Isso cria uma base favorável para evolução. O próximo passo não é apenas preservar esse clima positivo, mas transformá-lo em uma experiência mais estruturada, justa e previsível. O diagnóstico mostra que o clima não está fragilizado nas relações humanas; ele está pedindo amadurecimento de gestão.</p>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">12. Encaminhamento sugerido</h2>
-  <p style="margin:0 0 0 0;">Como desdobramento deste relatório, recomenda-se apresentar à liderança um plano de ação com responsáveis, prazo e indicadores de acompanhamento, priorizando as frentes mais críticas identificadas neste diagnóstico. O valor do relatório está justamente em transformar leitura executiva em decisão prática.</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">12. Encaminhamento sugerido</h2>
+  <p style="margin:0 0 0 0; color:#334155; line-height:1.6;">Como desdobramento deste relatório, recomenda-se apresentar à liderança um plano de ação com responsáveis, prazo e indicadores de acompanhamento, priorizando as frentes mais críticas identificadas neste diagnóstico. O valor do relatório está justamente em transformar leitura executiva em decisão prática.</p>
 </section>
 `;
 }
