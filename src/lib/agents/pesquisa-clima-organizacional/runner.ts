@@ -1375,23 +1375,37 @@ function buildPlanoAcaoReport(session: ClimaSession) {
   const fronts = detectFronts();
   const preservePoints = detectPreservePoints();
 
+  const dateStr = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
   const frontsHtml = fronts.map((front, index) => `
-    <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">${index + 1}) ${escapeHtml(front.title)}</h3>
+    <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:20px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+        <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0;">${index + 1}. ${escapeHtml(front.title)}</h3>
+        <span style="background:#e0f2fe !important; color:#0369a1 !important; font-size:12px; font-weight:700; padding:4px 12px; border-radius:12px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Prazo: ${escapeHtml(front.deadline)}</span>
+      </div>
 
-    <p style="margin:0 0 8px 0;"><strong>Por que priorizar:</strong> ${escapeHtml(front.why)}</p>
+      <p style="margin:0 0 14px 0; color:#475569; font-size:13px; line-height:1.6;">
+        <strong style="color:#0f172a;">Por que priorizar:</strong> ${escapeHtml(front.why)}
+      </p>
 
-    <p style="margin:0 0 8px 0;"><strong>Ações:</strong></p>
-    <ul style="margin:0 0 12px 22px; padding:0;">
-      ${front.actions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}
-    </ul>
+      <div style="margin-bottom:14px;">
+        <strong style="color:#0f172a; font-size:13px;">Ações recomendadas:</strong>
+        <ul style="margin:6px 0 0 20px; padding:0; color:#334155; font-size:13px; line-height:1.6;">
+          ${front.actions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}
+        </ul>
+      </div>
 
-    <p style="margin:0 0 6px 0;"><strong>Responsáveis:</strong> ${escapeHtml(front.owners)}</p>
-    <p style="margin:0 0 6px 0;"><strong>Prazo sugerido:</strong> ${escapeHtml(front.deadline)}</p>
+      <div style="margin-bottom:14px;">
+        <strong style="color:#0f172a; font-size:13px;">Indicadores de acompanhamento:</strong>
+        <ul style="margin:6px 0 0 20px; padding:0; color:#334155; font-size:13px; line-height:1.6;">
+          ${front.indicators.map((indicator) => `<li>${escapeHtml(indicator)}</li>`).join("")}
+        </ul>
+      </div>
 
-    <p style="margin:0 0 8px 0;"><strong>Indicadores de acompanhamento:</strong></p>
-    <ul style="margin:0 0 12px 22px; padding:0;">
-      ${front.indicators.map((indicator) => `<li>${escapeHtml(indicator)}</li>`).join("")}
-    </ul>
+      <p style="margin:0; font-size:13px; color:#64748b;">
+        <strong style="color:#0f172a;">Responsáveis:</strong> ${escapeHtml(front.owners)}
+      </p>
+    </div>
   `).join("");
 
   const first30 = [
@@ -1422,36 +1436,68 @@ function buildPlanoAcaoReport(session: ClimaSession) {
   })();
 
   return `
-<section style="background:#ffffff;border-radius:12px;padding:32px;color:#374151;margin-bottom:24px;">
-  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">PLANO DE AÇÃO SUGERIDO</h1>
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+</style>
 
-  <p style="margin:0 0 24px 0;">Com base nos achados enviados, eu sugeriria um plano de ação em frentes prioritárias, com execução em até 90 dias. A lógica é simples: atacar primeiro os temas que mais fragilizam percepção de justiça, clareza, integração e previsibilidade, sem perder o que hoje sustenta o clima.</p>
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">Plano de ação sugerido</h2>
+  <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Plano de Ação Estratégico — Pesquisa de Clima</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Plano de Ação de Clima Organizacional</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Plano de Implementação em 90 dias • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: #0284c7 !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      Estratégia & Execução de RH
+    </div>
+  </div>
+
+  <p style="margin:0 0 24px 0; color:#334155; line-height:1.6;">Com base nos achados enviados, estruturamos um plano de ação em frentes prioritárias, com execução em até 90 dias. A lógica é simples: atacar primeiro os temas que mais fragilizam percepção de justiça, clareza, integração e previsibilidade, sem perder os ativos que hoje sustentam o clima.</p>
+
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Plano de Ação Estruturado</h2>
   ${frontsHtml}
 
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">O que preservar</h2>
-  <p style="margin:0 0 24px 0;">O plano não deve focar só nas dores. Também é importante preservar ${escapeHtml(preservePoints.join("; "))}, porque esses elementos funcionam como ativos relevantes do clima. Melhorar a estrutura não pode destruir o que já funciona bem na experiência humana.</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">O que preservar</h2>
+  <div style="background:#f0fdf4 !important; border:1px solid #bbf7d0; border-radius:12px; padding:18px; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="margin:0; color:#166534; font-size:14px; line-height:1.6;">
+      O plano não deve focar só nas dores. Também é importante preservar <strong>${escapeHtml(preservePoints.join("; "))}</strong>, porque esses elementos funcionam como ativos relevantes do clima. Melhorar a estrutura não pode destruir o que já funciona bem na experiência humana.
+    </p>
+  </div>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">Sequência prática de 90 dias</h2>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Sequência prática de 90 dias</h2>
+  <div style="display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:240px; background:#f0f9ff !important; border:1px solid #bae6fd; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <h3 style="font-size:14px; font-weight:700; color:#0369a1; margin:0 0 10px 0;">Primeiros 30 dias (Fase 1)</h3>
+      <ul style="margin:0; padding-left:18px; font-size:13px; color:#0369a1; line-height:1.6;">
+        ${first30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
 
-  <h3 style="font-size:20px; font-weight:700; margin:18px 0 8px 0;">Primeiros 30 dias</h3>
-  <ul style="margin:0 0 16px 22px; padding:0;">
-    ${first30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
-  </ul>
+    <div style="flex:1; min-width:240px; background:#fffbeb !important; border:1px solid #fde68a; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <h3 style="font-size:14px; font-weight:700; color:#92400e; margin:0 0 10px 0;">De 31 a 60 dias (Fase 2)</h3>
+      <ul style="margin:0; padding-left:18px; font-size:13px; color:#b45309; line-height:1.6;">
+        ${next30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
 
-  <h3 style="font-size:20px; font-weight:700; margin:18px 0 8px 0;">De 31 a 60 dias</h3>
-  <ul style="margin:0 0 16px 22px; padding:0;">
-    ${next30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
-  </ul>
+    <div style="flex:1; min-width:240px; background:#f0fdf4 !important; border:1px solid #bbf7d0; border-radius:12px; padding:18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <h3 style="font-size:14px; font-weight:700; color:#166534; margin:0 0 10px 0;">De 61 a 90 dias (Fase 3)</h3>
+      <ul style="margin:0; padding-left:18px; font-size:13px; color:#15803d; line-height:1.6;">
+        ${last30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+      </ul>
+    </div>
+  </div>
 
-  <h3 style="font-size:20px; font-weight:700; margin:18px 0 8px 0;">De 61 a 90 dias</h3>
-  <ul style="margin:0 0 24px 22px; padding:0;">
-    ${last30.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
-  </ul>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">Síntese executiva</h2>
-  <p style="margin:0 0 0 0;">${escapeHtml(summary)}</p>
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">Síntese executiva</h2>
+  <div style="background:#f8fafc !important; border-left:4px solid #0284c7; padding:18px; border-radius:0 12px 12px 0; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="margin:0; color:#334155; font-size:14px; line-height:1.6;">${escapeHtml(summary)}</p>
+  </div>
 </section>
 `;
 }
