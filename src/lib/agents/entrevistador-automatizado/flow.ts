@@ -123,10 +123,24 @@ export const ENTREVISTADOR_AUTOMATIZADO_FLOW: FlowStep[] = [
     validate: (value) => validateSemanticText(value, { minWords: 1 }),
   },
   {
+    key: "nivelSenioridade",
+    question: "Qual é o nível de senioridade da vaga (ex.: Júnior, Pleno, Sênior, Gestão ou Direção)?",
+    validate: (value) => validateSemanticText(value, { minWords: 1 }),
+  },
+  {
     key: "competenciasDesejadas",
-    question:
-      "Quais competências comportamentais e organizacionais você deseja avaliar nesta entrevista?",
-    validate: (value) => validateSemanticText(value, { minWords: 2 }),
+    question: "Quais competências comportamentais e organizacionais você deseja avaliar nesta entrevista?",
+    validate: (value) => validateSemanticText(value, { minWords: 1 }),
+  },
+  {
+    key: "principaisDesafios",
+    question: "Quais são os principais desafios práticos, rotinas ou entregas esperadas para esta vaga no dia a dia?",
+    validate: (value) => validateSemanticText(value, { minWords: 1 }),
+  },
+  {
+    key: "estiloCultura",
+    question: "Como você descreveria o ambiente e a cultura da empresa (ex.: dinâmico, focado em metas, estruturado, flexível)?",
+    validate: (value) => validateSemanticText(value, { minWords: 1 }),
   },
 ];
 
