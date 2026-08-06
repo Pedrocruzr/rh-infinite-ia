@@ -468,7 +468,14 @@ export function buildDescricaoCargoCompetenciaReport(
 
   <!-- SEÇÃO 2: COMPETÊNCIAS ORGANIZACIONAIS -->
   <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. COMPETÊNCIAS ORGANIZACIONAIS (CULTURA DA EMPRESA)</h2>
-  <p style="margin:8px 0 16px 0; color:#64748b; font-size:14px;">Competências de grau máximo (5) derivadas da identidade cultural da organização:</p>
+  <p style="margin:8px 0 12px 0; color:#64748b; font-size:14px;">Competências de grau máximo (5) derivadas da identidade cultural da organização:</p>
+  
+  <div style="background:#f0f9ff !important; border-left:4px solid #0284c7 !important; border-radius:8px; padding:16px; margin-bottom:20px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:#0284c7; text-transform:uppercase; letter-spacing:0.5px;">Guia de Avaliação — Por que Grau 5 (Máximo)?</p>
+    <p style="margin:0 0 8px 0; font-size:13px; color:#0369a1; line-height:1.5;">O <strong>Grau 5 (Referência)</strong> indica que estas competências representam a espinha dorsal da cultura da empresa. Não são apenas desejáveis, mas obrigações de conduta para qualquer profissional do time.</p>
+    <p style="margin:0; font-size:13px; color:#0369a1; line-height:1.5;"><strong>Como Avaliar:</strong> Durante o processo seletivo ou avaliação de desempenho, utilize perguntas comportamentais baseadas em acontecimentos passados (técnica STAR). Busque evidências concretas de integridade, respeito e alinhamento ético. Candidatos que não demonstram alinhamento cultural de Grau 5 geram ruído na equipe, independentemente do alto conhecimento técnico.</p>
+  </div>
+
   <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:28px;">
     ${organizacionais
       .map(
@@ -485,6 +492,12 @@ export function buildDescricaoCargoCompetenciaReport(
 
   <!-- SEÇÃO 3: COMPETÊNCIAS TÉCNICAS E COMPORTAMENTAIS -->
   <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. COMPETÊNCIAS TÉCNICAS E COMPORTAMENTAIS</h2>
+  
+  <div style="background:#f8fafc !important; border-left:4px solid #475569 !important; border-radius:8px; padding:16px; margin-top:12px; margin-bottom:16px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;">Guia de Avaliação — Técnicas vs. Comportamentais</p>
+    <p style="margin:0 0 8px 0; font-size:13px; color:#334155; line-height:1.5;"><strong>Competências Técnicas:</strong> Medem o domínio prático em ferramentas, sistemas e processos. Avalie através de testes práticos, amostras de trabalho ou perguntas técnicas objetivas.</p>
+    <p style="margin:0; font-size:13px; color:#334155; line-height:1.5;"><strong>Competências Comportamentais:</strong> Medem atitudes, adaptabilidade, comunicação e gestão de inteligência emocional no dia a dia. Avalie observando a linguagem corporal, postura em situações de simulação e histórico de superação de conflitos.</p>
+  </div>
   
   <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-top:16px; margin-bottom:28px;">
     <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
@@ -518,7 +531,13 @@ export function buildDescricaoCargoCompetenciaReport(
 
   <!-- SEÇÃO 4: REQUISITOS DO CARGO -->
   <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. REQUISITOS E ESCOLARIDADE</h2>
-  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-top:16px; margin-bottom:28px;">
+  
+  <div style="background:#f8fafc !important; border-left:4px solid #64748b !important; border-radius:8px; padding:14px 16px; margin-top:12px; margin-bottom:16px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="margin:0 0 4px 0; font-size:13px; font-weight:700; color:#0f172a;">Como Usar em Triagem & Seleção:</p>
+    <p style="margin:0; font-size:13px; color:#334155; line-height:1.5;">A <strong>Escolaridade Mínima</strong> funciona como filtro eliminatório de triagem. Os <strong>Requisitos Desejáveis</strong> servem para pontuação complementar e ranqueamento de candidatos finalistas, garantindo que profissionais promissores não sejam descartados precocemente por pequenos desvios de formação.</p>
+  </div>
+
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:28px;">
     <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Escolaridade mínima:</strong> ${escapeHtml(normalizeSentence(session.escolaridadeMinima ?? "Não informado").replace(/[.!?]$/, ""))}</p>
     <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Formação desejável:</strong> ${escapeHtml(normalizeSentence(session.formacaoDesejavel ?? "Não informado").replace(/[.!?]$/, ""))}</p>
     <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Experiência desejável:</strong> ${escapeHtml(normalizeSentence(session.experienciaDesejavel ?? "Não informado").replace(/[.!?]$/, ""))}</p>
@@ -530,6 +549,13 @@ export function buildDescricaoCargoCompetenciaReport(
 
   <!-- SEÇÃO 5: MATRIZ DE COMPETÊNCIAS COMPLETA -->
   <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. MATRIZ DE COMPETÊNCIAS DO CARGO</h2>
+  
+  <div style="background:#f0f9ff !important; border-left:4px solid #0284c7 !important; border-radius:8px; padding:16px; margin-top:12px; margin-bottom:20px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size:13px; font-weight:700; color:#0284c7; text-transform:uppercase; margin:0 0 6px 0;">Como Interpretar e Aplicar a Matriz de Proficiência:</p>
+    <p style="font-size:13px; color:#0369a1; margin:0 0 8px 0; line-height:1.5;"><strong>Para Seleção:</strong> Compare a nota observada no candidato durante a avaliação com a nota do <em>Grau Esperado (1 a 5)</em>. Crie um radar de lacunas antes da contratação.</p>
+    <p style="font-size:13px; color:#0369a1; margin:0; line-height:1.5;"><strong>Para Gestão & PDI:</strong> Utilize as competências em que o colaborador estiver abaixo do grau esperado como plano de ação de 90 dias (PDI) para evolução de carreira e feedbacks de desempenho.</p>
+  </div>
+
   <table class="cargo-table">
     <thead>
       <tr>
