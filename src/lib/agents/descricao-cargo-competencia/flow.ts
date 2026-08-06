@@ -455,14 +455,16 @@ function validateField(field: DescricaoCargoField, value: string) {
 
 function isShortLocalBypass(field: string, text: string): boolean {
   const n = text.trim().toLowerCase();
+  if (isValidationLike(n)) return true;
+  if (["proximo", "próximo", "continuar", "prosseguir", "avancar", "avançar", "pronto"].includes(n)) return true;
   if (field === "temAtividadesMapeadas") {
     return isYes(n) || isNo(n);
   }
   if (field === "validacaoAtividadesSugeridas" || field === "validacaoResponsabilidadesGeradas") {
-    return isValidationLike(n);
+    return isValidationLike(n) || ["proximo", "próximo", "continuar", "prosseguir", "avancar", "avançar", "pronto"].includes(n);
   }
-  if (field === "observacoes") {
-    return isNo(n) || n === "não" || n === "nao";
+  if (field === "observacoes" || field === "escolaridadeMinima" || field === "formacaoDesejavel" || field === "experienciaDesejavel" || field === "conhecimentosDesejaveis") {
+    return isNo(n) || n === "não" || n === "nao" || isValidationLike(n);
   }
   return false;
 }
@@ -682,7 +684,7 @@ export async function runDescricaoCargoStep(
   // Check for local shortcuts/bypass first to avoid false positives by the LLM
   const bypass = isShortLocalBypass(currentField, raw);
 
-  if (!bypass) {
+  if (!bypass && isConfusedOrAsking(raw)) {
     // Check if the user is expressing a doubt or asking questions
     const analise = await analisarMensagemUsuarioDescricao(raw, currentField, session);
 

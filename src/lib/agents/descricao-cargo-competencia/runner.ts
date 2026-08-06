@@ -348,6 +348,7 @@ function buildObservation(session: DescricaoCargoSession, tecnicas: { nome: stri
 export function buildDescricaoCargoCompetenciaReport(
   session: DescricaoCargoSession
 ): string {
+  const dateStr = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const tituloCargo = normalizeSentence(session.tituloCargo ?? "Não informado").replace(/[.!?]$/, "");
   const area = normalizeSentence(session.area ?? "Não informada").replace(/[.!?]$/, "");
   const nivelHierarquico = normalizeSentence(session.nivelHierarquico ?? "Não informado").replace(/[.!?]$/, "");
@@ -368,8 +369,6 @@ export function buildDescricaoCargoCompetenciaReport(
     String(session.observacoes ?? "").trim().toLowerCase() === "nao"
       ? ""
       : normalizeSentence(session.observacoes ?? "");
-
-  const topIndicadores = comportamentais.slice(0, 4);
 
   const matrixRows = [
     ...organizacionais.map((item) => ({
@@ -398,142 +397,146 @@ export function buildDescricaoCargoCompetenciaReport(
   ]);
 
   return `
-<section>
-  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">DESCRIÇÃO DE CARGO POR COMPETÊNCIA</h1>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">1. IDENTIFICAÇÃO DO CARGO</h2>
-  <p style="margin:0 0 8px 0;"><strong>Título do cargo:</strong> ${escapeHtml(tituloCargo)}</p>
-  <p style="margin:0 0 8px 0;"><strong>Área:</strong> ${escapeHtml(area)}</p>
-  <p style="margin:0 0 8px 0;"><strong>Nível hierárquico:</strong> ${escapeHtml(nivelHierarquico)}</p>
-  <p style="margin:0 0 8px 0;"><strong>Reporta-se a:</strong> ${escapeHtml(reportaSeA)}</p>
-  <p style="margin:0 0 24px 0;"><strong>Interações principais:</strong> ${escapeHtml(interacoesPrincipais)}</p>
-
-  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">3. RESPONSABILIDADES PRINCIPAIS</h2>
-  <p style="margin:0 0 16px 0;">Abaixo, as responsabilidades no modelo de relatório: <strong>O QUE / COMO / PARA QUE / QUANDO</strong>.</p>
-
-  ${responsabilidades
-    .map(
-      (item, index) => `
-        <div style="margin:0 0 28px 0;">
-          <h3 style="font-size:18px; font-weight:700; margin:0 0 10px 0;">3.${index + 1} ${escapeHtml(normalizeSentence(item.atividade).replace(/[.!?]$/, ""))}</h3>
-          <p style="margin:0 0 8px 0;"><strong>O que:</strong> ${escapeHtml(normalizeSentence(item.oQue ?? "Não informado"))}</p>
-          <p style="margin:0 0 8px 0;"><strong>Como:</strong> ${escapeHtml(normalizeSentence(item.como ?? "Não informado"))}</p>
-          <p style="margin:0 0 8px 0;"><strong>Para que:</strong> ${escapeHtml(normalizeSentence(item.paraQue ?? "Não informado"))}</p>
-          <p style="margin:0 0 0 0;"><strong>Quando:</strong> ${escapeHtml(normalizeSentence(item.quando ?? "Não informado"))}</p>
-        </div>
-      `
-    )
-    .join("")}
-
-  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">4. COMPETÊNCIAS NECESSÁRIAS</h2>
-  <p style="margin:0 0 8px 0;">A estrutura abaixo considera:</p>
-  <ul style="margin:0 0 16px 22px; padding:0;">
-    <li>competências organizacionais derivadas da cultura informada;</li>
-    <li>competências técnicas extraídas das atribuições do cargo;</li>
-    <li>competências comportamentais coerentes com a execução da função.</li>
-  </ul>
-
-  <p style="margin:0 0 8px 0;"><strong>Escala de proficiência</strong></p>
-  <p style="margin:0 0 4px 0;">1 — Básico: conhecimento introdutório ou exposição limitada</p>
-  <p style="margin:0 0 4px 0;">2 — Intermediário: aplicação com apoio ou em situações limitadas</p>
-  <p style="margin:0 0 4px 0;">3 — Avançado: aplicação autônoma em situações recorrentes</p>
-  <p style="margin:0 0 4px 0;">4 — Especialista: domínio completo, orienta outros</p>
-  <p style="margin:0 0 24px 0;">5 — Referência: estabelece padrão, inova e é referência interna</p>
-
-  <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">4.1 Competências organizacionais</h3>
-  <p style="margin:0 0 16px 0;">Estas competências refletem a cultura da empresa e, pela metodologia de mapeamento, têm peso máximo de importância.</p>
-
-  ${organizacionais
-    .map(
-      (item, index) => `
-        <div style="margin:0 0 22px 0;">
-          <p style="margin:0 0 8px 0;"><strong>${index + 1}. ${escapeHtml(item.nome)} — Grau esperado: ${item.grau}</strong></p>
-          <p style="margin:0 0 8px 0;"><strong>Conceito:</strong> ${escapeHtml(organizationalConcept(item.nome))}</p>
-          <p style="margin:0 0 0 0;"><strong>Aplicação no cargo:</strong> ${escapeHtml(organizationalApplication(item.nome, responsabilidades))}</p>
-        </div>
-      `
-    )
-    .join("")}
-
-  <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">4.2 Competências técnicas</h3>
-  ${tecnicas
-    .map(
-      (item, index) => `
-        <div style="margin:0 0 22px 0;">
-          <p style="margin:0 0 8px 0;"><strong>${index + 1}. ${escapeHtml(item.nome)} — Grau esperado: ${item.grau}</strong></p>
-          <p style="margin:0 0 8px 0;"><strong>Descrição:</strong> ${escapeHtml(technicalDescription(item.nome))}</p>
-          <p style="margin:0 0 0 0;"><strong>Por que é importante:</strong> ${escapeHtml(technicalImportance(item.nome, responsabilidades))}</p>
-        </div>
-      `
-    )
-    .join("")}
-
-  <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">4.3 Competências comportamentais</h3>
-  ${comportamentais
-    .map(
-      (item, index) => `
-        <div style="margin:0 0 22px 0;">
-          <p style="margin:0 0 8px 0;"><strong>${index + 1}. ${escapeHtml(item.nome)} — Grau esperado: ${item.grau}</strong></p>
-          <p style="margin:0 0 8px 0;"><strong>Descrição:</strong> ${escapeHtml(behavioralDescription(item.nome))}</p>
-          <p style="margin:0 0 0 0;"><strong>Aplicação no cargo:</strong> ${escapeHtml(behavioralApplication(item.nome, responsabilidades))}</p>
-        </div>
-      `
-    )
-    .join("")}
-
-  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">5. REQUISITOS</h2>
-  <p style="margin:0 0 8px 0;"><strong>Escolaridade mínima:</strong> ${escapeHtml(normalizeSentence(session.escolaridadeMinima ?? "Não informado").replace(/[.!?]$/, ""))}</p>
-  <p style="margin:0 0 8px 0;"><strong>Formação desejável:</strong> ${escapeHtml(normalizeSentence(session.formacaoDesejavel ?? "Não informado").replace(/[.!?]$/, ""))}</p>
-  <p style="margin:0 0 8px 0;"><strong>Experiência desejável:</strong> ${escapeHtml(normalizeSentence(session.experienciaDesejavel ?? "Não informado").replace(/[.!?]$/, ""))}</p>
-  <p style="margin:0 0 8px 0;"><strong>Conhecimentos desejáveis:</strong></p>
-  <ul style="margin:0 0 24px 22px; padding:0;">
-    ${renderList(conhecimentosDesejaveis)}
-  </ul>
-
-  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">6. INDICADORES COMPORTAMENTAIS SUGERIDOS</h2>
-  <p style="margin:0 0 16px 0;">Para tornar a descrição mais aplicável em recrutamento e avaliação, seguem exemplos de indicadores observáveis. A metodologia recomenda indicadores objetivos para reduzir subjetividade.</p>
-
-  ${topIndicadores
-    .map(
-      (item) => `
-        <div style="margin:0 0 20px 0;">
-          <p style="margin:0 0 8px 0;"><strong>${escapeHtml(item.nome)}</strong></p>
-          <ul style="margin:0 0 0 22px; padding:0;">
-            ${renderList(indicatorsForBehavior(item.nome))}
-          </ul>
-        </div>
-      `
-    )
-    .join("")}
-
-  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">7. OBSERVAÇÕES DE ENQUADRAMENTO</h2>
-  <p style="margin:0 0 12px 0;">${escapeHtml(observation)}</p>
-  ${
-    observacaoExtra
-      ? `<p style="margin:0 0 24px 0;">${escapeHtml(observacaoExtra)}</p>`
-      : `<p style="margin:0 0 24px 0;"></p>`
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
   }
+  .cargo-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+  }
+  .cargo-table th, .cargo-table td {
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 13px;
+  }
+  .cargo-table th {
+    background-color: #f8fafc !important;
+    color: #0f172a;
+    font-weight: 700;
+  }
+</style>
 
-  <hr style="margin:0 0 24px 0; border:none; border-top:1px solid #ddd;" />
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">MATRIZ DE COMPETÊNCIAS — ${escapeHtml(tituloCargo.toUpperCase())}</h2>
-  <table style="width:100%; border-collapse:collapse; margin:0 0 24px 0;">
+  <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Engenharia de Cargos & Mapeamento por Competências</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Descrição de Cargo por Competência</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Cargo: ${escapeHtml(tituloCargo)} • Nível: ${escapeHtml(nivelHierarquico)} • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: #0284c7 !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      Documento Oficial de Engenharia de Cargos
+    </div>
+  </div>
+
+  <!-- METADADOS E IDENTIFICAÇÃO DO CARGO -->
+  <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:28px; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Título do Cargo</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(tituloCargo)}</strong></div>
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Área</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(area)}</strong></div>
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Nível Hierárquico</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(nivelHierarquico)}</strong></div>
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Reporta-se a</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(reportaSeA)}</strong></div>
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Interações Principais</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(interacoesPrincipais)}</strong></div>
+  </div>
+
+  <!-- SEÇÃO 1: RESPONSABILIDADES PRINCIPAIS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">1. RESPONSABILIDADES PRINCIPAIS (O QUE / COMO / PARA QUE / QUANDO)</h2>
+  <p style="margin:8px 0 16px 0; color:#64748b; font-size:14px;">Abaixo, a estruturação metodológica das atribuições do cargo:</p>
+
+  <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:28px;">
+    ${responsabilidades
+      .map(
+        (item, index) => `
+          <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+            <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 12px 0;">1.${index + 1} ${escapeHtml(normalizeSentence(item.atividade).replace(/[.!?]$/, ""))}</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:13px; color:#334155;">
+              <div><strong>O que:</strong> ${escapeHtml(normalizeSentence(item.oQue ?? "Não informado"))}</div>
+              <div><strong>Como:</strong> ${escapeHtml(normalizeSentence(item.como ?? "Não informado"))}</div>
+              <div><strong>Para que:</strong> ${escapeHtml(normalizeSentence(item.paraQue ?? "Não informado"))}</div>
+              <div><strong>Quando:</strong> ${escapeHtml(normalizeSentence(item.quando ?? "Não informado"))}</div>
+            </div>
+          </div>
+        `
+      )
+      .join("")}
+  </div>
+
+  <!-- SEÇÃO 2: COMPETÊNCIAS ORGANIZACIONAIS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. COMPETÊNCIAS ORGANIZACIONAIS (CULTURA DA EMPRESA)</h2>
+  <p style="margin:8px 0 16px 0; color:#64748b; font-size:14px;">Competências de grau máximo (5) derivadas da identidade cultural da organização:</p>
+  <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:28px;">
+    ${organizacionais
+      .map(
+        (item, index) => `
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+            <p style="margin:0 0 6px 0; color:#0f172a; font-weight:700; font-size:14px;">${index + 1}. ${escapeHtml(item.nome)} <span style="background:#0284c7; color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px;">Grau ${item.grau} — Referência</span></p>
+            <p style="margin:0 0 4px 0; color:#334155; font-size:13px;"><strong>Conceito:</strong> ${escapeHtml(organizationalConcept(item.nome))}</p>
+            <p style="margin:0; color:#334155; font-size:13px;"><strong>Aplicação no cargo:</strong> ${escapeHtml(organizationalApplication(item.nome, responsabilidades))}</p>
+          </div>
+        `
+      )
+      .join("")}
+  </div>
+
+  <!-- SEÇÃO 3: COMPETÊNCIAS TÉCNICAS E COMPORTAMENTAIS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. COMPETÊNCIAS TÉCNICAS E COMPORTAMENTAIS</h2>
+  
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-top:16px; margin-bottom:28px;">
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+      <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 14px 0; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">Competências Técnicas</h3>
+      ${tecnicas
+        .map(
+          (item) => `
+            <div style="margin-bottom:14px;">
+              <p style="margin:0 0 4px 0; font-size:13px; font-weight:700; color:#0f172a;">${escapeHtml(item.nome)} <span style="color:#64748b; font-weight:500;">(Grau ${item.grau})</span></p>
+              <p style="margin:0; font-size:12px; color:#475569; line-height:1.4;">${escapeHtml(technicalDescription(item.nome))}</p>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+      <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 14px 0; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">Competências Comportamentais</h3>
+      ${comportamentais
+        .map(
+          (item) => `
+            <div style="margin-bottom:14px;">
+              <p style="margin:0 0 4px 0; font-size:13px; font-weight:700; color:#0f172a;">${escapeHtml(item.nome)} <span style="color:#64748b; font-weight:500;">(Grau ${item.grau})</span></p>
+              <p style="margin:0; font-size:12px; color:#475569; line-height:1.4;">${escapeHtml(behavioralDescription(item.nome))}</p>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  </div>
+
+  <!-- SEÇÃO 4: REQUISITOS DO CARGO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. REQUISITOS E ESCOLARIDADE</h2>
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-top:16px; margin-bottom:28px;">
+    <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Escolaridade mínima:</strong> ${escapeHtml(normalizeSentence(session.escolaridadeMinima ?? "Não informado").replace(/[.!?]$/, ""))}</p>
+    <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Formação desejável:</strong> ${escapeHtml(normalizeSentence(session.formacaoDesejavel ?? "Não informado").replace(/[.!?]$/, ""))}</p>
+    <p style="margin:0 0 8px 0; color:#334155; line-height:1.6;"><strong>Experiência desejável:</strong> ${escapeHtml(normalizeSentence(session.experienciaDesejavel ?? "Não informado").replace(/[.!?]$/, ""))}</p>
+    <p style="margin:0 0 6px 0; color:#334155; line-height:1.6;"><strong>Conhecimentos desejáveis:</strong></p>
+    <ul style="margin:0 0 0 20px; padding:0; color:#334155; line-height:1.6;">
+      ${renderList(conhecimentosDesejaveis)}
+    </ul>
+  </div>
+
+  <!-- SEÇÃO 5: MATRIZ DE COMPETÊNCIAS COMPLETA -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. MATRIZ DE COMPETÊNCIAS DO CARGO</h2>
+  <table class="cargo-table">
     <thead>
       <tr>
-        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Competência</th>
-        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Categoria</th>
-        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Grau Esperado (1-5)</th>
-        <th style="text-align:left; border:1px solid #ddd; padding:8px;">Descrição do Nível</th>
+        <th>Competência</th>
+        <th>Categoria</th>
+        <th>Grau Esperado (1-5)</th>
+        <th>Descrição do Nível</th>
       </tr>
     </thead>
     <tbody>
@@ -541,10 +544,10 @@ export function buildDescricaoCargoCompetenciaReport(
         .map(
           (row) => `
             <tr>
-              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(row.competencia)}</td>
-              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(row.categoria)}</td>
-              <td style="border:1px solid #ddd; padding:8px;">${row.grau}</td>
-              <td style="border:1px solid #ddd; padding:8px;">${escapeHtml(row.descricao)}</td>
+              <td><strong>${escapeHtml(row.competencia)}</strong></td>
+              <td>${escapeHtml(row.categoria)}</td>
+              <td><strong>${row.grau}</strong></td>
+              <td>${escapeHtml(row.descricao)}</td>
             </tr>
           `
         )
@@ -552,10 +555,17 @@ export function buildDescricaoCargoCompetenciaReport(
     </tbody>
   </table>
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 12px 0;">Síntese final</h2>
-  <p style="margin:0 0 8px 0;">Para este cargo, as competências mais críticas são:</p>
-  <p style="margin:0 0 16px 0;"><strong>${escapeHtml(sinteseCriticas.join(", "))}.</strong></p>
-  <p style="margin:0 0 0 0;">Essas competências sustentam o sucesso do ${escapeHtml(tituloCargo)} ao combinar alinhamento cultural, capacidade técnica e comportamento consistente na execução da rotina.</p>
+  <!-- SEÇÃO 6: OBSERVAÇÕES E SÍNTESE DE ENQUADRAMENTO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. OBSERVAÇÕES E SÍNTESE DE ENQUADRAMENTO</h2>
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-top:16px;">
+    <p style="margin:0 0 10px 0; color:#334155; line-height:1.6; font-size:14px;">${escapeHtml(observation)}</p>
+    ${
+      observacaoExtra
+        ? `<p style="margin:0 0 10px 0; color:#334155; line-height:1.6; font-size:14px;">${escapeHtml(observacaoExtra)}</p>`
+        : ""
+    }
+    <p style="margin:0; color:#0f172a; font-weight:700; font-size:14px;">Competências Críticas do Cargo: ${escapeHtml(sinteseCriticas.join(", "))}.</p>
+  </div>
 </section>
-`;
+  `.trim();
 }
