@@ -51,13 +51,24 @@ function classificacaoMeta(pct: number) {
   return "Abaixo da meta";
 }
 
-function statusByPct(pct: number) {
-  if (pct >= 100) return "Bom";
-  if (pct >= 80) return "Bom";
-  return "Atenção";
+function statusBadge(classe: string) {
+  if (classe === "Acima da meta" || classe === "Na meta") {
+    return `<span style="display:inline-block; background:#dcfce7 !important; color:#166534 !important; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${esc(classe)}</span>`;
+  }
+  if (classe === "Próximo da meta") {
+    return `<span style="display:inline-block; background:#e0f2fe !important; color:#0369a1 !important; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${esc(classe)}</span>`;
+  }
+  return `<span style="display:inline-block; background:#fee2e2 !important; color:#991b1b !important; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">${esc(classe)}</span>`;
+}
+
+function statusColor(pct: number) {
+  if (pct >= 95) return "#10b981";
+  if (pct >= 80) return "#0284c7";
+  return "#f59e0b";
 }
 
 export function buildProdutividadeColaboradorReport(rawAnswers: Session) {
+  const dateStr = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const nomeColaborador = String(rawAnswers.nomeColaborador ?? "Não informado");
   const cargo = String(rawAnswers.cargo ?? "Não informado");
   const setor = String(rawAnswers.setor ?? "Não informado");
@@ -109,172 +120,312 @@ export function buildProdutividadeColaboradorReport(rawAnswers: Session) {
       ? `A área apresenta receita direta atribuível. O retorno financeiro estimado é de ${round2(retornoFinanceiro)}x sobre o custo do colaborador.`
       : `A área não apresenta receita direta atribuível. A análise financeira deve considerar valor agregado indireto, como qualidade, redução de retrabalho, eficiência e experiência do cliente.`;
 
-  return `
-<section>
-  <h1>Modelo de Relatório de Taxa de Produtividade por Colaborador</h1>
+  const barWidth = Math.min(100, Math.max(5, Math.round(atingMeta)));
+  const barColor = statusColor(atingMeta);
 
-  <h2>1. Resumo Executivo</h2>
-  <table>
+  return `
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+  .prod-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+  }
+  .prod-table th, .prod-table td {
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 13px;
+  }
+  .prod-table th {
+    background-color: #f8fafc !important;
+    color: #0f172a;
+    font-weight: 700;
+  }
+</style>
+
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+
+  <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Auditoria de Performance & Produtividade</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Relatório de Taxa de Produtividade</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Colaborador: <strong style="color:#ffffff !important;">${esc(nomeColaborador)}</strong> • Cargo: ${esc(cargo)} (${esc(setor)}) • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: #0284c7 !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      Diagnóstico Executivo de Eficiência Operacional
+    </div>
+  </div>
+
+  <!-- CARDS DE METRICAS PRINCIPAIS (KPIS) -->
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:28px;">
+    <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:18px; text-align:center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">Taxa de Produtividade</span>
+      <strong style="color:#0f172a; font-size:22px; display:block;">${esc(round2(produtividade))}</strong>
+      <span style="font-size:12px; color:#64748b;">${esc(unidade)}</span>
+    </div>
+
+    <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:18px; text-align:center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">Atingimento da Meta</span>
+      <strong style="color:${barColor}; font-size:22px; display:block;">${esc(round2(atingMeta))}%</strong>
+      <div style="background:#e2e8f0; border-radius:6px; height:6px; width:100%; margin-top:8px; overflow:hidden;">
+        <div style="background:${barColor} !important; height:100%; width:${barWidth}%; border-radius:6px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;"></div>
+      </div>
+    </div>
+
+    <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:18px; text-align:center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">Classificação Geral</span>
+      <div style="margin-top:6px;">
+        ${statusBadge(classeMeta)}
+      </div>
+      <span style="font-size:12px; color:#64748b; display:block; margin-top:6px;">${esc(entregas)} de ${esc(metaEsperada)} entregas</span>
+    </div>
+
+    <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:18px; text-align:center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      <span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block; margin-bottom:6px;">Retorno Financeiro (ROI)</span>
+      <strong style="color:#0f172a; font-size:22px; display:block;">${receitaGerada > 0 ? esc(round2(retornoFinanceiro) + "x") : "Indireto"}</strong>
+      <span style="font-size:12px; color:#64748b;">${receitaGerada > 0 ? "Receita / Custo" : "Valor agregado à área"}</span>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 1: RESUMO EXECUTIVO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">1. RESUMO EXECUTIVO</h2>
+  <table class="prod-table">
     <tbody>
-      <tr><td><strong>Colaborador(a)</strong></td><td>${esc(nomeColaborador)}</td></tr>
-      <tr><td><strong>Cargo</strong></td><td>${esc(cargo)}</td></tr>
-      <tr><td><strong>Área / Setor</strong></td><td>${esc(setor)}</td></tr>
-      <tr><td><strong>Período de análise</strong></td><td>${esc(periodo)}</td></tr>
-      <tr><td><strong>Gestor(a) responsável</strong></td><td>Não informado na coleta</td></tr>
-      <tr><td><strong>Classificação geral</strong></td><td>${esc(statusByPct(atingMeta))}</td></tr>
+      <tr><td style="width:240px; font-weight:600; background:#f8fafc;">Colaborador(a)</td><td><strong>${esc(nomeColaborador)}</strong></td></tr>
+      <tr><td style="font-weight:600; background:#f8fafc;">Cargo</td><td>${esc(cargo)}</td></tr>
+      <tr><td style="font-weight:600; background:#f8fafc;">Área / Setor</td><td>${esc(setor)}</td></tr>
+      <tr><td style="font-weight:600; background:#f8fafc;">Período de Análise</td><td>${esc(periodo)}</td></tr>
+      <tr><td style="font-weight:600; background:#f8fafc;">Indicador Principal</td><td>${esc(tipoIndicador)} (${esc(unidade)})</td></tr>
+      <tr><td style="font-weight:600; background:#f8fafc;">Classificação Geral</td><td>${statusBadge(classeMeta)}</td></tr>
     </tbody>
   </table>
 
-  <h2>2. Produtividade – Indicadores Objetivos</h2>
-  <table>
+  <!-- SEÇÃO 2: PRODUTIVIDADE - INDICADORES OBJETIVOS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. PRODUTIVIDADE – INDICADORES OBJETIVOS</h2>
+  <table class="prod-table">
     <thead>
       <tr>
         <th>Indicador</th>
-        <th>Valor</th>
+        <th>Realizado</th>
         <th>Meta</th>
         <th>Atingimento</th>
         <th>Status</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>Horas trabalhadas</td><td>${esc(horasTrabalhadas)}</td><td>${esc(horasTrabalhadas)}</td><td>100%</td><td>OK</td></tr>
-      <tr><td>Volume realizado</td><td>${esc(entregas)}</td><td>${esc(metaEsperada)}</td><td>${esc(round2(atingMeta))}%</td><td>${esc(classeMeta)}</td></tr>
-      <tr><td>Qualidade / Acurácia</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado</td></tr>
-      <tr><td>Prazo / Eficiência</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado na coleta</td><td>Não informado</td></tr>
-      <tr><td>Produtividade (${esc(unidade)})</td><td>${esc(round2(produtividade))}</td><td>${esc(round2(metaProdutividade))}</td><td>${esc(round2(atingProd))}%</td><td>${esc(classeMeta)}</td></tr>
+      <tr>
+        <td><strong>Horas Trabalhadas</strong></td>
+        <td>${esc(horasTrabalhadas)}h</td>
+        <td>${esc(horasTrabalhadas)}h</td>
+        <td>100%</td>
+        <td><span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700;">OK</span></td>
+      </tr>
+      <tr>
+        <td><strong>Volume Realizado (Entregas)</strong></td>
+        <td>${esc(entregas)}</td>
+        <td>${esc(metaEsperada)}</td>
+        <td>${esc(round2(atingMeta))}%</td>
+        <td>${statusBadge(classeMeta)}</td>
+      </tr>
+      <tr>
+        <td><strong>Taxa de Produtividade</strong></td>
+        <td>${esc(round2(produtividade))} ${esc(unidade)}</td>
+        <td>${esc(round2(metaProdutividade))} ${esc(unidade)}</td>
+        <td>${esc(round2(atingProd))}%</td>
+        <td>${statusBadge(classeMeta)}</td>
+      </tr>
     </tbody>
   </table>
 
-  <h2>3. Cálculo de Produtividade Detalhado</h2>
-  <table>
+  <!-- SEÇÃO 3: CÁLCULO DE PRODUTIVIDADE DETALHADO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. CÁLCULO DE PRODUTIVIDADE DETALHADO</h2>
+  <table class="prod-table">
     <thead>
       <tr>
-        <th>Item</th>
+        <th>Variável</th>
+        <th>Valor Registrado</th>
+        <th>Fórmula / Memória de Cálculo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Horas Trabalhadas no Período</td><td>${esc(horasTrabalhadas)} horas</td><td>Total de horas ativas apuradas no período</td></tr>
+      <tr><td>Entregas Realizadas</td><td>${esc(entregas)} unidades</td><td>Total de entregas concluídas</td></tr>
+      <tr><td>Taxa de Produtividade Bruta</td><td><strong>${esc(round2(produtividade))} ${esc(unidade)}</strong></td><td>${esc(entregas)} entregas ÷ ${esc(horasTrabalhadas)} horas</td></tr>
+      <tr><td>Meta de Produtividade Esperada</td><td>${esc(round2(metaProdutividade))} ${esc(unidade)}</td><td>${esc(metaEsperada)} meta total ÷ ${esc(horasTrabalhadas)} horas</td></tr>
+      <tr><td>Percentual de Atingimento</td><td><strong>${esc(round2(atingMeta))}%</strong></td><td>(${esc(entregas)} ÷ ${esc(metaEsperada)}) × 100</td></tr>
+      <tr><td>Classificação Final</td><td>${statusBadge(classeMeta)}</td><td>Faixa de enquadramento metodológico</td></tr>
+    </tbody>
+  </table>
+
+  <div style="background:#f8fafc !important; border-left:4px solid #0284c7 !important; border-radius:8px; padding:16px; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="margin:0 0 4px 0; font-size:13px; font-weight:700; color:#0f172a;">Leitura do Cálculo de Desempenho:</p>
+    <p style="margin:0; font-size:13px; color:#334155; line-height:1.5;">${esc(leituraCalculo)}</p>
+  </div>
+
+  <!-- SEÇÃO 4: ANÁLISE FINANCEIRA -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. ANÁLISE FINANCEIRA (CUSTO X RETORNO)</h2>
+  <table class="prod-table">
+    <thead>
+      <tr>
+        <th>Item Financeiro</th>
         <th>Valor</th>
-        <th>Cálculo</th>
+        <th>Critério / Aplicação</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>Horas trabalhadas no período</td><td>${esc(horasTrabalhadas)}</td><td>Total de horas registradas</td></tr>
-      <tr><td>Entregas realizadas</td><td>${esc(entregas)}</td><td>Total de unidades produzidas no período</td></tr>
-      <tr><td>Taxa de produtividade bruta</td><td>${esc(round2(produtividade))}</td><td>${esc(entregas)} ÷ ${esc(horasTrabalhadas)} = ${esc(round2(produtividade))}</td></tr>
-      <tr><td>Unidade de medida</td><td>${esc(unidade)}</td><td>Conforme natureza da função</td></tr>
-      <tr><td>Meta de produtividade esperada</td><td>${esc(round2(metaProdutividade))}</td><td>Meta total ÷ horas trabalhadas</td></tr>
-      <tr><td>Percentual de atingimento da meta</td><td>${esc(round2(atingMeta))}%</td><td>(${esc(entregas)} ÷ ${esc(metaEsperada)}) × 100 = ${esc(round2(atingMeta))}%</td></tr>
-      <tr><td>Classificação</td><td>${esc(classeMeta)}</td><td>Conforme faixa de atingimento</td></tr>
-    </tbody>
-  </table>
-  <p><strong>Leitura do cálculo:</strong></p>
-  <p>${esc(leituraCalculo)}</p>
-
-  <h2>4. Análise Financeira</h2>
-  <table>
-    <thead>
       <tr>
-        <th>Item</th>
-        <th>Valor</th>
-        <th>Cálculo / Observação</th>
+        <td><strong>Receita Gerada pelo Colaborador</strong></td>
+        <td><strong>${esc(money(receitaGerada))}</strong></td>
+        <td>${receitaGerada > 0 ? "Receita direta gerada no período" : "Área de suporte/atendimento (sem receita direta atribuída)"}</td>
       </tr>
-    </thead>
-    <tbody>
-      <tr><td>Receita gerada pelo colaborador</td><td>${esc(money(receitaGerada))}</td><td>${receitaGerada > 0 ? "Receita direta atribuída ao colaborador" : "Área sem receita direta atribuída"}</td></tr>
-      <tr><td>Custo total do colaborador</td><td>${esc(money(custoColaborador))}</td><td>Valor informado na coleta</td></tr>
-      <tr><td>Retorno financeiro (ROI)</td><td>${receitaGerada > 0 ? esc(round2(retornoFinanceiro) + "x") : "Não se aplica"}</td><td>${receitaGerada > 0 ? "Receita ÷ custo do colaborador" : "Área de suporte e relacionamento"}</td></tr>
-      <tr><td>Valor agregado identificado</td><td>${receitaGerada > 0 ? "Direto" : "Indireto"}</td><td>Considerar qualidade, eficiência, satisfação e redução de retrabalho</td></tr>
-    </tbody>
-  </table>
-  <p><strong>Análise complementar:</strong></p>
-  <p>${esc(analiseFinanceira)}</p>
-
-  <h2>5. Clima e Contexto – Indicadores Subjetivos</h2>
-  <p><strong>Contexto informado:</strong> ${esc(observacoes)}</p>
-  <p><strong>Análise contextual:</strong></p>
-  <p>${esc(contextAnalysis)}</p>
-  <p><strong>Pontos de atenção para RH e liderança:</strong></p>
-  <ul>
-    <li>Verificar se o contexto informado impacta diretamente o ritmo, a qualidade ou a consistência das entregas.</li>
-    <li>Evitar leitura isolada da produtividade sem considerar o cenário operacional do período.</li>
-    <li>Confirmar com a liderança imediata se houve impacto temporário, estrutural ou recorrente.</li>
-    <li>Usar esse dado como base para suporte, desenvolvimento e ajuste de processo.</li>
-  </ul>
-
-  <h2>6. Comparação com Meta e Referências</h2>
-  <table>
-    <thead>
       <tr>
-        <th>Critério</th>
-        <th>Resultado</th>
-        <th>Referência</th>
-        <th>Análise</th>
+        <td><strong>Custo Total do Colaborador</strong></td>
+        <td>${esc(money(custoColaborador))}</td>
+        <td>Salário, encargos e benefícios no período apurado</td>
       </tr>
-    </thead>
-    <tbody>
-      <tr><td>Meta de volume</td><td>${esc(round2(atingMeta))}%</td><td>Meta: ${esc(metaEsperada)} unidades</td><td>${atingMeta >= 100 ? "Atingiu ou superou a meta" : `Abaixo em ${esc(round2(100 - atingMeta))}%`}</td></tr>
-      <tr><td>Meta de qualidade</td><td>Não informado</td><td>Não informado na coleta</td><td>Sem dados suficientes</td></tr>
-      <tr><td>Média da área</td><td>${esc(round2(produtividade))}</td><td>Sem benchmark interno informado</td><td>Usar comparação entre funções equivalentes</td></tr>
-      <tr><td>Evolução</td><td>Não informado</td><td>Período anterior não coletado</td><td>Sem base comparativa histórica</td></tr>
+      <tr>
+        <td><strong>Retorno Financeiro (ROI)</strong></td>
+        <td><strong>${receitaGerada > 0 ? esc(round2(retornoFinanceiro) + "x") : "Valor Indireto"}</strong></td>
+        <td>${receitaGerada > 0 ? "Receita gerada ÷ custo total do colaborador" : "Foco em qualidade, eficiência e suporte operacional"}</td>
+      </tr>
     </tbody>
   </table>
 
-  <h2>7. Análise Integrada – O que os dados dizem juntos</h2>
-  <p><strong>Diagnóstico:</strong> ${esc(classeMeta)} com necessidade de leitura integrada entre números, contexto e qualidade.</p>
-  <p>A produtividade deve ser interpretada junto com contexto operacional, complexidade das tarefas e condições de trabalho. A base metodológica recomenda evitar leitura puramente numérica e considerar fatores estruturais antes de qualquer conclusão individual. ${esc(observacoes)}</p>
+  <div style="background:#f8fafc !important; border-left:4px solid #0284c7 !important; border-radius:8px; padding:16px; margin-bottom:28px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="margin:0 0 4px 0; font-size:13px; font-weight:700; color:#0f172a;">Análise Financeira Complementar:</p>
+    <p style="margin:0; font-size:13px; color:#334155; line-height:1.5;">${esc(analiseFinanceira)}</p>
+  </div>
 
-  <h2>8. Leitura Estratégica para RH e Gestão</h2>
-  <table>
+  <!-- SEÇÃO 5: CLIMA E CONTEXTO – INDICADORES SUBJETIVOS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. CLIMA E CONTEXTO (INDICADORES SUBJETIVOS)</h2>
+  
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:24px;">
+    <p style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:#0f172a;">Contexto Registrado:</p>
+    <p style="margin:0 0 14px 0; font-size:13px; color:#475569; font-style:italic;">"${esc(observacoes)}"</p>
+    
+    <p style="margin:0 0 6px 0; font-size:13px; font-weight:700; color:#0f172a;">Parecer Contextual da Metodologia:</p>
+    <p style="margin:0 0 14px 0; font-size:13px; color:#334155; line-height:1.6;">${esc(contextAnalysis)}</p>
+
+    <p style="margin:0 0 8px 0; font-size:13px; font-weight:700; color:#0f172a;">Diretrizes para RH e Liderança:</p>
+    <ul style="margin:0 0 0 20px; padding:0; font-size:13px; color:#334155; line-height:1.6;">
+      <li>Verificar se o contexto operacional impactou diretamente o ritmo, a qualidade ou a consistência das entregas.</li>
+      <li>Evitar leitura puramente numérica da produtividade sem considerar as condições de trabalho do período.</li>
+      <li>Confirmar com a liderança imediata se houve impacto temporário, estrutural ou recorrente.</li>
+      <li>Utilizar o indicador como base para apoio, desenvolvimento individual e melhoria de processos.</li>
+    </ul>
+  </div>
+
+  <!-- SEÇÃO 6: COMPARAÇÃO COM METAS E REFERÊNCIAS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">6. COMPARAÇÃO COM METAS E REFERÊNCIAS</h2>
+  <table class="prod-table">
     <thead>
       <tr>
         <th>Dimensão</th>
-        <th>Análise</th>
+        <th>Resultado Apurado</th>
+        <th>Referência / Meta</th>
+        <th>Diagnóstico Comparativo</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>O que os números mostram?</td><td>Produtividade de ${esc(round2(produtividade))} ${esc(unidade)}, com ${esc(round2(atingMeta))}% de atingimento da meta.</td></tr>
-      <tr><td>O que a produtividade detalhada revela?</td><td>${esc(entregas)} entregas em ${esc(horasTrabalhadas)} horas, com meta total de ${esc(metaEsperada)}.</td></tr>
-      <tr><td>O que a análise financeira indica?</td><td>${esc(analiseFinanceira)}</td></tr>
-      <tr><td>O que o clima revela?</td><td>Contexto informado: ${esc(observacoes)}</td></tr>
-      <tr><td>Existe descolamento entre produtividade e clima?</td><td>Sem coleta completa de clima, a análise deve ser feita com cautela.</td></tr>
-      <tr><td>A causa é individual, da liderança ou estrutural?</td><td>A análise deve investigar primeiro fatores contextuais, estruturais e de processo antes de concluir causa individual.</td></tr>
+      <tr>
+        <td><strong>Volume de Entregas</strong></td>
+        <td><strong>${esc(round2(atingMeta))}%</strong></td>
+        <td>Meta: ${esc(metaEsperada)} unidades</td>
+        <td>${atingMeta >= 100 ? "Atingiu ou superou a meta estabelecida" : `Abaixo da meta em ${esc(round2(100 - atingMeta))}%`}</td>
+      </tr>
+      <tr>
+        <td><strong>Taxa de Produtividade</strong></td>
+        <td>${esc(round2(produtividade))} ${esc(unidade)}</td>
+        <td>${esc(round2(metaProdutividade))} ${esc(unidade)}</td>
+        <td>${statusBadge(classeMeta)}</td>
+      </tr>
+      <tr>
+        <td><strong>Retorno sobre Custo</strong></td>
+        <td>${receitaGerada > 0 ? esc(round2(retornoFinanceiro) + "x") : "Valor Indireto"}</td>
+        <td>Sustentabilidade Financeira</td>
+        <td>${receitaGerada > 0 ? (retornoFinanceiro >= 3 ? "Retorno financeiro alto" : "Retorno financeiro moderado") : "Atividade de apoio e suporte"}</td>
+      </tr>
     </tbody>
   </table>
 
-  <h2>9. Recomendações e Plano de Ação</h2>
-  <table>
+  <!-- SEÇÃO 7: ANÁLISE INTEGRADA -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">7. ANÁLISE INTEGRADA (NÚMEROS, CONTEXTO E QUALIDADE)</h2>
+  <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:28px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+    <p style="margin:0 0 10px 0; color:#0f172a; font-weight:700; font-size:14px;">Diagnóstico Geral: Desempenho ${esc(classeMeta.toLowerCase())}.</p>
+    <p style="margin:0; color:#334155; font-size:13px; line-height:1.6;">
+      A produtividade deve ser interpretada de forma sistêmica, combinando o volume produzido com a complexidade das rotinas e as condições de infraestrutura. A metodologia recomenda que gestores analisem gargalos de processos e ferramentas antes de atribuir qualquer desvio de performance exclusivamente a fatores individuais.
+    </p>
+  </div>
+
+  <!-- SEÇÃO 8: RECOMENDAÇÕES E PLANO DE AÇÃO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">8. RECOMENDAÇÕES E PLANO DE AÇÃO</h2>
+  <table class="prod-table">
     <thead>
       <tr>
-        <th>Oportunidade</th>
-        <th>Ação</th>
+        <th>Oportunidade / Eixo</th>
+        <th>Ação Proposta</th>
         <th>Responsável</th>
         <th>Prazo</th>
         <th>Prioridade</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td>Clareza de meta</td><td>Formalizar meta por função com unidade objetiva e critério de qualidade.</td><td>Gestor / RH</td><td>15 dias</td><td>Alta</td></tr>
-      <tr><td>Contexto operacional</td><td>Investigar gargalos, sobrecarga, sistema e distribuição de demanda.</td><td>Gestor</td><td>15 dias</td><td>Alta</td></tr>
-      <tr><td>Desenvolvimento</td><td>Realizar feedback estruturado e plano de melhoria individual.</td><td>Gestor / RH</td><td>30 dias</td><td>Média</td></tr>
-      <tr><td>Monitoramento</td><td>Acompanhar produtividade com qualidade e contexto, não só volume.</td><td>RH</td><td>30 dias</td><td>Média</td></tr>
-    </tbody>
-  </table>
-
-  <h2>10. Próximos Passos e Monitoramento</h2>
-  <table>
-    <thead>
       <tr>
-        <th>Etapa</th>
-        <th>Descrição</th>
-        <th>Data limite</th>
+        <td><strong>Alinhamento de Metas</strong></td>
+        <td>Revisar e formalizar critérios de meta, qualidade e ritmo esperado para a função.</td>
+        <td>Gestor / RH</td>
+        <td>15 dias</td>
+        <td><span style="background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700;">Alta</span></td>
       </tr>
-    </thead>
-    <tbody>
-      <tr><td>1. Devolutiva ao colaborador</td><td>Compartilhar análise e alinhar percepção do contexto.</td><td>Definir internamente</td></tr>
-      <tr><td>2. Acompanhamento</td><td>Verificar evolução da produtividade após ajustes.</td><td>Definir internamente</td></tr>
-      <tr><td>3. Reavaliação</td><td>Nova análise integrada após ciclo de ações.</td><td>Definir internamente</td></tr>
+      <tr>
+        <td><strong>Contexto Operacional</strong></td>
+        <td>Investigar gargalos estruturais, sistemas, ferramentas e distribuição de carga de trabalho.</td>
+        <td>Gestor Direto</td>
+        <td>15 dias</td>
+        <td><span style="background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700;">Alta</span></td>
+      </tr>
+      <tr>
+        <td><strong>Desenvolvimento Individual</strong></td>
+        <td>Conduzir sessão de feedback estruturado e mapear necessidades de capacitação.</td>
+        <td>Gestor / RH</td>
+        <td>30 dias</td>
+        <td><span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700;">Média</span></td>
+      </tr>
+      <tr>
+        <td><strong>Monitoramento Contínuo</strong></td>
+        <td>Acompanhar a evolução da taxa de produtividade em ciclos regulares de 30 dias.</td>
+        <td>RH</td>
+        <td>30 dias</td>
+        <td><span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700;">Média</span></td>
+      </tr>
     </tbody>
   </table>
 
-  <h2>11. Observações Adicionais</h2>
-  <p>${esc(observacoes)}</p>
+  <!-- SEÇÃO 9: PRÓXIMOS PASSOS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">9. PRÓXIMOS PASSOS E MONITORAMENTO</h2>
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+      <strong style="color:#0f172a; font-size:14px; display:block; margin-bottom:6px;">1. Devolutiva ao Colaborador</strong>
+      <p style="margin:0; font-size:13px; color:#475569; line-height:1.5;">Apresentar os números, alinhar a percepção do contexto operacional e ouvir as considerações do profissional.</p>
+    </div>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+      <strong style="color:#0f172a; font-size:14px; display:block; margin-bottom:6px;">2. Acompanhamento Operacional</strong>
+      <p style="margin:0; font-size:13px; color:#475569; line-height:1.5;">Monitorar as melhorias de rotina, fluxo de sistemas e apoio de liderança acordados no plano de ação.</p>
+    </div>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px;">
+      <strong style="color:#0f172a; font-size:14px; display:block; margin-bottom:6px;">3. Reavaliação no Novo Ciclo</strong>
+      <p style="margin:0; font-size:13px; color:#475569; line-height:1.5;">Executar nova apuração integrada após 30 a 60 dias para mensurar o ganho real de produtividade.</p>
+    </div>
+  </div>
+
 </section>
-`.trim();
+  `.trim();
 }
