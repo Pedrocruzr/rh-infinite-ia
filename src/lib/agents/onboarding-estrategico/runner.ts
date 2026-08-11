@@ -44,12 +44,30 @@ function unique(items: string[]): string[] {
 }
 
 function parseDurationInfo(tempo?: string) {
-  const raw = String(tempo ?? "").toLowerCase();
+  let raw = String(tempo ?? "").toLowerCase().trim();
+
+  // Convert written word numbers to digits
+  const wordMap: Record<string, string> = {
+    "um": "1", "uma": "1", "dois": "2", "duas": "2",
+    "três": "3", "tres": "3", "quatro": "4", "cinco": "5",
+    "seis": "6", "sete": "7", "oito": "8", "nove": "9", "dez": "10"
+  };
+  for (const [word, digit] of Object.entries(wordMap)) {
+    raw = raw.replace(new RegExp(`\\b${word}\\b`, "gi"), digit);
+  }
+
   let morningHours = 0;
   let afternoonHours = 0;
 
-  const morningMatch = raw.match(/(\d+)\s*(?:h|hora|horas)?\s*(?:de\s+)?manh[ãa]/i);
-  const afternoonMatch = raw.match(/(\d+)\s*(?:h|hora|horas)?\s*(?:à|a|de\s+)?tarde/i);
+  // Patterns for morning:
+  // "3 horas de manhã", "3h manha", "3 de manha", "3 na manha", "manha: 3h"
+  const morningMatch = raw.match(/(\d+)\s*(?:h|hora|horas)?\s*(?:de\s+|da\s+|na\s+|pela\s+|no\s+per[ií]odo\s+da\s+)?manh[ãa]/i)
+    || raw.match(/manh[ãa][:\s]+(\d+)\s*(?:h|hora|horas)?/i);
+
+  // Patterns for afternoon:
+  // "3 horas da tarde", "3h a tarde", "3 à tarde", "3 de tarde", "3 tarde", "tarde: 3h"
+  const afternoonMatch = raw.match(/(\d+)\s*(?:h|hora|horas)?\s*(?:à|a|de|da|na|pela|no\s+per[ií]odo\s+da)?\s*tarde/i)
+    || raw.match(/tarde[:\s]+(\d+)\s*(?:h|hora|horas)?/i);
 
   if (morningMatch) {
     morningHours = parseInt(morningMatch[1], 10) || 0;
@@ -58,10 +76,22 @@ function parseDurationInfo(tempo?: string) {
     afternoonHours = parseInt(afternoonMatch[1], 10) || 0;
   }
 
-  if (!morningMatch && !afternoonMatch) {
+  // If text mentions both "manhã" and "tarde" but didn't extract one of them, check if a single number was given for both or split total
+  const mentionsMorning = /manh[ãa]/i.test(raw);
+  const mentionsAfternoon = /tarde/i.test(raw);
+
+  if (mentionsMorning && mentionsAfternoon) {
+    if (morningHours > 0 && afternoonHours === 0) {
+      afternoonHours = morningHours;
+    } else if (afternoonHours > 0 && morningHours === 0) {
+      morningHours = afternoonHours;
+    }
+  }
+
+  if (morningHours === 0 && afternoonHours === 0) {
     const generalMatch = raw.match(/(\d+)\s*(?:h|hora|horas)/i);
     const total = generalMatch ? parseInt(generalMatch[1], 10) : 6;
-    if (total >= 6) {
+    if (total >= 4) {
       morningHours = Math.ceil(total / 2);
       afternoonHours = Math.floor(total / 2);
     } else {
@@ -119,11 +149,19 @@ export function buildOnboardingReport(session: OnboardingSession): string {
     horario: string;
     atividade: string;
     responsavel: string;
+    isHeader?: boolean;
   };
 
   const scheduleRows: ScheduleRow[] = [];
 
   // Morning Block
+  scheduleRows.push({
+    horario: "MANHÃ",
+    atividade: `Período da Manhã (${duration.morningText || "3 horas"})`,
+    responsavel: facilitadores,
+    isHeader: true,
+  });
+
   scheduleRows.push({
     horario: "08h00–08h15",
     atividade: "Boas-vindas institucionais + Apresentação de Missão, Visão e Valores",
@@ -138,17 +176,17 @@ export function buildOnboardingReport(session: OnboardingSession): string {
 
   if (hasAtendimento || (!hasComercialOuVendas && !hasAdministrativo)) {
     scheduleRows.push({
-      horario: "08h20–08h50",
+      horario: "08h20–09h00",
       atividade: "Módulo Atendimento: Jornada do Cliente / Aluno & Encantamento",
       responsavel: facilitadores,
     });
     scheduleRows.push({
-      horario: "08h50–09h30",
+      horario: "09h00–09h45",
       atividade: "Comunicação Eficaz: Escuta Ativa, Empatia e Resolução de Problemas",
       responsavel: facilitadores,
     });
     scheduleRows.push({
-      horario: "09h30–10h00",
+      horario: "09h45–10h30",
       atividade: "Gestão de Objeções: Técnica LAER (Listar, Acolher, Explicar, Resolver)",
       responsavel: facilitadores,
     });
@@ -156,18 +194,18 @@ export function buildOnboardingReport(session: OnboardingSession): string {
 
   if (hasComercialOuVendas) {
     scheduleRows.push({
-      horario: "10h00–10h15",
-      atividade: "Vídeo de Apoio: Atendimento e Vendas com Foco em Excelência",
-      responsavel: facilitadores,
+      horario: "10h30–10h45",
+      atividade: "Pausa rápida / Coffee Break",
+      responsavel: "—",
     });
     scheduleRows.push({
-      horario: "10h15–11h00",
+      horario: "10h45–11h30",
       atividade: "Módulo Vendas: Venda Consultiva (Método SPIN Selling)",
       responsavel: facilitadores,
     });
     scheduleRows.push({
-      horario: "11h00–11h45",
-      atividade: "Gatilhos Mentais e Argumentação Estratégica",
+      horario: "11h30–12h00",
+      atividade: "Gatilhos Mentais e Argumentação Estratégica na Decisão de Compra",
       responsavel: facilitadores,
     });
   } else if (!hasAtendimento) {
@@ -181,25 +219,37 @@ export function buildOnboardingReport(session: OnboardingSession): string {
       atividade: "Boas Práticas de Trabalho, Qualidade e Fluxos Internos",
       responsavel: facilitadores,
     });
+    scheduleRows.push({
+      horario: "11h45–12h00",
+      atividade: "Síntese do Período da Manhã e Alinhamento de Aprendizados",
+      responsavel: facilitadores,
+    });
   }
 
-  scheduleRows.push({
-    horario: "11h45–12h00",
-    atividade: "Síntese do Período da Manhã e Alinhamento de Aprendizados",
-    responsavel: facilitadores,
-  });
-
-  // Afternoon Block (if duration has afternoon)
+  // Afternoon Block (if duration has afternoon or >= 4 hours)
   if (duration.afternoonHours > 0 || duration.totalHours >= 4) {
+    scheduleRows.push({
+      horario: "12h00–13h00",
+      atividade: "Intervalo de Almoço",
+      responsavel: "—",
+    });
+
+    scheduleRows.push({
+      horario: "TARDE",
+      atividade: `Período da Tarde (${duration.afternoonText || "3 horas"})`,
+      responsavel: facilitadores,
+      isHeader: true,
+    });
+
     if (hasComercialOuVendas || hasAtendimento) {
       scheduleRows.push({
         horario: "13h00–13h45",
-        atividade: "Prática de Fechamento, Apresentação de Valor e Tratamento de Objeções",
+        atividade: "Prática de Fechamento, Apresentação de Valor com Âncoras e Tratamento de Objeções",
         responsavel: facilitadores,
       });
       scheduleRows.push({
         horario: "13h45–14h30",
-        atividade: "Integração Interdepartamental: Alinhamento entre Áreas e Experiência do Cliente",
+        atividade: "Integração Interdepartamental: Vendas + Atendimento na Jornada Completa do Cliente",
         responsavel: facilitadores,
       });
     } else {
@@ -218,26 +268,26 @@ export function buildOnboardingReport(session: OnboardingSession): string {
     if (sistemasList.length > 0) {
       scheduleRows.push({
         horario: "14h30–15h00",
-        atividade: `Treinamento de Sistemas: ${sistemasList.join(", ")}`,
+        atividade: `Treinamento e Prática de Sistemas: ${sistemasList.join(", ")}`,
         responsavel: facilitadores,
       });
     }
 
     scheduleRows.push({
       horario: "15h00–15h30",
-      atividade: `Apresentação dos Documentos Oficiais: ${documentosList.join(", ") || "Manuais e Políticas"}`,
+      atividade: `Apresentação dos Documentos Oficiais e Manuais: ${documentosList.join(", ") || "Código de Conduta e Manuais"}`,
       responsavel: facilitadores,
     });
 
     scheduleRows.push({
       horario: "15h30–16h00",
-      atividade: "Fechamento, Esclarecimento de Dúvidas, Próximos Passos e Avaliação",
+      atividade: "Fechamento da Integração, Esclarecimento de Dúvidas, Próximos Passos e Avaliação",
       responsavel: facilitadores,
     });
   } else {
     scheduleRows.push({
       horario: "12h00–12h30",
-      atividade: "Fechamento, Documentação de Apoio e Próximos Passos",
+      atividade: "Fechamento da Integração, Documentação de Apoio e Próximos Passos",
       responsavel: facilitadores,
     });
   }
@@ -420,15 +470,24 @@ export function buildOnboardingReport(session: OnboardingSession): string {
     </thead>
     <tbody>
       ${scheduleRows
-        .map(
-          (row) => `
+        .map((row) => {
+          if (row.isHeader) {
+            return `
+              <tr style="background:#f1f5f9;">
+                <td colspan="3" style="padding:10px 14px; font-weight:800; color:#0f172a; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; border:1px solid #cbd5e1;">
+                  ${escapeHtml(row.atividade)}
+                </td>
+              </tr>
+            `;
+          }
+          return `
             <tr>
               <td><strong style="color:#0284c7;">${escapeHtml(row.horario)}</strong></td>
               <td>${escapeHtml(row.atividade)}</td>
               <td>${escapeHtml(row.responsavel)}</td>
             </tr>
-          `
-        )
+          `;
+        })
         .join("")}
     </tbody>
   </table>
