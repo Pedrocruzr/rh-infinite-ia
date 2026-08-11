@@ -1,14 +1,5 @@
 import type { OnboardingSession } from "./flow";
 
-type DynamicInfo = {
-  nome: string;
-  categoria: string;
-  objetivo: string;
-  comoFunciona: string;
-  materiais: string;
-  tempo: string;
-};
-
 function escapeHtml(value: string) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -18,669 +9,442 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-const DYNAMIC_DETAILS: Record<string, DynamicInfo> = {
-  "Pitch de 1 Minuto": {
-    nome: "Pitch de 1 Minuto",
-    categoria: "Comunicação",
-    objetivo: "Estimular clareza, concisão e segurança na fala.",
-    comoFunciona: "Cada participante recebe 1 minuto para se apresentar ou defender uma ideia sobre um tema proposto, com foco em objetividade e estrutura.",
-    materiais: "Cronômetro e tema orientador.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Telefone sem Fio Profissional": {
-    nome: "Telefone sem Fio Profissional",
-    categoria: "Comunicação",
-    objetivo: "Mostrar ruídos na transmissão de mensagens e reforçar a importância da comunicação clara.",
-    comoFunciona: "Uma mensagem é passada entre os participantes e depois comparada com a versão original para análise dos ruídos.",
-    materiais: "Mensagem escrita e espaço para discussão.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Explicando um Objeto Misterioso": {
-    nome: "Explicando um Objeto Misterioso",
-    categoria: "Comunicação",
-    objetivo: "Treinar descrição, didática e organização verbal.",
-    comoFunciona: "Cada participante explica um objeto ou conceito sem mostrar diretamente o item, exigindo clareza e lógica na exposição.",
-    materiais: "Objetos simples ou cartões com conceitos.",
-    tempo: "20 a 25 minutos.",
-  },
-  "Torre de Papel A4": {
-    nome: "Torre de Papel A4",
-    categoria: "Trabalho em Equipe",
-    objetivo: "Estimular cooperação, planejamento e execução em grupo.",
-    comoFunciona: "O grupo deve construir a torre mais alta possível com folhas A4 dentro do tempo proposto.",
-    materiais: "Folhas A4 e fita adesiva.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Ponte de Palitos": {
-    nome: "Ponte de Palitos",
-    categoria: "Trabalho em Equipe",
-    objetivo: "Desenvolver coordenação, divisão de tarefas e solução coletiva de problemas.",
-    comoFunciona: "Os participantes montam uma ponte simples com palitos, respeitando tempo e critérios definidos.",
-    materiais: "Palitos, fita e superfície de apoio.",
-    tempo: "30 a 40 minutos.",
-  },
-  "Quebra-Cabeça Misto": {
-    nome: "Quebra-Cabeça Misto",
-    categoria: "Trabalho em Equipe",
-    objetivo: "Reforçar interdependência, comunicação e organização do time.",
-    comoFunciona: "O grupo recebe partes misturadas de um quebra-cabeça e precisa se organizar para concluir a atividade em conjunto.",
-    materiais: "Peças impressas ou cartões recortados.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Delegação Relâmpago": {
-    nome: "Delegação Relâmpago",
-    categoria: "Liderança",
-    objetivo: "Trabalhar delegação, priorização e condução de equipe.",
-    comoFunciona: "Um participante assume a liderança da atividade e precisa distribuir tarefas de forma rápida e coerente.",
-    materiais: "Cartões com tarefas ou mini desafio.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Porta-Voz do Grupo": {
-    nome: "Porta-Voz do Grupo",
-    categoria: "Liderança",
-    objetivo: "Estimular liderança situacional e representação de equipe.",
-    comoFunciona: "O grupo discute um tema e um participante representa a síntese final diante dos demais.",
-    materiais: "Tema ou problema orientador.",
-    tempo: "15 a 25 minutos.",
-  },
-  "Reunião Stand-up Simulada": {
-    nome: "Reunião Stand-up Simulada",
-    categoria: "Liderança",
-    objetivo: "Treinar organização de fala, direção de reunião e foco em entregas.",
-    comoFunciona: "Os participantes simulam uma reunião rápida de alinhamento com pauta, prioridades e encaminhamentos.",
-    materiais: "Roteiro simples de reunião.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Usos Alternativos": {
-    nome: "Usos Alternativos",
-    categoria: "Criatividade",
-    objetivo: "Estimular pensamento divergente e geração rápida de ideias.",
-    comoFunciona: "Os participantes precisam sugerir usos alternativos para um objeto comum dentro de um tempo curto.",
-    materiais: "Objeto simples ou imagem.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Slogan Relâmpago": {
-    nome: "Slogan Relâmpago",
-    categoria: "Criatividade",
-    objetivo: "Estimular síntese criativa e construção de mensagem.",
-    comoFunciona: "O grupo cria slogans curtos para uma situação ou produto fictício ligado ao contexto do trabalho.",
-    materiais: "Tema orientador.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Desenhe um Conceito": {
-    nome: "Desenhe um Conceito",
-    categoria: "Criatividade",
-    objetivo: "Trabalhar criatividade visual e interpretação de ideias.",
-    comoFunciona: "Os participantes desenham um conceito abstrato e depois explicam o raciocínio usado.",
-    materiais: "Papel e canetas.",
-    tempo: "20 a 25 minutos.",
-  },
-  "Sequência que Falta": {
-    nome: "Sequência que Falta",
-    categoria: "Raciocínio Lógico",
-    objetivo: "Estimular análise, atenção e identificação de padrões.",
-    comoFunciona: "Os participantes resolvem sequências lógicas e explicam o raciocínio utilizado.",
-    materiais: "Folhas com exercícios.",
-    tempo: "15 a 25 minutos.",
-  },
-  "Problema de Alocação": {
-    nome: "Problema de Alocação",
-    categoria: "Raciocínio Lógico",
-    objetivo: "Treinar organização mental e solução estruturada de problemas.",
-    comoFunciona: "O grupo recebe um problema de distribuição de recursos e precisa chegar a uma solução coerente.",
-    materiais: "Caso escrito e quadro de apoio.",
-    tempo: "25 a 35 minutos.",
-  },
-  "Caso Analítico": {
-    nome: "Caso Analítico",
-    categoria: "Raciocínio Lógico",
-    objetivo: "Desenvolver interpretação, análise de cenário e tomada de decisão.",
-    comoFunciona: "Os participantes analisam um caso curto e propõem uma solução com justificativa lógica.",
-    materiais: "Caso impresso.",
-    tempo: "30 a 40 minutos.",
-  },
-  "Quem Se Oferece?": {
-    nome: "Quem Se Oferece?",
-    categoria: "Proatividade",
-    objetivo: "Observar iniciativa e disposição para agir sem depender de comando constante.",
-    comoFunciona: "O facilitador apresenta pequenas demandas e observa quem se antecipa para propor ou executar soluções.",
-    materiais: "Situações curtas simuladas.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Melhorias em 5 Minutos": {
-    nome: "Melhorias em 5 Minutos",
-    categoria: "Proatividade",
-    objetivo: "Estimular visão de melhoria contínua e atitude prática.",
-    comoFunciona: "Os participantes recebem um cenário simples e sugerem melhorias rápidas e viáveis.",
-    materiais: "Caso breve ou processo simplificado.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Plano Relâmpago": {
-    nome: "Plano Relâmpago",
-    categoria: "Proatividade",
-    objetivo: "Treinar capacidade de agir rápido com organização.",
-    comoFunciona: "Diante de um desafio, o participante propõe um mini plano de ação com etapas imediatas.",
-    materiais: "Situação problema.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Meus 3 Valores": {
-    nome: "Meus 3 Valores",
-    categoria: "Fit Cultural",
-    objetivo: "Identificar valores pessoais e comparar com a cultura esperada no ambiente de trabalho.",
-    comoFunciona: "Cada participante escolhe 3 valores que considera inegociáveis no trabalho, explica por que os escolheu e relaciona esses valores com a cultura da empresa.",
-    materiais: "Lista de valores, papel e caneta.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Orgulho Profissional": {
-    nome: "Orgulho Profissional",
-    categoria: "Fit Cultural",
-    objetivo: "Explorar significados de pertencimento, entrega e conexão com o trabalho.",
-    comoFunciona: "Os participantes compartilham uma situação profissional da qual se orgulham e refletem sobre quais comportamentos e valores estavam presentes naquela experiência.",
-    materiais: "Roteiro de reflexão e espaço para compartilhamento.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Dilema Ético": {
-    nome: "Dilema Ético",
-    categoria: "Fit Cultural",
-    objetivo: "Observar coerência de decisão, senso ético e aderência à cultura organizacional.",
-    comoFunciona: "O grupo analisa um cenário com dilema ético e discute qual decisão seria mais coerente com os valores da organização.",
-    materiais: "Caso escrito com dilema e perguntas de apoio.",
-    tempo: "25 a 35 minutos.",
-  },
-  "Tempo Curtíssimo": {
-    nome: "Tempo Curtíssimo",
-    categoria: "Resiliência e Estresse",
-    objetivo: "Observar reação a pressão e capacidade de manter foco sob limite de tempo.",
-    comoFunciona: "A atividade impõe prazo muito curto para uma tarefa simples, exigindo equilíbrio, organização e adaptação.",
-    materiais: "Desafio rápido e cronômetro.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Interrupções Planejadas": {
-    nome: "Interrupções Planejadas",
-    categoria: "Resiliência e Estresse",
-    objetivo: "Avaliar flexibilidade e estabilidade emocional diante de interrupções.",
-    comoFunciona: "Durante a execução de uma tarefa, o facilitador cria interrupções controladas para observar como o participante retoma o foco.",
-    materiais: "Atividade simples e roteiro de interrupções.",
-    tempo: "20 a 25 minutos.",
-  },
-  "Erro no Enunciado": {
-    nome: "Erro no Enunciado",
-    categoria: "Resiliência e Estresse",
-    objetivo: "Trabalhar tolerância à frustração e capacidade de reagir de forma construtiva.",
-    comoFunciona: "O grupo recebe um enunciado com falha proposital e precisa lidar com o erro sem perder a postura analítica.",
-    materiais: "Caso com falha proposital.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Matriz Urgente x Importante": {
-    nome: "Matriz Urgente x Importante",
-    categoria: "Organização e Tempo",
-    objetivo: "Desenvolver priorização e gestão de tempo.",
-    comoFunciona: "Os participantes classificam tarefas em urgente/importante e justificam a ordem de priorização.",
-    materiais: "Lista de tarefas e matriz impressa.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Planeje Seu Dia": {
-    nome: "Planeje Seu Dia",
-    categoria: "Organização e Tempo",
-    objetivo: "Trabalhar planejamento de rotina e distribuição de esforço.",
-    comoFunciona: "O participante organiza uma agenda de trabalho a partir de tarefas, prazos e imprevistos simulados.",
-    materiais: "Agenda modelo e lista de demandas.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Priorize o Backlog": {
-    nome: "Priorize o Backlog",
-    categoria: "Organização e Tempo",
-    objetivo: "Treinar análise de prioridade e capacidade de ordenar demandas.",
-    comoFunciona: "O grupo recebe várias tarefas e precisa decidir a sequência mais lógica de execução.",
-    materiais: "Cartões com tarefas.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Barganha de Mercado": {
-    nome: "Barganha de Mercado",
-    categoria: "Negociação e Persuasão",
-    objetivo: "Treinar argumentação, escuta e construção de acordo.",
-    comoFunciona: "Dois participantes negociam condições de uma situação fictícia, buscando equilíbrio entre interesses e limites.",
-    materiais: "Roteiro de negociação.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Ganha-Ganha com Limites": {
-    nome: "Ganha-Ganha com Limites",
-    categoria: "Negociação e Persuasão",
-    objetivo: "Estimular negociação equilibrada e pensamento estratégico.",
-    comoFunciona: "O grupo trabalha um cenário em que precisa defender interesses sem romper a lógica de colaboração.",
-    materiais: "Caso de negociação.",
-    tempo: "25 a 35 minutos.",
-  },
-  "Defenda seu Orçamento": {
-    nome: "Defenda seu Orçamento",
-    categoria: "Negociação e Persuasão",
-    objetivo: "Trabalhar persuasão com base em argumentos e prioridades.",
-    comoFunciona: "Cada participante precisa justificar por que determinado orçamento ou recurso deve ser priorizado.",
-    materiais: "Situação simulada de decisão.",
-    tempo: "20 a 30 minutos.",
-  },
-  "Escuta Refletida": {
-    nome: "Escuta Refletida",
-    categoria: "Empatia e Escuta",
-    objetivo: "Treinar escuta ativa, compreensão e devolutiva respeitosa.",
-    comoFunciona: "Um participante relata uma situação e o outro precisa reformular o que entendeu antes de responder.",
-    materiais: "Roteiro de conversa em dupla.",
-    tempo: "15 a 25 minutos.",
-  },
-  "Paráfrase em 3 Passos": {
-    nome: "Paráfrase em 3 Passos",
-    categoria: "Empatia e Escuta",
-    objetivo: "Desenvolver compreensão antes de responder ou argumentar.",
-    comoFunciona: "O participante escuta um relato, parafraseia a mensagem e só depois propõe encaminhamento.",
-    materiais: "Casos curtos de interação.",
-    tempo: "15 a 20 minutos.",
-  },
-  "Mapa de Empatia": {
-    nome: "Mapa de Empatia",
-    categoria: "Empatia e Escuta",
-    objetivo: "Trabalhar compreensão de perspectiva, contexto e necessidade do outro.",
-    comoFunciona: "O grupo constrói um mapa de empatia com foco no perfil de uma pessoa ou situação específica do trabalho.",
-    materiais: "Modelo de mapa de empatia, post-its e canetas.",
-    tempo: "25 a 35 minutos.",
-  },
-};
+function normalizeSentence(value: string): string {
+  let text = String(value ?? "").trim();
+  text = text
+    .replace(/\s+/g, " ")
+    .replace(/\s+,/g, ",")
+    .replace(/\s+\./g, ".")
+    .replace(/\s+:/g, ":")
+    .replace(/\s+;/g, ";")
+    .trim();
 
-const SYSTEM_LABELS: Record<string, string> = {
-  "crm": "CRM",
-  "crm corporativo": "CRM Corporativo",
-  "totvs": "TOTVS",
-  "protheus": "TOTVS Protheus",
-  "totvs protheus": "TOTVS Protheus",
-  "rm": "TOTVS RM",
-  "totvs rm": "TOTVS RM",
-  "erp": "ERP",
-  "sap": "SAP",
-  "power bi": "Power BI",
-  "planilhas power bi": "Planilhas Power BI",
-  "sistema de atendimento": "Sistema de Atendimento",
-  "e-mail corporativo": "E-mail corporativo",
-  "email corporativo": "E-mail corporativo",
-  "portal rh": "Portal RH",
-  "sistema erp": "Sistema ERP",
-  "intranet corporativa": "Intranet Corporativa",
-  "plataforma de treinamentos": "Plataforma de Treinamentos",
-};
-
-const MATERIALS_BASE: Record<string, string> = {
-  "Manual do Colaborador": "Manual do Colaborador — PDF com informações essenciais sobre empresa, benefícios e políticas.",
-  "Guia Rápido de Sistemas": "Guia Rápido de Sistemas — PDF interativo com instruções básicas dos principais sistemas corporativos.",
-  "Glossário Técnico": "Glossário Técnico — documento com termos e conceitos utilizados nas rotinas da empresa.",
-  "Fluxogramas de Processos": "Fluxogramas de Processos — apresentação com visualização dos principais fluxos de trabalho da empresa.",
-};
-
-function applyPortugueseCorrections(text: string) {
-  let value = String(text ?? "").trim().replace(/\s+/g, " ");
-
-  const replacements: Array<[RegExp, string]> = [
-    [/\bmanha\b/gi, "manhã"],
-    [/\btarde\b/gi, "tarde"],
-    [/\bvisao\b/gi, "visão"],
-    [/\bmissao\b/gi, "missão"],
-    [/\betica\b/gi, "ética"],
-    [/\bexcelencia\b/gi, "excelência"],
-    [/\binovacao\b/gi, "inovação"],
-    [/\bpublico\b/gi, "público"],
-    [/\btelefonico\b/gi, "telefônico"],
-    [/\brelatorios\b/gi, "relatórios"],
-    [/\bcontabeis\b/gi, "contábeis"],
-    [/\bservicos\b/gi, "serviços"],
-    [/\btecnico\b/gi, "técnico"],
-    [/\bgestao\b/gi, "gestão"],
-    [/\borganizacao\b/gi, "organização"],
-    [/\bcodigo\b/gi, "código"],
-    [/\bconduta\b/gi, "conduta"],
-    [/\bbenvidos\b/gi, "bem-vindos"],
-    [/\bbem vindos\b/gi, "bem-vindos"],
-    [/\bcomunicacao\b/gi, "comunicação"],
-    [/\bboas vindas\b/gi, "boas-vindas"],
-    [/\bemail\b/gi, "e-mail"],
-    [/\bchefe administrativo\b/gi, "chefe administrativo"],
-    [/\bchefe de vendas\b/gi, "chefe de vendas"],
-  ];
-
-  for (const [pattern, replacement] of replacements) {
-    value = value.replace(pattern, replacement);
-  }
-
-  value = value.replace(/\s+\./g, ".").replace(/\s+,/g, ",").replace(/\.\./g, ".");
-  return value.trim();
-}
-
-function normalizeSentence(value: string) {
-  let text = applyPortugueseCorrections(value);
   if (!text) return "";
   text = text.charAt(0).toUpperCase() + text.slice(1);
-  if (!/[.!?]$/.test(text)) text += ".";
+  if (!/[.!?]$/.test(text)) {
+    text += ".";
+  }
   return text;
 }
 
-function normalizeLine(value: string) {
+function normalizeLine(value: string): string {
   return normalizeSentence(value).replace(/[.!?]$/, "");
 }
 
-function splitList(text?: string) {
+function splitList(text?: string): string[] {
   return String(text ?? "")
     .split(/\n|;|,/)
     .map((item) => item.replace(/^\d+[\).\-\s]*/, "").trim())
     .filter(Boolean)
-    .map((item) => normalizeLine(item));
+    .map(normalizeLine);
 }
 
-function unique(items: string[]) {
+function unique(items: string[]): string[] {
   return [...new Set(items)];
 }
 
-function renderList(items: string[]) {
-  return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
-}
+function parseDurationInfo(tempo?: string) {
+  const raw = String(tempo ?? "").toLowerCase();
+  let morningHours = 0;
+  let afternoonHours = 0;
 
-function parseDurationInfo(text?: string) {
-  const raw = applyPortugueseCorrections(String(text ?? "").toLowerCase());
+  const morningMatch = raw.match(/(\d+)\s*(?:h|hora|horas)?\s*(?:de\s+)?manh[ãa]/i);
+  const afternoonMatch = raw.match(/(\d+)\s*(?:h|hora|horas)?\s*(?:à|a|de\s+)?tarde/i);
 
-  const morning = raw.match(/(\d+)\s*(hora|horas)?\s*(de\s*)?manhã/);
-  const afternoon = raw.match(/(\d+)\s*(hora|horas)?\s*(a\s*)?tarde/);
-  const total = raw.match(/(\d+)\s*(hora|horas)/);
-
-  if (morning || afternoon) {
-    const morningHours = morning ? Number(morning[1]) : 0;
-    const afternoonHours = afternoon ? Number(afternoon[1]) : 0;
-    const phraseParts: string[] = [];
-    if (morningHours) phraseParts.push(`${morningHours} hora${morningHours > 1 ? "s" : ""} de manhã`);
-    if (afternoonHours) phraseParts.push(`${afternoonHours} hora${afternoonHours > 1 ? "s" : ""} à tarde`);
-    return {
-      display: phraseParts.join(" e "),
-      morningHours,
-      afternoonHours,
-      totalHours: morningHours + afternoonHours,
-    };
+  if (morningMatch) {
+    morningHours = parseInt(morningMatch[1], 10) || 0;
+  }
+  if (afternoonMatch) {
+    afternoonHours = parseInt(afternoonMatch[1], 10) || 0;
   }
 
-  const totalHours = total ? Number(total[1]) : 5;
-  if (totalHours >= 6) {
-    return {
-      display: "3 horas de manhã e 3 horas à tarde",
-      morningHours: 3,
-      afternoonHours: 3,
-      totalHours: 6,
-    };
+  if (!morningMatch && !afternoonMatch) {
+    const generalMatch = raw.match(/(\d+)\s*(?:h|hora|horas)/i);
+    const total = generalMatch ? parseInt(generalMatch[1], 10) : 6;
+    if (total >= 6) {
+      morningHours = Math.ceil(total / 2);
+      afternoonHours = Math.floor(total / 2);
+    } else {
+      morningHours = total;
+      afternoonHours = 0;
+    }
   }
 
-  if (totalHours >= 5) {
-    return {
-      display: "3 horas de manhã e 2 horas à tarde",
-      morningHours: 3,
-      afternoonHours: 2,
-      totalHours: 5,
-    };
+  const totalHours = morningHours + afternoonHours || 6;
+  const morningText = morningHours > 0 ? `${morningHours} ${morningHours === 1 ? "hora" : "horas"}` : null;
+  const afternoonText = afternoonHours > 0 ? `${afternoonHours} ${afternoonHours === 1 ? "hora" : "horas"}` : null;
+
+  let display = `${totalHours} horas`;
+  if (morningText && afternoonText) {
+    display = `${totalHours} horas (Manhã: ${morningText} | Tarde: ${afternoonText})`;
+  } else if (morningText) {
+    display = `${morningText} de manhã`;
+  } else if (afternoonText) {
+    display = `${afternoonText} à tarde`;
   }
 
   return {
-    display: `${totalHours} hora${totalHours > 1 ? "s" : ""}`,
-    morningHours: totalHours,
-    afternoonHours: 0,
     totalHours,
+    morningHours,
+    afternoonHours,
+    display,
+    morningText,
+    afternoonText,
   };
 }
 
-function normalizeSystems(items: string[]) {
-  return items.map((item) => {
-    const key = applyPortugueseCorrections(item).toLowerCase();
-    return SYSTEM_LABELS[key] ?? normalizeLine(item);
-  });
-}
-
-function dynamicInfo(name: string): DynamicInfo {
-  return DYNAMIC_DETAILS[name] ?? {
-    nome: normalizeLine(name),
-    categoria: "Dinâmica",
-    objetivo: "Estimular integração, participação e alinhamento entre os participantes.",
-    comoFunciona: "A dinâmica é aplicada em grupo, com orientação do facilitador e foco em participação ativa.",
-    materiais: "Conforme necessidade do facilitador.",
-    tempo: "20 a 30 minutos.",
-  };
-}
-
-function buildDynamicsSection(names: string[]) {
-  return names
-    .map((name, index) => {
-      const info = dynamicInfo(name);
-      return `
-        <div style="margin:0 0 22px 0;">
-          <p style="margin:0 0 8px 0;"><strong>${index + 1}. ${escapeHtml(info.nome)}</strong></p>
-          <p style="margin:0 0 4px 0;"><strong>Categoria:</strong> ${escapeHtml(info.categoria)}</p>
-          <p style="margin:0 0 4px 0;"><strong>Objetivo:</strong> ${escapeHtml(info.objetivo)}</p>
-          <p style="margin:0 0 4px 0;"><strong>Como funciona:</strong> ${escapeHtml(info.comoFunciona)}</p>
-          <p style="margin:0 0 4px 0;"><strong>Materiais:</strong> ${escapeHtml(info.materiais)}</p>
-          <p style="margin:0 0 0 0;"><strong>Tempo estimado:</strong> ${escapeHtml(info.tempo)}</p>
-        </div>
-      `;
-    })
-    .join("");
-}
-
-function buildDepartmentModules(departments: string[], themes: string[]) {
-  const modules: string[] = [];
-
-  const hasComercial = departments.some((dep) => /comercial|vendas/.test(dep.toLowerCase()));
-  const hasAdministrativo = departments.some((dep) => /administr|adm/.test(dep.toLowerCase()));
-
-  if (hasComercial) {
-    const comercialThemes = unique(
-      themes.filter((item) => /atendimento|telef|cliente|meta|crm|comunica/.test(item.toLowerCase()))
-    );
-
-    const finalThemes = comercialThemes.length
-      ? comercialThemes
-      : [
-          "Atendimento telefônico",
-          "Atendimento ao público",
-          "Metas mensais",
-          "Uso do CRM no fluxo comercial",
-          "Padrão de comunicação com cliente",
-        ];
-
-    modules.push(`
-      <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">Módulo Comercial / Vendas</h3>
-      <p style="margin:0 0 10px 0;">Baseei este bloco no departamento Comercial da base, que destaca produtos e serviços, técnicas de vendas, metas e indicadores, atendimento ao cliente e relaciona CRM Corporativo.</p>
-      <p style="margin:0 0 8px 0;"><strong>Temas do módulo:</strong></p>
-      <ul style="margin:0 0 16px 22px; padding:0;">
-        ${renderList(finalThemes)}
-      </ul>
-      <p style="margin:0 0 8px 0;"><strong>Vídeo recomendado da base:</strong></p>
-      <p style="margin:0 0 24px 0;">Atendimento ao Cliente: Nosso Diferencial — cobre empatia, resolução de problemas e comunicação eficaz; indicado para Operacional e Técnico.</p>
-    `);
-  }
-
-  if (hasAdministrativo) {
-    const administrativoThemes = unique(
-      themes.filter((item) => /e-mail|email|relat|organiz|demanda|registro|controle|contáb|contabil|obriga/.test(item.toLowerCase()))
-    );
-
-    const finalThemes = administrativoThemes.length
-      ? administrativoThemes
-      : [
-          "Checagem de e-mail",
-          "Confecção de relatórios administrativos",
-          "Rotina de organização de demandas",
-          "Boas práticas de registro e controle",
-          "Interface com processos contábeis e obrigações internas",
-        ];
-
-    modules.push(`
-      <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">Módulo Administrativo</h3>
-      <p style="margin:0 0 10px 0;">A base não traz um departamento “Administrativo”, então este bloco foi estruturado com seus temas e com proximidade ao departamento Financeiro, que na base cobre processos contábeis, controles internos, orçamento e compliance.</p>
-      <p style="margin:0 0 8px 0;"><strong>Temas do módulo:</strong></p>
-      <ul style="margin:0 0 24px 22px; padding:0;">
-        ${renderList(finalThemes)}
-      </ul>
-    `);
-  }
-
-  if (!modules.length) {
-    modules.push(`<p style="margin:0 0 24px 0;">Os módulos departamentais foram distribuídos com base nos departamentos informados e nos temas priorizados para a integração.</p>`);
-  }
-
-  return modules.join("");
-}
-
-function buildSystemsSection(systems: string[]) {
-  return `
-    <ul style="margin:0 0 24px 22px; padding:0;">
-      ${renderList(systems)}
-    </ul>
-  `;
-}
-
-function buildMaterialsSection(documents: string[]) {
-  return documents
-    .map((doc) => {
-      const normalized = normalizeLine(doc);
-      const mapped = MATERIALS_BASE[normalized] ?? MATERIALS_BASE[doc];
-      if (mapped) {
-        return `<li>${escapeHtml(mapped)}</li>`;
-      }
-      return `<li><strong>${escapeHtml(normalized)}</strong> — material informado pelo usuário para apoio à integração.</li>`;
-    })
-    .join("");
-}
-
-function buildMorningSchedule(selectedDynamic: string, hasComercial: boolean, includeCRM: boolean) {
-  return `
-    <h3 style="font-size:20px; font-weight:700; margin:0 0 10px 0;">Manhã — 3 horas</h3>
-
-    <p style="margin:0 0 4px 0;"><strong>08:00–08:15 | Abertura com RH</strong></p>
-    <p style="margin:0 0 12px 0;">Boas-vindas<br />Apresentação da agenda<br />Contextualização da integração</p>
-
-    <p style="margin:0 0 4px 0;"><strong>08:15–08:35 | Alinhamento Cultural</strong></p>
-    <p style="margin:0 0 12px 0;">Missão<br />Visão<br />Valores<br />Papel de cada colaborador na cultura da empresa</p>
-
-    <p style="margin:0 0 4px 0;"><strong>08:35–08:55 | Dinâmica da Base</strong></p>
-    <p style="margin:0 0 12px 0;">${escapeHtml(selectedDynamic)}</p>
-
-    <p style="margin:0 0 4px 0;"><strong>08:55–09:00 | Pausa rápida</strong></p>
-    <p style="margin:0 0 12px 0;"></p>
-
-    <p style="margin:0 0 4px 0;"><strong>09:00–09:20 | Vídeo institucional</strong></p>
-    <p style="margin:0 0 12px 0;">Boas-vindas do CEO</p>
-
-    ${
-      hasComercial
-        ? `
-          <p style="margin:0 0 4px 0;"><strong>09:20–10:10 | Módulo Comercial com chefe de vendas</strong></p>
-          <p style="margin:0 0 12px 0;">Atendimento telefônico<br />Atendimento ao público<br />Metas mensais<br />Introdução ao CRM</p>
-
-          <p style="margin:0 0 4px 0;"><strong>10:10–10:25 | Vídeo de apoio</strong></p>
-          <p style="margin:0 0 12px 0;">Atendimento ao Cliente: Nosso Diferencial</p>
-        `
-        : ""
-    }
-
-    ${
-      includeCRM
-        ? `
-          <p style="margin:0 0 4px 0;"><strong>10:25–11:00 | Apresentação do CRM</strong></p>
-          <p style="margin:0 0 0 0;">Acesso<br />Uso básico<br />Fluxo de registro comercial<br />A base prevê 60 minutos, mas aqui foi ajustado para caber no tempo total disponível.</p>
-        `
-        : ""
-    }
-  `;
-}
-
-function buildAfternoonSchedule(hasAdministrativo: boolean, documents: string[]) {
-  const docsBlock = documents.length ? documents.join("<br />") : "Documentos selecionados para apoio da integração";
-
-  return `
-    <h3 style="font-size:20px; font-weight:700; margin:24px 0 10px 0;">Tarde — 3 horas</h3>
-
-    ${
-      hasAdministrativo
-        ? `
-          <p style="margin:0 0 4px 0;"><strong>13:00–13:50 | Módulo Administrativo com chefe administrativo</strong></p>
-          <p style="margin:0 0 12px 0;">Checagem de e-mail<br />Organização de demandas<br />Confecção de relatórios administrativos<br />Boas práticas de comunicação interna</p>
-        `
-        : `
-          <p style="margin:0 0 4px 0;"><strong>13:00–13:50 | Módulo Departamental</strong></p>
-          <p style="margin:0 0 12px 0;">Apresentação das rotinas e dos temas prioritários definidos para a integração.</p>
-        `
-    }
-
-    <p style="margin:0 0 4px 0;"><strong>13:50–14:20 | Documentação de apoio</strong></p>
-    <p style="margin:0 0 12px 0;">${docsBlock}</p>
-
-    <p style="margin:0 0 4px 0;"><strong>14:20–14:45 | Aplicação prática orientada</strong></p>
-    <p style="margin:0 0 12px 0;">Simulação simples de rotina:<br />receber demanda<br />registrar no fluxo correto<br />responder e-mail de forma adequada<br />encaminhar ou reportar status</p>
-
-    <p style="margin:0 0 4px 0;"><strong>14:45–15:00 | Fechamento com RH</strong></p>
-    <p style="margin:0 0 0 0;">Recapitulação dos pontos principais<br />Espaço para dúvidas<br />Próximos passos<br />Reforço de cultura e expectativas</p>
-  `;
-}
-
-export function buildOnboardingReport(session: OnboardingSession) {
+export function buildOnboardingReport(session: OnboardingSession): string {
+  const dateStr = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const duration = parseDurationInfo(session.tempoIntegracao);
-  const departments = unique(splitList(session.departamentos));
-  const themes = unique(splitList(session.temasDepartamentos));
-  const documents = unique(splitList(session.documentosBase));
-  const systems = normalizeSystems(unique(splitList(session.sistemasApresentados)));
-  const dynamicNames = unique(splitList(session.dinamicaPropria));
+  const quantidade = normalizeLine(session.quantidadeColaboradores ?? "Não informado");
+  const nivel = normalizeLine(session.nivelHierarquico ?? "Não informado");
+  const departamentosList = unique(splitList(session.departamentos));
+  const departamentosStr = departamentosList.length ? departamentosList.join(", ") : "Geral / Não informado";
+  const facilitadores = normalizeLine(session.facilitadoresDisponiveis ?? "Coordenador / Facilitador de Integração");
+  const missao = normalizeSentence(session.missaoEmpresa ?? "Não informada");
+  const visao = normalizeSentence(session.visaoEmpresa ?? "Não informada");
+  const valoresList = unique(splitList(session.valoresEmpresa));
+  const temasList = unique(splitList(session.temasDepartamentos));
+  const documentosList = unique(splitList(session.documentosBase));
+  const sistemasList = unique(splitList(session.sistemasApresentados)).filter(
+    (s) => !["nenhum", "nao", "não", "não haverá", "nao havera"].includes(s.toLowerCase())
+  );
 
-  const selectedDynamicNames = dynamicNames.length ? dynamicNames : ["Dinâmica não informada"];
-  const hasComercial = departments.some((dep) => /comercial|vendas/.test(dep.toLowerCase()));
-  const hasAdministrativo = departments.some((dep) => /administr|adm/.test(dep.toLowerCase()));
-  const includeCRM = systems.some((item) => /crm/i.test(item));
+  const hasComercialOuVendas = departamentosList.some((dep) => /comercial|vendas|venda/i.test(dep));
+  const hasAtendimento = departamentosList.some((dep) => /atendimento|suporte|cliente|relacionamento/i.test(dep));
+  const hasAdministrativo = departamentosList.some((dep) => /administr|adm|financeir|contab/i.test(dep));
 
-  return `
-<section>
-  <h1 style="font-size:30px; font-weight:800; margin:0 0 24px 0;">ROTEIRO DE INTEGRAÇÃO PERSONALIZADO PRONTO</h1>
+  // Build Schedule Table Items
+  type ScheduleRow = {
+    horario: string;
+    atividade: string;
+    responsavel: string;
+  };
 
-  <p style="margin:0 0 8px 0;"><strong>Quantidade de colaboradores:</strong> ${escapeHtml(normalizeLine(session.quantidadeColaboradores ?? "Não informado"))}</p>
-  <p style="margin:0 0 8px 0;"><strong>Nível hierárquico:</strong> ${escapeHtml(normalizeLine(session.nivelHierarquico ?? "Não informado"))}</p>
-  <p style="margin:0 0 8px 0;"><strong>Departamentos:</strong> ${escapeHtml(departments.join(", "))}</p>
-  <p style="margin:0 0 8px 0;"><strong>Facilitadores disponíveis:</strong> ${escapeHtml(normalizeLine(session.facilitadoresDisponiveis ?? "Não informado"))}</p>
-  <p style="margin:0 0 24px 0;"><strong>Tempo total da integração:</strong> ${escapeHtml(duration.display || normalizeLine(session.tempoIntegracao ?? "Não informado"))}</p>
+  const scheduleRows: ScheduleRow[] = [];
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">1. Alinhamento Cultural</h2>
-  <p style="margin:0 0 8px 0;"><strong>Missão:</strong> ${escapeHtml(normalizeLine(session.missaoEmpresa ?? "Não informado"))}</p>
-  <p style="margin:0 0 8px 0;"><strong>Visão:</strong> ${escapeHtml(normalizeLine(session.visaoEmpresa ?? "Não informado"))}</p>
-  <p style="margin:0 0 24px 0;"><strong>Valores:</strong> ${escapeHtml(normalizeLine(session.valoresEmpresa ?? "Não informado"))}</p>
+  // Morning Block
+  scheduleRows.push({
+    horario: "08h00–08h15",
+    atividade: "Boas-vindas institucionais + Apresentação de Missão, Visão e Valores",
+    responsavel: facilitadores,
+  });
 
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">2. Dinâmica Selecionada</h2>
-  ${buildDynamicsSection(selectedDynamicNames)}
+  scheduleRows.push({
+    horario: "08h15–08h20",
+    atividade: "Vídeo Institucional: Boas-vindas da Liderança / CEO",
+    responsavel: facilitadores,
+  });
 
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">3. Módulos Departamentais</h2>
-  ${buildDepartmentModules(departments, themes)}
-
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">4. Apresentação de Sistemas</h2>
-  ${buildSystemsSection(systems)}
-
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">5. Documentação de Apoio</h2>
-  <ul style="margin:0 0 24px 22px; padding:0;">
-    ${buildMaterialsSection(documents)}
-  </ul>
-
-  <h2 style="font-size:22px; font-weight:700; margin:0 0 10px 0;">6. Cronograma Integrado</h2>
-  ${
-    duration.morningHours >= 3 && duration.afternoonHours >= 2
-      ? buildMorningSchedule(selectedDynamicNames[0], hasComercial, includeCRM) + buildAfternoonSchedule(hasAdministrativo, documents)
-      : `
-        <p style="margin:0 0 8px 0;"><strong>Abertura:</strong> boas-vindas, agenda e contexto da integração.</p>
-        <p style="margin:0 0 8px 0;"><strong>Alinhamento cultural:</strong> missão, visão, valores e papel esperado de cada colaborador.</p>
-        <p style="margin:0 0 8px 0;"><strong>Dinâmica:</strong> ${escapeHtml(selectedDynamicNames.join(", "))}.</p>
-        <p style="margin:0 0 8px 0;"><strong>Módulos departamentais:</strong> apresentação dos temas e das rotinas das áreas envolvidas.</p>
-        <p style="margin:0 0 8px 0;"><strong>Sistemas:</strong> ${escapeHtml(systems.join(", "))}.</p>
-        <p style="margin:0 0 0 0;"><strong>Fechamento:</strong> documentos, dúvidas e próximos passos.</p>
-      `
+  if (hasAtendimento || (!hasComercialOuVendas && !hasAdministrativo)) {
+    scheduleRows.push({
+      horario: "08h20–08h50",
+      atividade: "Módulo Atendimento: Jornada do Cliente / Aluno & Encantamento",
+      responsavel: facilitadores,
+    });
+    scheduleRows.push({
+      horario: "08h50–09h30",
+      atividade: "Comunicação Eficaz: Escuta Ativa, Empatia e Resolução de Problemas",
+      responsavel: facilitadores,
+    });
+    scheduleRows.push({
+      horario: "09h30–10h00",
+      atividade: "Gestão de Objeções: Técnica LAER (Listar, Acolher, Explicar, Resolver)",
+      responsavel: facilitadores,
+    });
   }
 
-  <h2 style="font-size:22px; font-weight:700; margin:24px 0 10px 0;">Resumo de compatibilidade da base</h2>
-  <p style="margin:0 0 8px 0;">Dinâmicas escolhidas: ${escapeHtml(selectedDynamicNames.join(", "))}.</p>
-  <p style="margin:0 0 8px 0;">Vídeos usados: compatíveis com integração geral e, quando aplicável, com o módulo comercial.</p>
-  <p style="margin:0 0 8px 0;">Materiais usados: ${escapeHtml(documents.join(", "))}.</p>
-  <p style="margin:0 0 0 0;">Sistema oficial usado: ${escapeHtml(systems.join(", "))}.</p>
+  if (hasComercialOuVendas) {
+    scheduleRows.push({
+      horario: "10h00–10h15",
+      atividade: "Vídeo de Apoio: Atendimento e Vendas com Foco em Excelência",
+      responsavel: facilitadores,
+    });
+    scheduleRows.push({
+      horario: "10h15–11h00",
+      atividade: "Módulo Vendas: Venda Consultiva (Método SPIN Selling)",
+      responsavel: facilitadores,
+    });
+    scheduleRows.push({
+      horario: "11h00–11h45",
+      atividade: "Gatilhos Mentais e Argumentação Estratégica",
+      responsavel: facilitadores,
+    });
+  } else if (!hasAtendimento) {
+    scheduleRows.push({
+      horario: "09h00–10h30",
+      atividade: `Módulo Departamental: Rotinas e Processos Chave (${temasList.slice(0, 3).join(", ") || departamentosStr})`,
+      responsavel: facilitadores,
+    });
+    scheduleRows.push({
+      horario: "10h30–11h45",
+      atividade: "Boas Práticas de Trabalho, Qualidade e Fluxos Internos",
+      responsavel: facilitadores,
+    });
+  }
+
+  scheduleRows.push({
+    horario: "11h45–12h00",
+    atividade: "Síntese do Período da Manhã e Alinhamento de Aprendizados",
+    responsavel: facilitadores,
+  });
+
+  // Afternoon Block (if duration has afternoon)
+  if (duration.afternoonHours > 0 || duration.totalHours >= 4) {
+    if (hasComercialOuVendas || hasAtendimento) {
+      scheduleRows.push({
+        horario: "13h00–13h45",
+        atividade: "Prática de Fechamento, Apresentação de Valor e Tratamento de Objeções",
+        responsavel: facilitadores,
+      });
+      scheduleRows.push({
+        horario: "13h45–14h30",
+        atividade: "Integração Interdepartamental: Alinhamento entre Áreas e Experiência do Cliente",
+        responsavel: facilitadores,
+      });
+    } else {
+      scheduleRows.push({
+        horario: "13h00–14h00",
+        atividade: "Aplicação Prática Orientada e Simulação de Rotinas Operacionais",
+        responsavel: facilitadores,
+      });
+      scheduleRows.push({
+        horario: "14h00–14h30",
+        atividade: "Fluxos de Comunicação e Resolução de Demandas",
+        responsavel: facilitadores,
+      });
+    }
+
+    if (sistemasList.length > 0) {
+      scheduleRows.push({
+        horario: "14h30–15h00",
+        atividade: `Treinamento de Sistemas: ${sistemasList.join(", ")}`,
+        responsavel: facilitadores,
+      });
+    }
+
+    scheduleRows.push({
+      horario: "15h00–15h30",
+      atividade: `Apresentação dos Documentos Oficiais: ${documentosList.join(", ") || "Manuais e Políticas"}`,
+      responsavel: facilitadores,
+    });
+
+    scheduleRows.push({
+      horario: "15h30–16h00",
+      atividade: "Fechamento, Esclarecimento de Dúvidas, Próximos Passos e Avaliação",
+      responsavel: facilitadores,
+    });
+  } else {
+    scheduleRows.push({
+      horario: "12h00–12h30",
+      atividade: "Fechamento, Documentação de Apoio e Próximos Passos",
+      responsavel: facilitadores,
+    });
+  }
+
+  return `
+<style>
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+  .onboarding-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+  }
+  .onboarding-table th, .onboarding-table td {
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 13px;
+  }
+  .onboarding-table th {
+    background-color: #f8fafc !important;
+    color: #0f172a;
+    font-weight: 700;
+  }
+</style>
+
+<section style="background:#ffffff; border-radius:16px; padding:32px; color:#334155; margin-bottom:24px; font-family: system-ui, -apple-system, sans-serif; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+
+  <!-- CAPA / CABEÇALHO DO RELATÓRIO -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; border-radius: 14px; padding: 32px 24px; color: #ffffff !important; text-align: center; margin-bottom: 28px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8 !important; margin: 0 0 8px; font-weight:600; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Onboarding Estratégico & Integração Corporativa</p>
+    <h1 style="font-size: 28px; font-weight: 700; margin: 0 0 8px; color: #ffffff !important; letter-spacing: -0.5px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Roteiro de Integração Personalizado</h1>
+    <p style="font-size: 14px; color: #cbd5e1 !important; margin: 0 0 18px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">Perfil: ${escapeHtml(nivel)} (${escapeHtml(quantidade)} participantes) • Departamentos: ${escapeHtml(departamentosStr)} • Gerado em ${dateStr}</p>
+    <div style="display: inline-block; background: #0284c7 !important; color: #ffffff !important; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,0,0,0.2); -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+      Documento Oficial de Integração Estratégica
+    </div>
+  </div>
+
+  <!-- METADADOS E IDENTIFICAÇÃO DO PROGRAMA -->
+  <div style="background:#f8fafc !important; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-bottom:28px; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Público-Alvo</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(nivel)} — ${escapeHtml(quantidade)} pessoas</strong></div>
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Departamentos</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(departamentosStr)}</strong></div>
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Duração Total</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(duration.display)}</strong></div>
+    <div><span style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:600; display:block;">Facilitadores</span><strong style="color:#0f172a; font-size:14px;">${escapeHtml(facilitadores)}</strong></div>
+  </div>
+
+  <!-- SEÇÃO 1: ALINHAMENTO CULTURAL -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">1. ALINHAMENTO CULTURAL</h2>
+  <p style="margin:8px 0 16px 0; color:#64748b; font-size:14px;">Apresentação dos pilares estratégicos e da identidade da empresa para os novos colaboradores:</p>
+
+  <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:24px;">
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+      <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 8px 0;">08h00–08h15 | Boas-Vindas & Abertura Institucional</h3>
+      <p style="margin:0 0 6px 0; font-size:13px; color:#64748b;"><strong>Facilitador(es):</strong> ${escapeHtml(facilitadores)}</p>
+      <ul style="margin:6px 0 0 20px; padding:0; font-size:13px; color:#334155; line-height:1.6;">
+        <li>Recepção e acolhimento dos ${escapeHtml(quantidade)} novos colaboradores.</li>
+        <li>Apresentação dos facilitadores e agenda do dia.</li>
+        <li><strong>Missão:</strong> “${escapeHtml(missao.replace(/[.!?]$/, ""))}”</li>
+        <li><strong>Visão:</strong> “${escapeHtml(visao.replace(/[.!?]$/, ""))}”</li>
+        <li><strong>Valores:</strong> ${valoresList.length ? valoresList.join(", ") : "Valores organizacionais da empresa"}.</li>
+      </ul>
+    </div>
+
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+      <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 8px 0;">08h15–08h20 | Vídeo Institucional de Boas-Vindas</h3>
+      <p style="margin:0; font-size:13px; color:#334155; line-height:1.5;">Exibição de vídeo oficial com mensagem da diretoria/CEO, contextualizando a história, conquistas e visão de futuro da empresa.</p>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 2: MÓDULOS DE CONTEÚDO E DEPARTAMENTOS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">2. MÓDULOS DE CONTEÚDO & CAPACITAÇÃO DEPARTAMENTAL</h2>
+  <p style="margin:8px 0 16px 0; color:#64748b; font-size:14px;">Treinamento prático estruturado conforme os departamentos e temas priorizados:</p>
+
+  <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:28px;">
+    ${
+      hasAtendimento || (!hasComercialOuVendas && !hasAdministrativo)
+        ? `
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+            <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0 0 12px 0;">Módulo de Atendimento & Experiência do Cliente</h3>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:13px; color:#334155;">
+              <div>
+                <strong style="color:#0f172a;">Jornada do Cliente / Aluno:</strong>
+                <p style="margin:4px 0 0 0; line-height:1.5;">Apresentação dos 5 passos essenciais: <em>Atração ➔ Interesse ➔ Matrícula/Compra ➔ Experiência ➔ Indicação</em>. Mensagem central: <strong>Cada contato é uma oportunidade de encantar.</strong></p>
+              </div>
+              <div>
+                <strong style="color:#0f172a;">Escuta Ativa e Empatia:</strong>
+                <p style="margin:4px 0 0 0; line-height:1.5;">Metodologia: <em>Ouvir ➔ Validar ➔ Perguntar ➔ Resolver</em>. Foco em clareza, paciência e eliminação de ruídos de comunicação.</p>
+              </div>
+              <div>
+                <strong style="color:#0f172a;">Gestão de Objeções (Técnica LAER):</strong>
+                <p style="margin:4px 0 0 0; line-height:1.5;">Estrutura: <em>Listar ➔ Acolher ➔ Explicar ➔ Resolver</em>. Transformando dúvidas em segurança e fidelização.</p>
+              </div>
+            </div>
+          </div>
+        `
+        : ""
+    }
+
+    ${
+      hasComercialOuVendas
+        ? `
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+            <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0 0 12px 0;">Módulo de Vendas & Abordagem Consultiva</h3>
+            <div style="display:flex; flex-direction:column; gap:12px; font-size:13px; color:#334155;">
+              <div>
+                <strong style="color:#0f172a;">Venda Consultiva (Método SPIN):</strong>
+                <p style="margin:4px 0 0 0; line-height:1.5;">Diagnóstico estruturado: <em>Situação ➔ Problema ➔ Implicação ➔ Necessidade de Solução</em>. Atuando como consultor de confiança e gerador de valor.</p>
+              </div>
+              <div>
+                <strong style="color:#0f172a;">Gatilhos Mentais e Decisão de Compra:</strong>
+                <p style="margin:4px 0 0 0; line-height:1.5;">Aplicação ética dos pilares: <em>Urgência, Escassez, Prova Social e Autoridade</em> para acelerar a decisão do cliente.</p>
+              </div>
+              <div>
+                <strong style="color:#0f172a;">Apresentação de Preço e Fechamento:</strong>
+                <p style="margin:4px 0 0 0; line-height:1.5;">Ancoragem de valor, fechamento alternativo (“Segunda ou quarta?”) e reversão de hesitações.</p>
+              </div>
+            </div>
+          </div>
+        `
+        : ""
+    }
+
+    ${
+      temasList.length && !hasComercialOuVendas && !hasAtendimento
+        ? `
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+            <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0 0 12px 0;">Temas Específicos Priorizados</h3>
+            <ul style="margin:0 0 0 20px; padding:0; font-size:13px; color:#334155; line-height:1.6;">
+              ${temasList.map((tema) => `<li>${escapeHtml(tema)}</li>`).join("")}
+            </ul>
+          </div>
+        `
+        : ""
+    }
+  </div>
+
+  <!-- SEÇÃO 3: DOCUMENTAÇÃO DE APOIO & SISTEMAS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">3. DOCUMENTAÇÃO DE APOIO & SISTEMAS</h2>
+  
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:16px; margin-bottom:28px;">
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+      <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 12px 0; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">Documentos e Manuais de Apoio</h3>
+      <ul style="margin:0 0 0 18px; padding:0; font-size:13px; color:#334155; line-height:1.6;">
+        ${
+          documentosList.length
+            ? documentosList.map((doc) => `<li><strong>${escapeHtml(doc)}</strong></li>`).join("")
+            : "<li>Código de Conduta do Colaborador</li><li>Manual de Integração</li>"
+        }
+      </ul>
+    </div>
+
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+      <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0 0 12px 0; border-bottom:1px solid #e2e8f0; padding-bottom:6px;">Apresentação de Sistemas</h3>
+      <p style="margin:0; font-size:13px; color:#334155; line-height:1.6;">
+        ${
+          sistemasList.length
+            ? `Serão apresentados e treinados os seguintes sistemas: <strong>${escapeHtml(sistemasList.join(", "))}</strong>.`
+            : "Não haverá apresentação de sistemas operacionais específicos durante esta integração presencial."
+        }
+      </p>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 4: CRONOGRAMA INTEGRADO -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">4. CRONOGRAMA INTEGRADO HORÁRIO A HORÁRIO</h2>
+  <p style="margin:8px 0 16px 0; color:#64748b; font-size:14px;">Planejamento detalhado das atividades, horários e facilitadores responsáveis:</p>
+
+  <table class="onboarding-table">
+    <thead>
+      <tr>
+        <th style="width: 140px;">Horário</th>
+        <th>Atividade / Módulo</th>
+        <th style="width: 220px;">Responsável</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${scheduleRows
+        .map(
+          (row) => `
+            <tr>
+              <td><strong style="color:#0284c7;">${escapeHtml(row.horario)}</strong></td>
+              <td>${escapeHtml(row.atividade)}</td>
+              <td>${escapeHtml(row.responsavel)}</td>
+            </tr>
+          `
+        )
+        .join("")}
+    </tbody>
+  </table>
+
+  <!-- SEÇÃO 5: SÍNTESE DE RESULTADOS ESPERADOS -->
+  <h2 style="font-size:18px; color:#0f172a; border-bottom:2px solid #e2e8f0; padding-bottom:8px; margin-top:32px;">5. RESULTADOS ESPERADOS AO FINAL DA INTEGRAÇÃO</h2>
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin-top:16px;">
+    <p style="margin:0 0 10px 0; color:#0f172a; font-weight:700; font-size:14px;">Ao final deste programa, os novos colaboradores estarão preparados para:</p>
+    <ul style="margin:0 0 0 20px; padding:0; font-size:13px; color:#334155; line-height:1.6;">
+      <li>Compreender e vivenciar no dia a dia a <strong>Missão, Visão e Valores</strong> da empresa;</li>
+      <li>Executar suas atividades com clareza quanto ao papel do seu departamento na jornada do cliente;</li>
+      <li>Aplicar os padrões de qualidade, comunicação transparente e respeito às normas internas;</li>
+      <li>Consultar e utilizar os manuais e documentações oficiais da organização (${documentosList.join(", ") || "Código de Conduta e Manuais"});</li>
+      <li>Atuar com alinhamento operacional, integração com os colegas de equipe e foco em excelência de entrega.</li>
+    </ul>
+  </div>
 </section>
-`;
+  `.trim();
 }
