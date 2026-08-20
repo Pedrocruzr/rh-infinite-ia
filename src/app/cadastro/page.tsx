@@ -20,8 +20,8 @@ function CadastroContent() {
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const googleOAuthEnabled = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_ENABLED === "true";
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(searchParams.get("name") || "");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
