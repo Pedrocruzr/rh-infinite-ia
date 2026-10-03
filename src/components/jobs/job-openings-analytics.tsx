@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { JobOpening } from "@/lib/jobs/types";
+import { JOB_DEPARTMENTS, parseJobTitleAndArea } from "@/lib/jobs/departments";
 
 interface JobOpeningsAnalyticsProps {
   isPurpleTheme?: boolean;
@@ -36,11 +37,10 @@ export function JobOpeningsAnalytics({
     return currentMonth >= 0 && currentMonth < 12 ? currentMonth : 9;
   });
 
-  // ─── CÁLCULO DE CONTRATAÇÕES 100% REAL E CONTINGENTE AOS DADOS DO USUÁRIO ──
+  // ─── CÁLCULO DE CONTRATAÇÕES + REGRESSÃO LINEAR NOS MESES FUTUROS ──────────
   const { monthStats } = useMemo(() => {
     const realHiresPerMonth = new Array(12).fill(0);
 
-    // Contabiliza apenas as vagas reais marcadas como fechadas/contratadas
     for (const job of items) {
       if (job.status === "fechada") {
         const dateStr = job.data_fechamento || job.data_abertura;
@@ -49,13 +49,11 @@ export function JobOpeningsAnalytics({
           let m = -1;
 
           if (clean.includes("-")) {
-            // Formato YYYY-MM-DD
             const parts = clean.split("-");
             if (parts.length === 3) {
               m = parseInt(parts[1], 10) - 1;
             }
           } else if (clean.includes("/")) {
-            // Formato DD/MM/YYYY
             const parts = clean.split("/");
             if (parts.length === 3) {
               m = parseInt(parts[1], 10) - 1;
@@ -79,7 +77,7 @@ export function JobOpeningsAnalytics({
     const currentMonthIdx = new Date().getMonth(); // Outubro = 9
     const maxReal = Math.max(...realHiresPerMonth, 1);
 
-    // Regressão Linear Simples Y = a + bX (apenas com base no histórico real dos meses transcorridos)
+    // Regressão Linear Simples Y = a + bX com base no histórico real dos meses transcorridos
     const n = Math.max(1, currentMonthIdx + 1);
     let sumX = 0;
     let sumY = 0;
@@ -115,16 +113,16 @@ export function JobOpeningsAnalytics({
         if (prev > 0) {
           pct = Math.round(((count - prev) / prev) * 100);
         } else if (count > 0) {
-          pct = 100; // Saiu de 0 para algo positivo
+          pct = 100;
         } else {
           pct = 0;
         }
       }
 
-      // Altura visual proporcional: se tiver contratações, cresce de 25% a 92%; se 0, fica na base (10%)
-      let heightPct = 10;
+      // Altura visual proporcional: se tiver contratações, cresce de 28% a 92%; se 0, fica na base (12%)
+      let heightPct = 12;
       if (count > 0) {
-        heightPct = Math.max(25, Math.min(95, Math.round((count / maxReal) * 88)));
+        heightPct = Math.max(28, Math.min(92, Math.round((count / maxReal) * 88)));
       }
 
       stats.push({
@@ -142,149 +140,49 @@ export function JobOpeningsAnalytics({
 
   const selectedMonth = monthStats[selectedMonthIndex] || monthStats[0];
 
-  // ─── DEPARTAMENTOS: CÁLCULO 100% DINÂMICO BASEADO NAS VAGAS EM ABERTO ───────
+  // ─── DEPARTAMENTOS: CÁLCULO 100% DINÂMICO CONECTADO ÀS ÁREAS REAIS ──────────
   const departments = useMemo(() => {
-    // Analisa as vagas em aberto (ou todas cadastradas se não houver em aberto)
     const openJobs = items.filter((job) => job.status === "em_aberto");
     const activeList = openJobs.length > 0 ? openJobs : items;
     const totalJobs = activeList.length;
 
-    const counts = {
-      vendas: 0,
-      tech: 0,
-      rh: 0,
-      financas: 0,
-      marketing: 0,
-    };
+    const counts: Record<string, number> = {};
+    for (const dep of JOB_DEPARTMENTS) {
+      counts[dep.name] = 0;
+    }
 
     for (const job of activeList) {
-      const name = (job.nome_vaga || "").toLowerCase();
-      if (
-        name.includes("vend") ||
-        name.includes("comercial") ||
-        name.includes("sdr") ||
-        name.includes("bdr") ||
-        name.includes("closer") ||
-        name.includes("inside sales") ||
-        name.includes("prospec") ||
-        name.includes("consultor")
-      ) {
-        counts.vendas++;
-      } else if (
-        name.includes("tech") ||
-        name.includes("ti") ||
-        name.includes("dev") ||
-        name.includes("software") ||
-        name.includes("front") ||
-        name.includes("back") ||
-        name.includes("full") ||
-        name.includes("engenheir") ||
-        name.includes("dados") ||
-        name.includes("qa") ||
-        name.includes("suporte") ||
-        name.includes("programad") ||
-        name.includes("ux") ||
-        name.includes("ui")
-      ) {
-        counts.tech++;
-      } else if (
-        name.includes("rh") ||
-        name.includes("humano") ||
-        name.includes("recrut") ||
-        name.includes("talent") ||
-        name.includes("gest") ||
-        name.includes("people") ||
-        name.includes("dp") ||
-        name.includes("psicol")
-      ) {
-        counts.rh++;
-      } else if (
-        name.includes("finan") ||
-        name.includes("contab") ||
-        name.includes("fisc") ||
-        name.includes("tesour") ||
-        name.includes("fatur") ||
-        name.includes("audit") ||
-        name.includes("controlad")
-      ) {
-        counts.financas++;
-      } else if (
-        name.includes("mkt") ||
-        name.includes("marketing") ||
-        name.includes("growth") ||
-        name.includes("copy") ||
-        name.includes("design") ||
-        name.includes("social") ||
-        name.includes("trafego") ||
-        name.includes("tráfego") ||
-        name.includes("comunic") ||
-        name.includes("midia") ||
-        name.includes("mídia")
-      ) {
-        counts.marketing++;
+      const { area } = parseJobTitleAndArea(job.nome_vaga);
+      if (counts[area] !== undefined) {
+        counts[area]++;
       } else {
-        // Classificação padrão quando o cargo for generalista
-        counts.tech++;
+        counts["Administração (ADM)"] = (counts["Administração (ADM)"] || 0) + 1;
       }
     }
 
     const calcPct = (count: number) =>
       totalJobs > 0 ? Math.round((count / totalJobs) * 100) : 0;
 
-    return [
-      {
-        name: "Vendas",
-        count: counts.vendas,
-        pct: calcPct(counts.vendas),
-        color: "#F59E0B", // Laranja / Âmbar
-        labelColor: "text-amber-400",
-        r: 98,
-        circumference: 615,
-      },
-      {
-        name: "Tech / TI",
-        count: counts.tech,
-        pct: calcPct(counts.tech),
-        color: "#10B981", // Verde Esmeralda / Menta
-        labelColor: "text-emerald-400",
-        r: 85,
-        circumference: 534,
-      },
-      {
-        name: "RH & Gestão",
-        count: counts.rh,
-        pct: calcPct(counts.rh),
-        color: "#8B5CF6", // Roxo / Violeta
-        labelColor: "text-purple-400",
-        r: 72,
-        circumference: 452,
-      },
-      {
-        name: "Finanças",
-        count: counts.financas,
-        pct: calcPct(counts.financas),
-        color: "#06B6D4", // Ciano Elétrico
-        labelColor: "text-cyan-400",
-        r: 59,
-        circumference: 370,
-      },
-      {
-        name: "Marketing",
-        count: counts.marketing,
-        pct: calcPct(counts.marketing),
-        color: "#EC4899", // Rosa / Magenta
-        labelColor: "text-pink-400",
-        r: 46,
-        circumference: 289,
-      },
-    ];
+    // Raios concêntricos de 98 até 44 para 7 áreas com respiro abundante para a esfera central
+    return JOB_DEPARTMENTS.map((dept, idx) => {
+      const r = 98 - idx * 9;
+      const circumference = Math.round(2 * Math.PI * r);
+      const count = counts[dept.name] || 0;
+      return {
+        ...dept,
+        count,
+        pct: calcPct(count),
+        r,
+        circumference,
+      };
+    });
   }, [items]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-12">
-      {/* ─── 1. GRÁFICO 3D: TENDÊNCIA DE CONTRATAÇÃO ──────────────────────── */}
+      {/* ─── 1. GRÁFICO 3D: TENDÊNCIA DE CONTRATAÇÃO (ASPECTO PRISMA 3D ISOMÉTRICO) ─── */}
       <div
-        className={`group relative rounded-[2rem] border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl lg:col-span-7 ${
+        className={`group relative overflow-hidden rounded-[2rem] border p-6 transition-all duration-300 hover:shadow-2xl lg:col-span-7 ${
           isPurpleTheme
             ? "border-purple-500/25 bg-[#160d26] shadow-[0_20px_50px_rgba(168,85,247,0.15)]"
             : "border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-gradient-to-b dark:from-[#0E1928] dark:to-[#0A111C] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
@@ -342,9 +240,24 @@ export function JobOpeningsAnalytics({
           </div>
         </div>
 
-        {/* 3D Isometric / Cylindrical Columns Container com altura total explícita */}
-        <div className="relative mt-8 flex h-60 w-full items-end justify-between gap-1.5 px-2 pb-6 pt-14">
-          {/* Subtle horizontal grid lines */}
+        {/* 3D Isometric Columns Container com feixes verticais estilo imagem 2 */}
+        <div className="relative mt-8 flex h-64 w-full items-end justify-between gap-1.5 px-3 pb-6 pt-16">
+          {/* Fios verticais de luz e grid lines 3D de fundo (conforme Imagem 2) */}
+          <div className="pointer-events-none absolute inset-x-3 bottom-6 top-6 flex justify-between">
+            {monthStats.map((item) => (
+              <div key={`guide-${item.name}`} className="flex h-full w-full justify-center">
+                <div
+                  className={`h-full w-[1px] opacity-15 ${
+                    isPurpleTheme
+                      ? "bg-gradient-to-t from-pink-500/40 via-purple-400/20 to-transparent"
+                      : "bg-gradient-to-t from-[#2BEF83]/40 via-[#2488BA]/20 to-transparent"
+                  }`}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Grid lines horizontais */}
           <div className="pointer-events-none absolute inset-x-0 bottom-6 top-8 flex flex-col justify-between border-b border-white/5">
             <div className="border-b border-dashed border-white/5" />
             <div className="border-b border-dashed border-white/5" />
@@ -353,6 +266,14 @@ export function JobOpeningsAnalytics({
 
           {monthStats.map((item, index) => {
             const isSelected = index === selectedMonthIndex;
+
+            // Alinhamento inteligente do tooltip flutuante para NUNCA vazar da caixa (meses 10 e 11 na borda direita)
+            const tooltipAlignClass =
+              index >= 10
+                ? "right-0 left-auto"
+                : index <= 1
+                  ? "left-0 right-auto"
+                  : "left-1/2 -translate-x-1/2";
 
             return (
               <div
@@ -368,7 +289,7 @@ export function JobOpeningsAnalytics({
                 {/* Floating Tooltip / Badge over selected month */}
                 {isSelected && (
                   <div
-                    className={`absolute -top-12 z-20 flex whitespace-nowrap rounded-xl px-2.5 py-1 text-[11px] font-bold shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
+                    className={`absolute -top-12 z-30 flex whitespace-nowrap rounded-xl px-2.5 py-1 text-[11px] font-bold shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${tooltipAlignClass} ${
                       item.isProjected
                         ? isPurpleTheme
                           ? "border border-purple-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-purple-500/40"
@@ -380,8 +301,7 @@ export function JobOpeningsAnalytics({
                   >
                     {item.isProjected ? (
                       <span>
-                        Projeção estimada de contratação: {item.count}{" "}
-                        {item.count === 1 ? "vaga" : "vagas"}
+                        Projeção estimada: {item.count} {item.count === 1 ? "vaga" : "vagas"}
                       </span>
                     ) : (
                       <span>
@@ -392,55 +312,110 @@ export function JobOpeningsAnalytics({
                   </div>
                 )}
 
-                {/* 3D Column Cylinder Wrapper (com altura percentual calculada sobre h-full) */}
+                {/* Coluna Prisma 3D Facetado com Volumetria e Glow no Piso */}
                 <div className="relative flex h-full w-full max-w-[28px] items-end justify-center">
+                  {/* Glow volumétrico no piso da coluna */}
                   <div
-                    className="relative w-full transition-all duration-500 flex flex-col justify-end"
+                    className={`absolute -bottom-1 h-2 w-full rounded-full blur-xs transition-opacity duration-300 ${
+                      isSelected
+                        ? isPurpleTheme
+                          ? "bg-pink-500 opacity-90 scale-125"
+                          : "bg-[#2BEF83] opacity-90 scale-125"
+                        : item.count > 0
+                          ? isPurpleTheme
+                            ? "bg-purple-500/40 opacity-50"
+                            : "bg-[#2488BA]/40 opacity-50"
+                          : "opacity-0"
+                    }`}
+                  />
+
+                  <div
+                    className="relative flex w-full flex-col justify-end transition-all duration-500"
                     style={{ height: `${item.heightPct}%` }}
                   >
-                    {/* Top Cylinder Cap (3D Bevel) */}
+                    {/* Topo Chanfrado 3D (Bevel Elíptico Iluminado com Highlight de Vidro) */}
                     <div
-                      className={`h-3 w-full shrink-0 rounded-full transition-all duration-300 ${
+                      className={`relative z-20 h-3.5 w-full shrink-0 rounded-full border transition-all duration-300 ${
                         isSelected
                           ? isPurpleTheme
-                            ? "bg-pink-300 shadow-[0_0_16px_rgba(244,114,182,1)]"
-                            : "bg-[#7ef5b6] shadow-[0_0_16px_rgba(43,239,131,1)]"
+                            ? "border-pink-200 bg-gradient-to-r from-pink-300 via-rose-200 to-pink-400 shadow-[0_0_16px_rgba(244,114,182,1)]"
+                            : "border-emerald-200 bg-gradient-to-r from-[#7ef5b6] via-white to-[#2BEF83] shadow-[0_0_16px_rgba(43,239,131,1)]"
                           : isPurpleTheme
-                            ? item.count > 0 ? "bg-purple-300/80" : "bg-purple-400/30"
-                            : item.count > 0 ? "bg-[#2488BA]/80" : "bg-[#2488BA]/30"
+                            ? item.count > 0
+                              ? "border-purple-300/60 bg-gradient-to-r from-purple-300 via-pink-300 to-purple-400"
+                              : "border-purple-400/20 bg-purple-400/20"
+                            : item.count > 0
+                              ? "border-sky-300/60 bg-gradient-to-r from-[#2488BA] via-[#5ce1e6] to-[#2BEF83]"
+                              : "border-[#2488BA]/20 bg-[#2488BA]/20"
                       }`}
-                    />
+                    >
+                      {/* Especular highlight central */}
+                      <div className="absolute inset-x-1.5 top-0.5 h-1 rounded-full bg-white/70 blur-[0.3px]" />
+                    </div>
 
-                    {/* Cylinder Column Body */}
+                    {/* Corpo do Prisma 3D com Duas Facetas: Frontal Iluminada + Lateral Sombreada */}
                     <div
-                      className={`w-full rounded-b-lg transition-all duration-300 ${
+                      className={`relative flex w-full overflow-hidden rounded-b-md transition-all duration-300 ${
                         item.heightPct > 15 ? "flex-1" : "h-1"
                       } ${
                         item.isProjected
                           ? isSelected
                             ? isPurpleTheme
-                              ? "border-2 border-dashed border-pink-300 bg-gradient-to-t from-purple-800/80 to-pink-500/80 shadow-[0_0_20px_rgba(236,72,153,0.5)]"
-                              : "border-2 border-dashed border-sky-300 bg-gradient-to-t from-slate-800/80 to-sky-500/80 shadow-[0_0_20px_rgba(56,189,248,0.5)]"
+                              ? "border-x border-b border-dashed border-pink-300 bg-gradient-to-t from-purple-900 via-purple-700 to-pink-600 shadow-[0_0_24px_rgba(236,72,153,0.6)]"
+                              : "border-x border-b border-dashed border-sky-300 bg-gradient-to-t from-slate-900 via-sky-700 to-cyan-500 shadow-[0_0_24px_rgba(56,189,248,0.6)]"
                             : isPurpleTheme
-                              ? "border border-dashed border-purple-400/40 bg-purple-900/30 hover:opacity-80"
-                              : "border border-dashed border-sky-400/40 bg-sky-950/30 hover:opacity-80"
+                              ? "border-x border-b border-dashed border-purple-400/40 bg-purple-900/30 hover:opacity-80"
+                              : "border-x border-b border-dashed border-sky-400/40 bg-sky-950/30 hover:opacity-80"
                           : isSelected
                             ? isPurpleTheme
-                              ? "bg-gradient-to-t from-[#7C3AED] via-[#A855F7] to-[#EC4899] shadow-[0_0_24px_rgba(236,72,153,0.6)]"
-                              : "bg-gradient-to-t from-[#0E1928] via-[#2488BA] to-[#2BEF83] shadow-[0_0_26px_rgba(43,239,131,0.6)]"
+                              ? "shadow-[0_0_28px_rgba(236,72,153,0.7)]"
+                              : "shadow-[0_0_28px_rgba(43,239,131,0.7)]"
+                            : item.count > 0
+                              ? "hover:opacity-95"
+                              : "opacity-30 hover:opacity-50"
+                      }`}
+                    >
+                      {/* Faceta Frontal (65% largura - Iluminada com gradiente vertical) */}
+                      <div
+                        className={`h-full w-[65%] transition-colors duration-300 ${
+                          isSelected
+                            ? isPurpleTheme
+                              ? "bg-gradient-to-t from-[#6D28D9] via-[#A855F7] to-[#EC4899]"
+                              : "bg-gradient-to-t from-[#0E1928] via-[#2488BA] to-[#2BEF83]"
                             : isPurpleTheme
                               ? item.count > 0
-                                ? "bg-gradient-to-t from-purple-900/80 to-purple-500/80 hover:opacity-90"
-                                : "opacity-25 hover:opacity-50 bg-gradient-to-t from-purple-900/40 to-purple-500/40"
+                                ? "bg-gradient-to-t from-purple-950 via-purple-800 to-purple-500"
+                                : "bg-gradient-to-t from-purple-950 to-purple-800"
                               : item.count > 0
-                                ? "bg-gradient-to-t from-slate-800 to-sky-500 hover:opacity-90"
-                                : "opacity-25 hover:opacity-50 bg-gradient-to-t from-slate-800 to-sky-700/50"
-                      }`}
-                    />
+                                ? "bg-gradient-to-t from-slate-900 via-slate-700 to-sky-500"
+                                : "bg-gradient-to-t from-slate-900 to-sky-900"
+                        }`}
+                      >
+                        {/* Brilho linear vertical (reflexo de aresta 3D) */}
+                        <div className="h-full w-full bg-gradient-to-r from-white/20 via-transparent to-transparent opacity-80" />
+                      </div>
+
+                      {/* Faceta Lateral Chanfrada (35% largura - Sombreada para profundidade 3D) */}
+                      <div
+                        className={`h-full w-[35%] border-l border-black/20 transition-colors duration-300 ${
+                          isSelected
+                            ? isPurpleTheme
+                              ? "bg-gradient-to-t from-[#4C1D95] via-[#7E22CE] to-[#BE185D]"
+                              : "bg-gradient-to-t from-[#060D17] via-[#1A5C7E] to-[#1F9F58]"
+                            : isPurpleTheme
+                              ? item.count > 0
+                                ? "bg-gradient-to-t from-purple-950 via-purple-900 to-purple-700"
+                                : "bg-purple-950"
+                              : item.count > 0
+                                ? "bg-gradient-to-t from-slate-950 via-slate-800 to-sky-700"
+                                : "bg-slate-950"
+                        }`}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Month Label */}
+                {/* Month Label com indicador de projeção */}
                 <span
                   className={`mt-2 flex flex-col items-center text-[11px] font-bold transition-colors ${
                     isSelected
@@ -465,9 +440,9 @@ export function JobOpeningsAnalytics({
         </div>
       </div>
 
-      {/* ─── 2. GRÁFICO HUD ORBITAL: VAGAS POR DEPARTAMENTO ───────────────── */}
+      {/* ─── 2. GRÁFICO HUD ORBITAL 3D: VAGAS POR DEPARTAMENTO ──────────────── */}
       <div
-        className={`group relative rounded-[2rem] border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl lg:col-span-5 ${
+        className={`group relative overflow-hidden rounded-[2rem] border p-6 transition-all duration-300 hover:shadow-2xl lg:col-span-5 ${
           isPurpleTheme
             ? "border-purple-500/25 bg-[#160d26] shadow-[0_20px_50px_rgba(168,85,247,0.15)]"
             : "border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-gradient-to-b dark:from-[#0E1928] dark:to-[#0A111C] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
@@ -500,28 +475,38 @@ export function JobOpeningsAnalytics({
         </div>
 
         <div className="mt-5 flex flex-col items-center justify-center gap-6 sm:flex-row sm:justify-around">
-          {/* Orbital HUD Graphic com raio expandido (110 center) para garantir RESPIRO TOTAL do texto */}
-          <div className="relative flex h-52 w-52 shrink-0 items-center justify-center">
+          {/* Orbital HUD Graphic com Anéis Animados Circulando o Círculo */}
+          <div className="relative flex h-56 w-56 shrink-0 items-center justify-center">
             {/* Ambient Background Glow */}
             <div
-              className={`absolute h-40 w-40 rounded-full blur-2xl opacity-20 ${
+              className={`absolute h-44 w-44 rounded-full blur-3xl opacity-25 ${
                 isPurpleTheme ? "bg-pink-500" : "bg-[#2BEF83]"
               }`}
             />
 
-            {/* SVG Concentric Rings com 5 cores distintas calculadas dinamicamente */}
+            {/* SVG Concentric Rings com Animação Contínua Circulando o Círculo */}
             <svg
               className="h-full w-full -rotate-90 transform"
               viewBox="0 0 220 220"
             >
-              {departments.map((dep) => {
+              {departments.map((dep, idx) => {
                 const strokeDashoffset =
                   dep.pct > 0
                     ? dep.circumference - (dep.circumference * dep.pct) / 100
                     : dep.circumference;
 
+                // Animação com velocidades alternadas em rotação orbital contínua
+                const animDuration = 16 + idx * 4;
+                const isClockwise = idx % 2 === 0;
+
                 return (
-                  <g key={dep.name}>
+                  <g
+                    key={dep.name}
+                    style={{
+                      transformOrigin: "110px 110px",
+                      animation: `spin ${animDuration}s linear infinite ${isClockwise ? "normal" : "reverse"}`,
+                    }}
+                  >
                     {/* Ring Track de fundo */}
                     <circle
                       cx="110"
@@ -529,8 +514,9 @@ export function JobOpeningsAnalytics({
                       r={dep.r}
                       fill="none"
                       stroke="rgba(255,255,255,0.06)"
-                      strokeWidth={dep.r > 70 ? "4" : "3.5"}
+                      strokeWidth={dep.r > 65 ? "3.5" : "3"}
                     />
+
                     {/* Ring Arc colorido proporcional às vagas reais */}
                     {dep.pct > 0 && (
                       <circle
@@ -539,45 +525,70 @@ export function JobOpeningsAnalytics({
                         r={dep.r}
                         fill="none"
                         stroke={dep.color}
-                        strokeWidth={dep.r > 70 ? "5" : "4"}
+                        strokeWidth={dep.r > 65 ? "4.5" : "3.5"}
                         strokeDasharray={dep.circumference}
                         strokeDashoffset={strokeDashoffset}
                         strokeLinecap="round"
-                        className="transition-all duration-1000"
+                        style={{
+                          filter: `drop-shadow(0 0 4px ${dep.color})`,
+                        }}
                       />
                     )}
+
+                    {/* Ponto / Feixe de luz circulando continuamente ao redor do anel */}
+                    <circle
+                      cx="110"
+                      cy="110"
+                      r={dep.r}
+                      fill="none"
+                      stroke={dep.color}
+                      strokeWidth={dep.r > 65 ? "3" : "2.5"}
+                      strokeDasharray={`14 ${dep.circumference - 14}`}
+                      strokeLinecap="round"
+                      opacity={dep.pct > 0 ? "0.9" : "0.35"}
+                      style={{
+                        filter: `drop-shadow(0 0 6px ${dep.color})`,
+                      }}
+                    />
                   </g>
                 );
               })}
             </svg>
 
-            {/* Central Text Display com amplo respiro (raio interno = 46px / diâmetro = 92px) */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span
-                className={`text-3xl font-black tracking-tight ${
-                  isPurpleTheme ? "text-white" : "text-slate-950 dark:text-white"
+            {/* Núcleo Central 3D em Esfera de Vidro com Palavras em Escala Ajustada */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div
+                className={`relative flex h-24 w-24 flex-col items-center justify-center rounded-full border p-2 text-center backdrop-blur-md shadow-2xl transition-all duration-300 ${
+                  isPurpleTheme
+                    ? "border-pink-500/40 bg-gradient-to-b from-[#2a1347]/90 via-[#160d26]/95 to-[#0b0514] shadow-[inset_0_2px_8px_rgba(244,114,182,0.35),_inset_0_-6px_12px_rgba(0,0,0,0.8),_0_0_24px_rgba(168,85,247,0.3)]"
+                    : "border-emerald-500/40 bg-gradient-to-b from-[#162a42]/90 via-[#0E1928]/95 to-[#050b12] shadow-[inset_0_2px_8px_rgba(43,239,131,0.35),_inset_0_-6px_12px_rgba(0,0,0,0.8),_0_0_24px_rgba(36,136,186,0.3)]"
                 }`}
               >
-                {openCount}
-              </span>
-              <span
-                className={`mt-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                  isPurpleTheme ? "text-pink-300" : "text-emerald-600 dark:text-[#2BEF83]"
-                }`}
-              >
-                {openCount === 1 ? "Vaga em Aberto" : "Vagas em Aberto"}
-              </span>
+                {/* Reflexo vítreo especular no topo da esfera 3D */}
+                <div className="pointer-events-none absolute inset-x-4 top-1.5 h-3 rounded-full bg-gradient-to-b from-white/30 to-transparent blur-[0.5px]" />
+
+                <span className="text-3xl font-black tracking-tight text-white drop-shadow-sm">
+                  {openCount}
+                </span>
+                <span
+                  className={`mt-0.5 max-w-[85px] text-[7.5px] font-extrabold uppercase tracking-[0.16em] leading-tight ${
+                    isPurpleTheme ? "text-pink-300" : "text-emerald-400"
+                  }`}
+                >
+                  {openCount === 1 ? "Vaga em aberto" : "Vagas em aberto"}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Department Legend List: Nomes e porcentagens 100% dinâmicos e fiéis */}
-          <div className="flex flex-col gap-2.5">
+          {/* Department Legend List: Nomes e porcentagens 100% dinâmicos e fiéis às áreas reais */}
+          <div className="flex flex-col gap-2">
             {departments.map((dep) => (
               <div
                 key={dep.name}
-                className="flex items-center justify-between gap-5 text-xs"
+                className="flex items-center justify-between gap-4 text-xs"
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 rounded-full shadow-sm ring-1 ring-white/10"
                     style={{ backgroundColor: dep.color }}

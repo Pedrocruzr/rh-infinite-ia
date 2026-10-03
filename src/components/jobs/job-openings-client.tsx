@@ -227,7 +227,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
                 Operação de recrutamento
               </div>
               <h1
-                className={`mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl transition-all duration-300 ${
+                className={`mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl pb-2 leading-tight overflow-visible transition-all duration-300 ${
                   isPurpleTheme
                     ? "bg-gradient-to-r from-purple-400 via-pink-400 to-rose-300 bg-clip-text text-transparent"
                     : "text-slate-950 dark:text-white"

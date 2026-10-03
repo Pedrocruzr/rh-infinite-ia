@@ -3,6 +3,7 @@
 import { JOB_STATUS_OPTIONS } from "@/lib/jobs/constants";
 import { formatDateBR, getStatusBadgeClass, getStatusLabel } from "@/lib/jobs/utils";
 import type { JobOpening, JobStatus } from "@/lib/jobs/types";
+import { parseJobTitleAndArea, JOB_DEPARTMENTS } from "@/lib/jobs/departments";
 import { Clock, Calendar, Check, Pause, Play, Edit3, Trash2, UserCheck } from "lucide-react";
 
 interface JobOpeningsBoardProps {
@@ -107,25 +108,43 @@ export function JobOpeningsBoard({
                       />
 
                       {/* Header Title & Status */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-slate-900 group-hover:text-sky-600 dark:text-white dark:group-hover:text-[#2BEF83] transition-colors">
-                            {item.nome_vaga}
-                          </h3>
-                          <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-400">
-                            <Calendar className="h-3 w-3 shrink-0" />
-                            <span>Aberta em {formatDateBR(item.data_abertura)}</span>
-                          </div>
-                        </div>
+                      {(() => {
+                        const { cleanName, area } = parseJobTitleAndArea(item.nome_vaga);
+                        const deptConfig = JOB_DEPARTMENTS.find((d) => d.name === area);
 
-                        <span
-                          className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${getStatusBadgeClass(
-                            item.status
-                          )}`}
-                        >
-                          {getStatusLabel(item.status)}
-                        </span>
-                      </div>
+                        return (
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-semibold text-slate-900 group-hover:text-sky-600 dark:text-white dark:group-hover:text-[#2BEF83] transition-colors">
+                                  {cleanName}
+                                </h3>
+                                <span
+                                  className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${
+                                    deptConfig
+                                      ? deptConfig.badgeBg
+                                      : "border-purple-500/30 bg-purple-500/15 text-purple-300"
+                                  }`}
+                                >
+                                  {area}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-400">
+                                <Calendar className="h-3 w-3 shrink-0" />
+                                <span>Aberta em {formatDateBR(item.data_abertura)}</span>
+                              </div>
+                            </div>
+
+                            <span
+                              className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${getStatusBadgeClass(
+                                item.status
+                              )}`}
+                            >
+                              {getStatusLabel(item.status)}
+                            </span>
+                          </div>
+                        );
+                      })()}
 
                       {/* SLA Progress Bar & Days */}
                       <div className="mt-3.5 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-xs dark:border-white/5 dark:bg-white/5">

@@ -4,6 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { JOB_STATUS_OPTIONS } from "@/lib/jobs/constants";
 import type { JobOpening, JobOpeningPayload, JobStatus } from "@/lib/jobs/types";
+import {
+  JOB_DEPARTMENTS,
+  JobDepartment,
+  parseJobTitleAndArea,
+  formatJobTitleWithArea,
+} from "@/lib/jobs/departments";
 
 interface JobOpeningFormDialogProps {
   open: boolean;
@@ -27,26 +33,37 @@ export function JobOpeningFormDialog({
   onOpenChange,
   onSubmit,
 }: JobOpeningFormDialogProps) {
-  const initialState = useMemo<JobOpeningPayload>(() => {
-    if (!item) return EMPTY_FORM;
-
-    return {
-      nome_vaga: item.nome_vaga,
-      data_abertura: item.data_abertura,
-      data_fechamento: item.data_fechamento,
-      status: item.status,
-    };
+  const { initialTitle, initialArea } = useMemo(() => {
+    if (!item) return { initialTitle: "", initialArea: "Administração (ADM)" as JobDepartment };
+    const parsed = parseJobTitleAndArea(item.nome_vaga);
+    return { initialTitle: parsed.cleanName, initialArea: parsed.area };
   }, [item]);
 
-  const [form, setForm] = useState<JobOpeningPayload>(initialState);
+  const [form, setForm] = useState<JobOpeningPayload>(EMPTY_FORM);
+  const [cleanTitle, setCleanTitle] = useState("");
+  const [area, setArea] = useState<JobDepartment>("Administração (ADM)");
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (open) {
-      setForm(initialState);
+      if (item) {
+        const parsed = parseJobTitleAndArea(item.nome_vaga);
+        setCleanTitle(parsed.cleanName);
+        setArea(parsed.area);
+        setForm({
+          nome_vaga: item.nome_vaga,
+          data_abertura: item.data_abertura,
+          data_fechamento: item.data_fechamento,
+          status: item.status,
+        });
+      } else {
+        setCleanTitle("");
+        setArea("Administração (ADM)");
+        setForm(EMPTY_FORM);
+      }
       setError("");
     }
-  }, [initialState, open]);
+  }, [open, item]);
 
   function updateField<K extends keyof JobOpeningPayload>(
     key: K,
@@ -61,7 +78,7 @@ export function JobOpeningFormDialog({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form.nome_vaga.trim()) {
+    if (!cleanTitle.trim()) {
       setError("Informe o nome da vaga.");
       return;
     }
@@ -77,8 +94,11 @@ export function JobOpeningFormDialog({
     }
 
     setError("");
+    const formattedTitle = formatJobTitleWithArea(cleanTitle, area);
+
     await onSubmit({
       ...form,
+      nome_vaga: formattedTitle,
       data_fechamento: form.status === "fechada" ? form.data_fechamento : null,
     });
   }
@@ -105,7 +125,7 @@ export function JobOpeningFormDialog({
               {item ? "Editar vaga" : "Nova vaga"}
             </h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Preencha os dados principais da vaga.
+              Preencha os dados e selecione a área da vaga para o gráfico analítico.
             </p>
           </div>
 
@@ -119,15 +139,36 @@ export function JobOpeningFormDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <label className="flex flex-col gap-2 text-sm">
-            <span className="font-medium text-slate-800 dark:text-slate-100">Nome da vaga</span>
-            <input
-              value={form.nome_vaga}
-              onChange={(event) => updateField("nome_vaga", event.target.value)}
-              placeholder="Ex: Analista de Recrutamento"
-              className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
-            />
-          </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm">
+              <span className="font-medium text-slate-800 dark:text-slate-100">
+                Nome da vaga / Cargo
+              </span>
+              <input
+                value={cleanTitle}
+                onChange={(event) => setCleanTitle(event.target.value)}
+                placeholder="Ex: Recepcionista, Analista Financeiro..."
+                className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
+              />
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm">
+              <span className="font-medium text-slate-800 dark:text-slate-100">
+                Área / Departamento <span className="text-pink-500">*</span>
+              </span>
+              <select
+                value={area}
+                onChange={(event) => setArea(event.target.value as JobDepartment)}
+                className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
+              >
+                {JOB_DEPARTMENTS.map((dept) => (
+                  <option key={dept.id} value={dept.name}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="flex flex-col gap-2 text-sm">
