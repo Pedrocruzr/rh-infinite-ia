@@ -302,19 +302,19 @@ export function buildCustoContratacaoReport(rawAnswers: Session) {
     const display = value && value !== "undefined" ? esc(value) : "—";
     const bg = highlight ? (highlightColor ? highlightColor : "#f0fdf4") : "#f8fafc";
     const border = highlight ? "#bbf7d0" : "#e2e8f0";
-    return `<div style="background:${bg};border:1px solid ${border};border-radius:12px;padding:14px 18px;min-width:140px;flex:1;">
-      <p style="font-size:10px;color:#64748b;margin:0 0 6px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;">${label}</p>
-      <p style="font-size:16px;font-weight:800;color:#0f172a;margin:0;">${display}</p>
+    return `<div style="background:${bg};border:1px solid ${border};border-radius:12px;padding:14px 18px;min-width:140px;flex:1;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;">
+      <p style="font-size:10px;color:#64748b;margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;min-height:22px;line-height:1.2;display:flex;align-items:center;">${label}</p>
+      <p style="font-size:16px;font-weight:800;color:#0f172a;margin:0;line-height:1.2;">${display}</p>
     </div>`;
   }
 
   const headerCards = `
-  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;">
+  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;align-items:stretch;">
     ${card("Período Analisado", periodo)}
     ${card("Setor / Segmento", setor)}
     ${card("Vagas Fechadas", `${contratacoes} ${contratacoes === 1 ? "vaga" : "vagas"}`)}
     ${card("Custo Total", brl(totalGeral))}
-    ${card("Custo por Contratação (CpH)", brl(cph), true, "#eff6ff")}
+    ${card("Custo por Contratação", brl(cph), true, "#eff6ff")}
   </div>`;
 
   const gaugeSvg = generateCphGaugeSvg(cph, setor);
