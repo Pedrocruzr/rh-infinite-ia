@@ -104,7 +104,11 @@ export function JobOpeningsStats({
                 >
                   {card.label}
                 </p>
-                <p className="mt-0.5 text-2xl font-black tracking-tight text-white dark:text-white">
+                <p
+                  className={`mt-0.5 text-2xl font-black tracking-tight ${
+                    isPurpleTheme ? "text-white" : "text-slate-950 dark:text-white"
+                  }`}
+                >
                   {card.value}
                 </p>
                 <p

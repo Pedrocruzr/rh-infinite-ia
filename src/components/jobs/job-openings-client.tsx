@@ -235,7 +235,11 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
               >
                 Painel de Vagas
               </h1>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300 md:text-lg">
+              <p
+                className={`mt-4 max-w-2xl text-base leading-7 md:text-lg transition-colors duration-300 ${
+                  isPurpleTheme ? "text-white" : "text-slate-600 dark:text-white"
+                }`}
+              >
                 Gerencie vagas, acompanhe status e exporte seus dados em um painel visual unificado.
               </p>
             </div>

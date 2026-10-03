@@ -103,10 +103,8 @@ export function JobOpeningsAnalytics({
 
     for (let i = 0; i < 12; i++) {
       const x = i + 1;
-      const isPastOrPresent = i <= currentMonthIdx;
-      // Para meses futuros projeta Y = a + bX, se positivo; caso contrário 0
-      const projected = Math.max(0, Math.round(a + b * x));
-      const count = isPastOrPresent ? realHiresPerMonth[i] : projected;
+      // Contagem 100% estrita e real: reflete exclusivamente o que o usuário cadastrou/contratou
+      const count = realHiresPerMonth[i];
 
       // Comparativo com o mês anterior
       let pct = 0;
@@ -133,7 +131,7 @@ export function JobOpeningsAnalytics({
         monthNum: x,
         count,
         pct,
-        isProjected: !isPastOrPresent,
+        isProjected: false,
         heightPct,
       });
     }
@@ -198,12 +196,16 @@ export function JobOpeningsAnalytics({
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-white dark:text-white">
+            <h3
+              className={`text-lg font-bold tracking-tight ${
+                isPurpleTheme ? "text-white" : "text-slate-900 dark:text-white"
+              }`}
+            >
               Tendência de Contratação
             </h3>
             <p
               className={`text-xs font-medium ${
-                isPurpleTheme ? "text-purple-200/80" : "text-slate-400 dark:text-slate-400"
+                isPurpleTheme ? "text-purple-200/90" : "text-slate-500 dark:text-slate-400"
               }`}
             >
               Últimos 12 meses • Base real de contratações do sistema
@@ -331,12 +333,16 @@ export function JobOpeningsAnalytics({
         />
 
         <div>
-          <h3 className="text-lg font-bold tracking-tight text-white dark:text-white">
+          <h3
+            className={`text-lg font-bold tracking-tight ${
+              isPurpleTheme ? "text-white" : "text-slate-900 dark:text-white"
+            }`}
+          >
             Vagas por Departamento
           </h3>
           <p
             className={`text-xs font-medium ${
-              isPurpleTheme ? "text-purple-200/80" : "text-slate-400 dark:text-slate-400"
+              isPurpleTheme ? "text-purple-200/90" : "text-slate-500 dark:text-slate-400"
             }`}
           >
             Distribuição em tempo real das posições
@@ -421,12 +427,16 @@ export function JobOpeningsAnalytics({
 
             {/* Central Text Display com amplo respiro (raio interno = 58px / diâmetro = 116px) */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-3xl font-black tracking-tight text-white">
+              <span
+                className={`text-3xl font-black tracking-tight ${
+                  isPurpleTheme ? "text-white" : "text-slate-950 dark:text-white"
+                }`}
+              >
                 {openCount}
               </span>
               <span
                 className={`mt-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                  isPurpleTheme ? "text-pink-300" : "text-[#2BEF83]"
+                  isPurpleTheme ? "text-pink-300" : "text-emerald-600 dark:text-[#2BEF83]"
                 }`}
               >
                 Vagas em Aberto
@@ -434,7 +444,7 @@ export function JobOpeningsAnalytics({
             </div>
           </div>
 
-          {/* Department Legend List: Nomes em BRANCO puro e cores distintas */}
+          {/* Department Legend List: Nomes legíveis em qualquer versão */}
           <div className="flex flex-col gap-2.5">
             {departments.map((dep) => (
               <div
@@ -446,7 +456,11 @@ export function JobOpeningsAnalytics({
                     className="h-2.5 w-2.5 rounded-full shadow-sm ring-1 ring-white/10"
                     style={{ backgroundColor: dep.color }}
                   />
-                  <span className="font-semibold text-white">
+                  <span
+                    className={`font-semibold ${
+                      isPurpleTheme ? "text-white" : "text-slate-800 dark:text-white"
+                    }`}
+                  >
                     {dep.name}
                   </span>
                 </div>
