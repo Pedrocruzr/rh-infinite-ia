@@ -1,10 +1,13 @@
 "use client";
 
+import { Briefcase, Search, PauseCircle, CheckCircle2 } from "lucide-react";
+
 interface JobOpeningsStatsProps {
   total: number;
   open: number;
   paused: number;
   closed: number;
+  isPurpleTheme?: boolean;
 }
 
 export function JobOpeningsStats({
@@ -12,33 +15,101 @@ export function JobOpeningsStats({
   open,
   paused,
   closed,
+  isPurpleTheme = false,
 }: JobOpeningsStatsProps) {
   const cards = [
-    { label: "Total de vagas", value: total, tone: "sky" },
-    { label: "Em aberto", value: open, tone: "emerald" },
-    { label: "Pausadas", value: paused, tone: "amber" },
-    { label: "Fechadas", value: closed, tone: "violet" },
+    {
+      label: "Total de vagas",
+      value: total,
+      subtext: `${total} cadastradas no sistema`,
+      icon: Briefcase,
+      iconBg: isPurpleTheme
+        ? "bg-purple-500/15 text-purple-400 border border-purple-500/30"
+        : "bg-sky-500/15 text-sky-500 border border-sky-500/30 dark:bg-sky-400/10 dark:text-sky-300",
+      topGlow: isPurpleTheme
+        ? "via-purple-500"
+        : "via-[#2488BA]",
+    },
+    {
+      label: "Em aberto",
+      value: open,
+      subtext: `${open} ativas para candidatura`,
+      icon: Search,
+      iconBg: isPurpleTheme
+        ? "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+        : "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 dark:bg-emerald-400/10 dark:text-[#2BEF83]",
+      topGlow: isPurpleTheme
+        ? "via-pink-500"
+        : "via-[#2BEF83]",
+    },
+    {
+      label: "Pausadas",
+      value: paused,
+      subtext: `${paused} em espera temporária`,
+      icon: PauseCircle,
+      iconBg: isPurpleTheme
+        ? "bg-purple-400/15 text-purple-300 border border-purple-400/30"
+        : "bg-amber-500/15 text-amber-600 border border-amber-500/30 dark:bg-amber-400/10 dark:text-amber-300",
+      topGlow: isPurpleTheme
+        ? "via-purple-400"
+        : "via-amber-400",
+    },
+    {
+      label: "Fechadas",
+      value: closed,
+      subtext: `${closed} contratações concluídas`,
+      icon: CheckCircle2,
+      iconBg: isPurpleTheme
+        ? "bg-pink-400/15 text-pink-300 border border-pink-400/30"
+        : "bg-violet-500/15 text-violet-600 border border-violet-500/30 dark:bg-violet-400/10 dark:text-violet-300",
+      topGlow: isPurpleTheme
+        ? "via-pink-400"
+        : "via-violet-400",
+    },
   ];
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {cards.map((card) => (
-        <div
-          key={card.label}
-          className={`rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72 ${
-            card.tone === "sky"
-              ? "dark:shadow-[inset_0_1px_0_rgba(56,189,248,0.12)]"
-              : card.tone === "emerald"
-                ? "dark:shadow-[inset_0_1px_0_rgba(52,211,153,0.12)]"
-                : card.tone === "amber"
-                  ? "dark:shadow-[inset_0_1px_0_rgba(251,191,36,0.12)]"
-                  : "dark:shadow-[inset_0_1px_0_rgba(167,139,250,0.12)]"
-          }`}
-        >
-          <p className="text-sm text-slate-500 dark:text-slate-400">{card.label}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight">{card.value}</p>
-        </div>
-      ))}
+      {cards.map((card) => {
+        const IconComponent = card.icon;
+
+        return (
+          <div
+            key={card.label}
+            className={`group relative overflow-hidden rounded-[1.75rem] border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
+              isPurpleTheme
+                ? "border-purple-500/20 bg-gradient-to-b from-[#180e29]/90 to-[#0e071a]/95 shadow-[0_12px_36px_rgba(168,85,247,0.1)] hover:border-purple-500/40"
+                : "border-slate-200/80 bg-white/90 shadow-[0_14px_40px_rgba(15,23,42,0.05)] hover:border-slate-300 dark:border-white/10 dark:bg-gradient-to-b dark:from-[#0E1928] dark:to-[#0A111C] dark:shadow-[0_14px_40px_rgba(0,0,0,0.4)] dark:hover:border-white/20"
+            }`}
+          >
+            {/* Top rim lighting */}
+            <div
+              className={`pointer-events-none absolute inset-x-6 top-0 h-[2px] rounded-full bg-gradient-to-r from-transparent ${card.topGlow} to-transparent opacity-70`}
+            />
+
+            <div className="flex items-center gap-4">
+              {/* Circular tactile embossed icon */}
+              <div
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-105 ${card.iconBg}`}
+              >
+                <IconComponent className="h-6 w-6" />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {card.label}
+                </p>
+                <p className="mt-0.5 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {card.value}
+                </p>
+                <p className="mt-0.5 truncate text-[11px] text-slate-400 dark:text-slate-500">
+                  {card.subtext}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

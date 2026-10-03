@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, Download, Sparkles, Lock, X, ArrowRight, Palette } from "lucide-react";
+import { BriefcaseBusiness, Download, Sparkles, Lock, X, ArrowRight } from "lucide-react";
 
 import type {
   JobFilters,
@@ -15,7 +15,6 @@ import { JobOpeningsBoard } from "./job-openings-board";
 import { JobOpeningsFilters } from "./job-openings-filters";
 import { JobOpeningsStats } from "./job-openings-stats";
 import { JobOpeningsTable } from "./job-openings-table";
-import { JobOpeningsAnalytics } from "./job-openings-analytics";
 
 interface JobOpeningsClientProps {
   initialItems: JobOpening[];
@@ -39,7 +38,6 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
 
   const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [isPurpleTheme, setIsPurpleTheme] = useState(false);
 
   useEffect(() => {
     const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
@@ -223,21 +221,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setIsPurpleTheme((prev) => !prev)}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition-all duration-300 shadow-sm ${
-                  isPurpleTheme
-                    ? "border-pink-500/50 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-pink-500/30"
-                    : "border-slate-200 bg-white/90 text-slate-700 hover:border-purple-300 hover:text-purple-600 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-purple-400/40"
-                }`}
-                title="Alternar entre paleta oficial e tema Roxo/Rosa"
-              >
-                <Palette className="h-4 w-4" />
-                {isPurpleTheme ? "Paleta Oficial" : "Tema Roxo / Rosa"}
-              </button>
-
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() => exportJobOpeningsToCsv(filteredItems)}
@@ -264,13 +248,6 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           open={stats.open}
           paused={stats.paused}
           closed={stats.closed}
-          isPurpleTheme={isPurpleTheme}
-        />
-
-        <JobOpeningsAnalytics
-          isPurpleTheme={isPurpleTheme}
-          openCount={stats.open}
-          totalCount={stats.total}
         />
 
         <JobOpeningsFilters
@@ -297,7 +274,6 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           onEdit={openEditDialog}
           onDelete={handleDelete}
           onStatusChange={handleStatusChange}
-          isPurpleTheme={isPurpleTheme}
         />
 
         <JobOpeningsTable
