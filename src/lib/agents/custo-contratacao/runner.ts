@@ -20,120 +20,134 @@ function round2(value: number) {
 // ─── SVG CHARTS (Base visual DISC / Big Five adaptado para métricas de CpH) ──────
 
 function generateCphGaugeSvg(cph: number, setor: string): string {
-  let z1End = 2500;
-  let z2End = 5000;
+  let z1 = 1000;
+  let z2 = 2000;
+  let z3 = 3000;
   const sLower = setor.toLowerCase();
   if (sLower.includes("varejo")) {
-    z1End = 1500;
-    z2End = 3000;
+    z1 = 1000;
+    z2 = 2000;
+    z3 = 3000;
   } else if (sLower.includes("tec") || sLower.includes("ti") || sLower.includes("soft")) {
-    z1End = 3000;
-    z2End = 6000;
-  }
-
-  const W = 520, H = 100;
-  const bx = 16, bw = 488, bh = 34, by = 42;
-  const segW = bw / 3;
-
-  // Calcula a posição do ponteiro nos 3 segmentos
-  let pinX = bx + segW / 2;
-  let activeZone = 0; // 0: enxuta, 1: media, 2: acima
-  if (cph <= z1End) {
-    activeZone = 0;
-    const ratio = Math.max(0.15, Math.min(0.85, z1End > 0 ? cph / z1End : 0.5));
-    pinX = bx + ratio * segW;
-  } else if (cph <= z2End) {
-    activeZone = 1;
-    const ratio = Math.max(0.15, Math.min(0.85, (cph - z1End) / (z2End - z1End)));
-    pinX = bx + segW + ratio * segW;
+    z1 = 2000;
+    z2 = 4000;
+    z3 = 6000;
   } else {
-    activeZone = 2;
-    const ratio = Math.max(0.2, Math.min(0.85, (cph - z2End) / (z2End * 3)));
-    pinX = bx + 2 * segW + ratio * segW;
+    z1 = 1500;
+    z2 = 3000;
+    z3 = 5000;
   }
 
-  pinX = Math.max(bx + 18, Math.min(bx + bw - 18, pinX));
+  const W = 620, H = 114;
+  const bx = 16, bw = 588, bh = 42, by = 54;
+  const segW = bw / 4;
 
-  const zones = [
+  let activeIndex = 0;
+  if (cph < z1) {
+    activeIndex = 0;
+  } else if (cph <= z2) {
+    activeIndex = 1;
+  } else if (cph <= z3) {
+    activeIndex = 2;
+  } else {
+    activeIndex = 3;
+  }
+
+  const pinX = bx + activeIndex * segW + segW / 2;
+
+  const phases = [
     {
       x: bx,
       w: segW,
-      color: "#10b981",
-      title: "Operação Enxuta",
-      range: `Até ${brl(z1End)}`,
-      isActive: activeZone === 0,
+      color: "#0ea5e9", // Sky / Azul Ciano
+      title: "Abaixo da média",
+      range: `Até ${brl(z1)}`,
+      isActive: activeIndex === 0,
     },
     {
       x: bx + segW,
       w: segW,
-      color: "#3b82f6",
-      title: "Média de Mercado",
-      range: `${brl(z1End)} a ${brl(z2End)}`,
-      isActive: activeZone === 1,
+      color: "#10b981", // Esmeralda / Verde
+      title: "Operação Enxuta",
+      range: `${brl(z1)} a ${brl(z2)}`,
+      isActive: activeIndex === 1,
     },
     {
       x: bx + 2 * segW,
       w: segW,
-      color: "#f59e0b",
-      title: "Acima da Média",
-      range: `> ${brl(z2End)}`,
-      isActive: activeZone === 2,
+      color: "#3b82f6", // Royal blue
+      title: "Média de mercado",
+      range: `${brl(z2)} a ${brl(z3)}`,
+      isActive: activeIndex === 2,
+    },
+    {
+      x: bx + 3 * segW,
+      w: segW,
+      color: "#f59e0b", // Âmbar / Laranja
+      title: "Atenção",
+      range: `> ${brl(z3)}`,
+      isActive: activeIndex === 3,
     },
   ];
 
-  const zoneBgs = zones
+  const segBgs = phases
     .map(
       (z) =>
-        `<rect x="${z.x.toFixed(1)}" y="${by}" width="${z.w.toFixed(1)}" height="${bh}" fill="${z.color}" opacity="${z.isActive ? "0.95" : "0.78"}"/>`
+        `<rect x="${z.x.toFixed(1)}" y="${by}" width="${z.w.toFixed(1)}" height="${bh}" fill="${z.color}" opacity="${z.isActive ? "1" : "0.78"}"/>`
     )
     .join("");
 
-  const separators = `
-    <line x1="${(bx + segW).toFixed(1)}" y1="${by}" x2="${(bx + segW).toFixed(1)}" y2="${by + bh}" stroke="#ffffff" stroke-width="2" opacity="0.7"/>
-    <line x1="${(bx + 2 * segW).toFixed(1)}" y1="${by}" x2="${(bx + 2 * segW).toFixed(1)}" y2="${by + bh}" stroke="#ffffff" stroke-width="2" opacity="0.7"/>
-  `;
+  const separators = [1, 2, 3]
+    .map(
+      (i) =>
+        `<line x1="${(bx + i * segW).toFixed(1)}" y1="${by}" x2="${(bx + i * segW).toFixed(1)}" y2="${by + bh}" stroke="#ffffff" stroke-width="2" opacity="0.6"/>`
+    )
+    .join("");
 
-  const zoneLabels = zones
+  const labels = phases
     .map((z) => {
       const cx = (z.x + z.w / 2).toFixed(1);
       return `
-      <text x="${cx}" y="${by + 14}" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">${z.title}</text>
-      <text x="${cx}" y="${by + 27}" font-size="9.5" font-weight="600" fill="rgba(255,255,255,0.92)" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">${z.range}</text>
+      <text x="${cx}" y="${by + 17}" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">${z.title}</text>
+      <text x="${cx}" y="${by + 32}" font-size="9.5" font-weight="600" fill="rgba(255,255,255,0.92)" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">${z.range}</text>
     `;
     })
     .join("");
 
-  const badgeW = 160;
-  const badgeH = 24;
+  const badgeW = 230;
+  const badgeH = 28;
   const badgeX = Math.max(bx, Math.min(bx + bw - badgeW, pinX - badgeW / 2));
 
-  const pinTopBadge = `
+  // O indicador flutua ACIMA da barra sem cobrir nenhuma nomenclatura
+  const topIndicator = `
     <g>
-      <rect x="${badgeX.toFixed(1)}" y="4" width="${badgeW}" height="${badgeH}" rx="12" fill="#0f172a"/>
-      <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="20" font-size="11" font-weight="700" fill="#38bdf8" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">Seu CpH: ${brl(cph)}</text>
-      <path d="M ${(pinX - 5).toFixed(1)} 28 L ${(pinX + 5).toFixed(1)} 28 L ${pinX.toFixed(1)} 36 Z" fill="#0f172a"/>
+      <rect x="${badgeX.toFixed(1)}" y="8" width="${badgeW}" height="${badgeH}" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="26" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">
+        <tspan fill="#38bdf8">📍 CpH: ${brl(cph)}</tspan> • ${phases[activeIndex].title}
+      </text>
+      <!-- Seta indicadora apontando para o centro da fase sem cobrir a barra -->
+      <path d="M ${(pinX - 7).toFixed(1)} 36 L ${(pinX + 7).toFixed(1)} 36 L ${pinX.toFixed(1)} 46 Z" fill="#0f172a"/>
     </g>
   `;
 
-  const pinMarker = `
-    <circle cx="${pinX.toFixed(1)}" cy="${by + bh / 2}" r="13" fill="#0f172a" stroke="#ffffff" stroke-width="2.5"/>
-    <circle cx="${pinX.toFixed(1)}" cy="${by + bh / 2}" r="4.5" fill="#38bdf8"/>
+  const activeHighlight = `
+    <rect x="${phases[activeIndex].x.toFixed(1)}" y="${by}" width="${segW.toFixed(1)}" height="${bh}" fill="none" stroke="#0f172a" stroke-width="3" opacity="0.35"/>
   `;
 
   const border = `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="none" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>`;
 
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:0 auto;max-width:520px;height:auto;" xmlns="http://www.w3.org/2000/svg">
-    <clipPath id="gauge-clip-3tier">
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:0 auto;max-width:620px;height:auto;" xmlns="http://www.w3.org/2000/svg">
+    <clipPath id="gauge-clip-4phases">
       <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="8"/>
     </clipPath>
-    <g clip-path="url(#gauge-clip-3tier)">
-      ${zoneBgs}
+    <g clip-path="url(#gauge-clip-4phases)">
+      ${segBgs}
       ${separators}
-      ${zoneLabels}
+      ${labels}
+      ${activeHighlight}
     </g>
     ${border}
-    ${pinTopBadge}
-    ${pinMarker}
+    ${topIndicator}
   </svg>`;
 }
 
