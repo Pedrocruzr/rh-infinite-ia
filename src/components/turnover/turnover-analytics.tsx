@@ -137,17 +137,24 @@ export function TurnoverAnalytics({ metrics, isPurpleTheme }: TurnoverAnalyticsP
                     )}
 
                     {/* Rótulo superior da barra */}
-                    <span
-                      className={`mb-2 text-[10.5px] font-extrabold transition-colors duration-200 ${
-                        isHovered
-                          ? "text-sky-400 scale-110"
-                          : isPurpleTheme
-                          ? "text-purple-300"
-                          : "text-slate-600 dark:text-slate-300"
-                      }`}
-                    >
-                      {taxa > 0 ? `${taxa}%` : "0%"}
-                    </span>
+                    <div className="flex flex-col items-center mb-1.5 transition-all">
+                      <span
+                        className={`text-[10.5px] font-extrabold transition-colors duration-200 ${
+                          isHovered
+                            ? "text-sky-400 scale-110"
+                            : isPurpleTheme
+                            ? "text-purple-300"
+                            : "text-slate-600 dark:text-slate-300"
+                        }`}
+                      >
+                        {taxa > 0 ? `${taxa}%` : "0%"}
+                      </span>
+                      {mes.desligamentos > 0 && (
+                        <span className="text-[9px] font-bold text-rose-500 dark:text-rose-400">
+                          {mes.desligamentos} {mes.desligamentos === 1 ? "saída" : "saídas"}
+                        </span>
+                      )}
+                    </div>
 
                     {/* COLUNA 3D PRISMÁTICA */}
                     <div
@@ -160,7 +167,7 @@ export function TurnoverAnalytics({ metrics, isPurpleTheme }: TurnoverAnalyticsP
                       {/* Face frontal com degradê prismático */}
                       <div
                         className={`h-full w-full rounded-t-md transition-all duration-300 ${
-                          taxa > 0
+                          taxa > 0 || mes.desligamentos > 0
                             ? isPurpleTheme
                               ? "bg-gradient-to-t from-purple-700 via-pink-600 to-rose-400 shadow-[0_0_15px_rgba(236,72,153,0.3)]"
                               : "bg-gradient-to-t from-blue-700 via-sky-500 to-cyan-400 shadow-[0_0_15px_rgba(14,165,233,0.35)]"
@@ -173,14 +180,14 @@ export function TurnoverAnalytics({ metrics, isPurpleTheme }: TurnoverAnalyticsP
                       {/* Chanfro brilhante no topo 3D */}
                       <div
                         className={`absolute top-0 inset-x-0 h-1.5 rounded-t-md ${
-                          taxa > 0 ? "bg-white/80" : "bg-transparent"
+                          taxa > 0 || mes.desligamentos > 0 ? "bg-white/80" : "bg-transparent"
                         }`}
                       />
 
                       {/* Feixe de luz vertical lateral 3D */}
                       <div
                         className={`absolute inset-y-0 left-0 w-1 rounded-tl-md ${
-                          taxa > 0 ? "bg-white/40" : "bg-transparent"
+                          taxa > 0 || mes.desligamentos > 0 ? "bg-white/40" : "bg-transparent"
                         }`}
                       />
                     </div>

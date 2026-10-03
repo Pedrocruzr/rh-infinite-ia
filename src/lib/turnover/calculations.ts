@@ -74,20 +74,22 @@ export function computeTurnoverMetrics(
         }
       }
 
-      // Efetivo ativo no último dia do mês
+      // Efetivo ativo durante ou no último dia do mês
       // Admitido até o fim do mês E (não desligado OU desligado após o fim do mês)
       if (dtAdm <= dataFimMes && (!dtDeslig || dtDeslig > dataFimMes)) {
         efetivoAtivo++;
       }
     }
 
-    // Fórmulas
+    // Base de cálculo do mês: considera efetivo restante ou o efetivo antes das saídas
+    const efetivoBaseCalculo = Math.max(efetivoAtivo, desligamentos, 1);
+
     const taxaTurnoverDesligamento =
-      efetivoAtivo > 0 ? (desligamentos / efetivoAtivo) * 100 : 0;
+      efetivoBaseCalculo > 0 ? (desligamentos / efetivoBaseCalculo) * 100 : 0;
 
     const taxaTurnoverGeral =
-      efetivoAtivo > 0
-        ? (((admissoes + desligamentos) / 2) / efetivoAtivo) * 100
+      efetivoBaseCalculo > 0
+        ? (((admissoes + desligamentos) / 2) / efetivoBaseCalculo) * 100
         : 0;
 
     return {
@@ -137,142 +139,164 @@ export function computeTurnoverMetrics(
   const totalAdmissoesPeriodo = admissoesPeriodo.length;
 
   // Taxa TD do período
+  const baseCalculoPeriodo = Math.max(efetivoAtivoAtual, totalDesligamentosPeriodo, 1);
   const taxaTurnoverDesligamento =
-    efetivoAtivoAtual > 0
-      ? (totalDesligamentosPeriodo / efetivoAtivoAtual) * 100
-      : 0;
+    Math.round((totalDesligamentosPeriodo / baseCalculoPeriodo) * 1000) / 10;
 
   // Taxa TG do período
   const taxaTurnoverGeral =
-    efetivoAtivoAtual > 0
-      ? (((totalAdmissoesPeriodo + totalDesligamentosPeriodo) / 2) /
-          efetivoAtivoAtual) *
-        100
-      : 0;
+    Math.round(
+      (((totalAdmissoesPeriodo + totalDesligamentosPeriodo) / 2) /
+        baseCalculoPeriodo) *
+        1000
+    ) / 10;
 
-  // Desligamentos voluntários vs involuntários
-  const totalVoluntarios = desligadosPeriodo.filter(
+  // 3. Voluntário vs Involuntário
+  const volCount = desligadosPeriodo.filter(
     (e) => e.tipo_desligamento === "voluntario"
   ).length;
+  const involCount = desligadosPeriodo.filter(
+    (e) => e.tipo_desligamento === "involuntario"
+  ).length;
+
   const turnoverVoluntarioPct =
     totalDesligamentosPeriodo > 0
-      ? (totalVoluntarios / totalDesligamentosPeriodo) * 100
+      ? Math.round((volCount / totalDesligamentosPeriodo) * 1000) / 10
       : 0;
-  const turnoverInvoluntarioPct =
-    totalDesligamentosPeriodo > 0 ? 100 - turnoverVoluntarioPct : 0;
 
-  // Early turnover (desligados com <= 90 dias de casa)
-  let earlyTurnoverQtd = 0;
-  let somaDiasCasa = 0;
-  for (const emp of desligadosPeriodo) {
+  const turnoverInvoluntarioPct =
+    totalDesligamentosPeriodo > 0
+      ? Math.round((involCount / totalDesligamentosPeriodo) * 1000) / 10
+      : 0;
+
+  // 4. Early Turnover (<= 90 dias)
+  const earlyTurnoverList = desligadosPeriodo.filter((emp) => {
     const dtAdm = parseDate(emp.data_admissao);
     const dtDeslig = parseDate(emp.data_desligamento);
-    if (dtAdm && dtDeslig) {
-      const dias = diffDays(dtAdm, dtDeslig);
-      somaDiasCasa += dias;
-      if (dias <= 90) {
-        earlyTurnoverQtd++;
-      }
-    }
-  }
+    if (!dtAdm || !dtDeslig) return false;
+    return diffDays(dtAdm, dtDeslig) <= 90;
+  });
 
+  const earlyTurnoverQtd = earlyTurnoverList.length;
   const earlyTurnoverPct =
     totalDesligamentosPeriodo > 0
-      ? (earlyTurnoverQtd / totalDesligamentosPeriodo) * 100
+      ? Math.round((earlyTurnoverQtd / totalDesligamentosPeriodo) * 1000) / 10
       : 0;
 
-  const tempoMedioCasaMeses =
-    totalDesligamentosPeriodo > 0
-      ? Math.round((somaDiasCasa / totalDesligamentosPeriodo / 30) * 10) / 10
-      : 0;
-
-  // Salário médio e custo estimado
+  // 5. Custo Estimado e Salário Médio
   const salariosValidos = employees
     .map((e) => Number(e.salario || 0))
     .filter((s) => s > 0);
   const salarioMedio =
     salariosValidos.length > 0
-      ? salariosValidos.reduce((acc, curr) => acc + curr, 0) /
-        salariosValidos.length
-      : 2500; // fallback para média nacional se não preenchido
+      ? salariosValidos.reduce((a, b) => a + b, 0) / salariosValidos.length
+      : 4000;
 
-  // Custo Estimado: Total Demitidos × (Salário Médio × 2.5)
-  const custoEstimadoTurnover =
-    totalDesligamentosPeriodo * (salarioMedio * 2.5);
+  // Multiplicador SHRM/FGV: custo total de rescisão, reposição e onboarding é ~1.5x a 2x o salário base
+  const custoEstimadoTurnover = Math.round(
+    totalDesligamentosPeriodo * salarioMedio * 1.75
+  );
+
+  // 6. Tempo médio de casa (em meses) dos desligados do período
+  let totalDiasCasa = 0;
+  let countDias = 0;
+  for (const emp of desligadosPeriodo) {
+    const dtAdm = parseDate(emp.data_admissao);
+    const dtDeslig = parseDate(emp.data_desligamento);
+    if (dtAdm && dtDeslig) {
+      totalDiasCasa += diffDays(dtAdm, dtDeslig);
+      countDias++;
+    }
+  }
+  const tempoMedioCasaMeses =
+    countDias > 0 ? Math.round((totalDiasCasa / countDias / 30) * 10) / 10 : 0;
 
   // Variação em relação ao mês anterior
   const mesAnteriorTaxaTD = mesDataAnterior
     ? mesDataAnterior.taxaTurnoverDesligamento
     : 0;
   const variacaoMesAnterior =
-    mesDataAnterior && mesDataAnterior.taxaTurnoverDesligamento > 0
-      ? taxaTurnoverDesligamento - mesDataAnterior.taxaTurnoverDesligamento
+    mesDataAtual && mesDataAnterior
+      ? Math.round(
+          (mesDataAtual.taxaTurnoverDesligamento -
+            mesDataAnterior.taxaTurnoverDesligamento) *
+            10
+        ) / 10
       : 0;
 
-  // 3. Ranking por Departamento
+  // 7. Ranking por Departamento
   const departamentosRanking: DepartmentTurnoverData[] = JOB_DEPARTMENTS.map(
     (dept) => {
       const empsDept = employees.filter((e) => e.departamento === dept.name);
-      const ativosDept = empsDept.filter((e) => !e.data_desligamento).length;
-      const desfigsDept = empsDept.filter((e) => {
+      const desligDept = empsDept.filter((e) => {
         const dt = parseDate(e.data_desligamento);
         if (!dt) return false;
         if (dt.getFullYear() !== anoAtual) return false;
         if (mesFiltro > 0 && dt.getMonth() + 1 !== mesFiltro) return false;
         return true;
-      }).length;
+      });
 
+      const efetivoDept = empsDept.filter((e) => !e.data_desligamento).length;
+      const baseDept = Math.max(efetivoDept, desligDept.length, 1);
       const taxa =
-        ativosDept > 0 ? (desfigsDept / ativosDept) * 100 : desfigsDept > 0 ? 100 : 0;
+        desligDept.length > 0
+          ? Math.round((desligDept.length / baseDept) * 1000) / 10
+          : 0;
 
       return {
         departamento: dept.name,
         cor: dept.color,
-        efetivo: ativosDept,
-        desligamentos: desfigsDept,
-        taxa: Math.round(taxa * 10) / 10,
+        efetivo: efetivoDept,
+        desligamentos: desligDept.length,
+        taxa,
       };
     }
-  ).sort((a, b) => b.taxa - a.taxa);
+  ).sort((a, b) => b.desligamentos - a.desligamentos);
 
-  // 4. Distribuição de Motivos de Saída
-  const motivosCount: Record<string, number> = {};
+  // 8. Distribuição de Motivos de Saída
+  const motivosCountMap: Record<string, number> = {};
+  for (const m of MOTIVOS_DESLIGAMENTO) {
+    motivosCountMap[m.id] = 0;
+  }
+
   for (const emp of desligadosPeriodo) {
-    const mot = emp.motivo_especifico || "Outro";
-    motivosCount[mot] = (motivosCount[mot] || 0) + 1;
+    const motivo = emp.motivo_especifico || "Outro";
+    motivosCountMap[motivo] = (motivosCountMap[motivo] || 0) + 1;
   }
 
   const motivosDistribuicao: ReasonTurnoverData[] = MOTIVOS_DESLIGAMENTO.map(
     (m) => {
-      const qtd = motivosCount[m.label] || 0;
+      const qtd = motivosCountMap[m.id] || 0;
       const pct =
         totalDesligamentosPeriodo > 0
-          ? (qtd / totalDesligamentosPeriodo) * 100
+          ? Math.round((qtd / totalDesligamentosPeriodo) * 1000) / 10
           : 0;
       return {
         motivo: m.label,
         quantidade: qtd,
-        percentual: Math.round(pct * 10) / 10,
+        percentual: pct,
         cor: m.cor,
       };
     }
-  ).sort((a, b) => b.quantidade - a.quantidade);
+  )
+    .filter((m) => m.quantidade > 0)
+    .sort((a, b) => b.quantidade - a.quantidade);
 
   return {
     efetivoAtivoAtual,
     totalDesligamentosPeriodo,
     totalAdmissoesPeriodo,
-    taxaTurnoverDesligamento: Math.round(taxaTurnoverDesligamento * 10) / 10,
-    taxaTurnoverGeral: Math.round(taxaTurnoverGeral * 10) / 10,
-    turnoverVoluntarioPct: Math.round(turnoverVoluntarioPct * 10) / 10,
-    turnoverInvoluntarioPct: Math.round(turnoverInvoluntarioPct * 10) / 10,
+    taxaTurnoverDesligamento,
+    taxaTurnoverGeral,
+    turnoverVoluntarioPct,
+    turnoverInvoluntarioPct,
     earlyTurnoverQtd,
-    earlyTurnoverPct: Math.round(earlyTurnoverPct * 10) / 10,
-    salarioMedio: Math.round(salarioMedio),
-    custoEstimadoTurnover: Math.round(custoEstimadoTurnover),
+    earlyTurnoverPct,
+    salarioMedio,
+    custoEstimadoTurnover,
     tempoMedioCasaMeses,
     mesAnteriorTaxaTD,
-    variacaoMesAnterior: Math.round(variacaoMesAnterior * 10) / 10,
+    variacaoMesAnterior,
     mesesEvolucao,
     departamentosRanking,
     motivosDistribuicao,

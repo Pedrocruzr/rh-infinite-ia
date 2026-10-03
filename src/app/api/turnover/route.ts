@@ -10,10 +10,14 @@ import {
 export async function GET() {
   try {
     const employees = await getTurnoverEmployees();
-    return NextResponse.json({ data: employees });
+    return NextResponse.json({
+      ok: true,
+      data: employees,
+      employees,
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: "Erro ao carregar colaboradores de turnover.", details: String(error) },
+      { ok: false, error: "Erro ao carregar colaboradores de turnover.", details: String(error) },
       { status: 500 }
     );
   }
@@ -24,11 +28,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const action = body?.action;
 
-    // Ação rápida de registrar desligamento
-    if (action === "exit") {
-      const id = String(body?.id || "");
+    // Ação rápida de registrar desligamento (aceita "exit" ou "register_exit")
+    if (action === "exit" || action === "register_exit") {
+      const id = String(body?.id || "").trim();
       if (!id) {
-        return NextResponse.json({ error: "ID do colaborador é obrigatório." }, { status: 400 });
+        return NextResponse.json({ ok: false, error: "ID do colaborador é obrigatório." }, { status: 400 });
       }
       const data_desligamento = String(body?.data_desligamento || "").trim();
       const tipo_desligamento = body?.tipo_desligamento;
@@ -36,7 +40,7 @@ export async function POST(request: NextRequest) {
 
       if (!data_desligamento || !tipo_desligamento || !motivo_especifico) {
         return NextResponse.json(
-          { error: "Data, tipo e motivo do desligamento são obrigatórios." },
+          { ok: false, error: "Data, tipo e motivo do desligamento são obrigatórios." },
           { status: 400 }
         );
       }
@@ -48,10 +52,11 @@ export async function POST(request: NextRequest) {
       });
 
       if (!updated) {
-        return NextResponse.json({ error: "Colaborador não encontrado." }, { status: 404 });
+        return NextResponse.json({ ok: false, error: "Colaborador não encontrado." }, { status: 404 });
       }
 
-      return NextResponse.json({ data: updated });
+      const allEmployees = await getTurnoverEmployees();
+      return NextResponse.json({ ok: true, data: updated, employees: allEmployees });
     }
 
     // Criar novo colaborador
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     if (!matricula || !nome || !cargo || !departamento || !data_admissao) {
       return NextResponse.json(
-        { error: "Matrícula, nome, cargo, departamento e data de admissão são obrigatórios." },
+        { ok: false, error: "Matrícula, nome, cargo, departamento e data de admissão são obrigatórios." },
         { status: 400 }
       );
     }
@@ -81,10 +86,11 @@ export async function POST(request: NextRequest) {
       motivo_especifico: body?.motivo_especifico || null,
     });
 
-    return NextResponse.json({ data: created }, { status: 201 });
+    const allEmployees = await getTurnoverEmployees();
+    return NextResponse.json({ ok: true, data: created, employees: allEmployees }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: "Erro ao processar requisição.", details: String(error) },
+      { ok: false, error: "Erro ao processar requisição.", details: String(error) },
       { status: 500 }
     );
   }
@@ -93,20 +99,21 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const id = String(body?.id || "");
+    const id = String(body?.id || "").trim();
     if (!id) {
-      return NextResponse.json({ error: "ID do colaborador é obrigatório." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "ID do colaborador é obrigatório." }, { status: 400 });
     }
 
     const updated = await updateTurnoverEmployee(id, body);
     if (!updated) {
-      return NextResponse.json({ error: "Colaborador não encontrado." }, { status: 404 });
+      return NextResponse.json({ ok: false, error: "Colaborador não encontrado." }, { status: 404 });
     }
 
-    return NextResponse.json({ data: updated });
+    const allEmployees = await getTurnoverEmployees();
+    return NextResponse.json({ ok: true, data: updated, employees: allEmployees });
   } catch (error) {
     return NextResponse.json(
-      { error: "Erro ao atualizar colaborador.", details: String(error) },
+      { ok: false, error: "Erro ao atualizar colaborador.", details: String(error) },
       { status: 500 }
     );
   }
@@ -117,14 +124,15 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     if (!id) {
-      return NextResponse.json({ error: "ID é obrigatório para exclusão." }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "ID é obrigatório para exclusão." }, { status: 400 });
     }
 
     await deleteTurnoverEmployee(id);
-    return NextResponse.json({ success: true });
+    const allEmployees = await getTurnoverEmployees();
+    return NextResponse.json({ ok: true, success: true, employees: allEmployees });
   } catch (error) {
     return NextResponse.json(
-      { error: "Erro ao excluir colaborador.", details: String(error) },
+      { ok: false, error: "Erro ao excluir colaborador.", details: String(error) },
       { status: 500 }
     );
   }

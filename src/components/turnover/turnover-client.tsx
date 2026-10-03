@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { UserMinus, Download, Sparkles, Palette, UserPlus, RefreshCw } from "lucide-react";
+import { Download, Sparkles, Palette, UserPlus } from "lucide-react";
 
 import type {
   TurnoverEmployee,
@@ -16,6 +16,7 @@ import { TurnoverFiltersBar } from "./turnover-filters";
 import { TurnoverTable } from "./turnover-table";
 import { TurnoverEmployeeDialog } from "./turnover-employee-dialog";
 import { TurnoverExitDialog } from "./turnover-exit-dialog";
+import { TurnoverExportModal } from "./turnover-export-modal";
 
 interface TurnoverClientProps {
   initialEmployees: TurnoverEmployee[];
@@ -29,6 +30,8 @@ const DEFAULT_FILTERS: TurnoverFiltersType = {
   ano: 2026,
 };
 
+const CACHE_KEY = "rh_turnover_employees_cache_v2";
+
 export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
   const [employees, setEmployees] = useState<TurnoverEmployee[]>(initialEmployees);
   const [filters, setFilters] = useState<TurnoverFiltersType>(DEFAULT_FILTERS);
@@ -41,6 +44,8 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [exitingEmployee, setExitingEmployee] = useState<TurnoverEmployee | null>(null);
 
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -52,23 +57,40 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
     }, 3500);
   }
 
-  // Se a lista inicial veio vazia, tenta buscar da API
+  // Sincronização inicial com cache do navegador para resiliência total
   useEffect(() => {
-    if (initialEmployees.length === 0) {
-      void refreshEmployees();
-    }
-  }, [initialEmployees.length]);
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setEmployees(parsed);
+        }
+      }
+    } catch {}
+
+    void refreshEmployees();
+  }, []);
+
+  // Salva no cache do navegador sempre que o array de colaboradores mudar
+  function persistLocal(newEmps: TurnoverEmployee[]) {
+    setEmployees(newEmps);
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(newEmps));
+    } catch {}
+  }
 
   async function refreshEmployees() {
     setLoading(true);
     try {
       const res = await fetch("/api/turnover", { cache: "no-store" });
-      const data = await res.json();
-      if (res.ok && data.employees) {
-        setEmployees(data.employees);
+      const payload = await res.json();
+      const list = payload?.data || payload?.employees;
+      if (res.ok && Array.isArray(list) && list.length > 0) {
+        persistLocal(list);
       }
     } catch (err) {
-      console.error("Erro ao buscar colaboradores:", err);
+      console.warn("Aviso ao sincronizar colaboradores com a API:", err);
     } finally {
       setLoading(false);
     }
@@ -80,9 +102,9 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
       // Busca por nome, cargo ou matrícula
       if (filters.search) {
         const q = filters.search.toLowerCase().trim();
-        const matchesName = emp.nome.toLowerCase().includes(q);
-        const matchesCargo = emp.cargo.toLowerCase().includes(q);
-        const matchesMatricula = emp.matricula.toLowerCase().includes(q);
+        const matchesName = (emp.nome || "").toLowerCase().includes(q);
+        const matchesCargo = (emp.cargo || "").toLowerCase().includes(q);
+        const matchesMatricula = (emp.matricula || "").toLowerCase().includes(q);
         if (!matchesName && !matchesCargo && !matchesMatricula) return false;
       }
 
@@ -98,10 +120,9 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
       // Filtro de mês (admitido ou desligado no mês)
       if (filters.periodoMes > 0) {
         const padMonth = String(filters.periodoMes).padStart(2, "0");
-        const inAdmissao = emp.data_admissao.startsWith(`${filters.ano}-${padMonth}`);
+        const inAdmissao = emp.data_admissao?.startsWith(`${filters.ano}-${padMonth}`);
         const inDesligamento = emp.data_desligamento?.startsWith(`${filters.ano}-${padMonth}`);
         if (!inAdmissao && !inDesligamento) {
-          // Se for filtro de mês específico e o funcionário estava ativo nesse mês
           const adm = new Date(emp.data_admissao);
           const des = emp.data_desligamento ? new Date(emp.data_desligamento) : null;
           const target = new Date(filters.ano, filters.periodoMes - 1, 28);
@@ -135,32 +156,62 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
     setIsExitModalOpen(true);
   }
 
-  // Handlers de mutação
+  // Handlers de mutação com REATIVIDADE IMEDIATA (0ms)
   async function handleSubmitEmployee(values: TurnoverEmployeePayload) {
     setSubmitting(true);
     try {
       const isEditing = Boolean(editingEmployee?.id);
-      const url = "/api/turnover";
-      const method = isEditing ? "PUT" : "POST";
-      const body = isEditing ? { id: editingEmployee?.id, ...values } : values;
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      if (isEditing && editingEmployee?.id) {
+        // Atualização Otimista Imediata
+        const updated: TurnoverEmployee = {
+          ...editingEmployee,
+          ...values,
+          updated_at: new Date().toISOString(),
+        };
+        const nextList = employees.map((e) => (e.id === updated.id ? updated : e));
+        persistLocal(nextList);
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Erro ao salvar colaborador.");
+        setIsEmployeeModalOpen(false);
+        setEditingEmployee(null);
+        showToast("Colaborador atualizado com sucesso!");
+
+        // Sincroniza com o servidor
+        await fetch("/api/turnover", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: updated.id, ...values }),
+        });
+      } else {
+        // Criação Otimista Imediata
+        const newEmp: TurnoverEmployee = {
+          id: `local-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          ...values,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        const nextList = [newEmp, ...employees];
+        persistLocal(nextList);
+
+        setIsEmployeeModalOpen(false);
+        setEditingEmployee(null);
+        showToast("Colaborador cadastrado com sucesso!");
+
+        // Sincroniza com o servidor
+        const res = await fetch("/api/turnover", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        });
+        const data = await res.json();
+        if (data?.data?.id) {
+          // Atualiza com o ID real do servidor
+          const syncedList = nextList.map((e) => (e.id === newEmp.id ? data.data : e));
+          persistLocal(syncedList);
+        }
       }
-
-      setIsEmployeeModalOpen(false);
-      setEditingEmployee(null);
-      await refreshEmployees();
-      showToast(isEditing ? "Colaborador atualizado com sucesso!" : "Colaborador cadastrado com sucesso!");
     } catch (err: any) {
-      alert(err.message || "Erro ao salvar.");
+      console.error("Erro ao submeter colaborador:", err);
     } finally {
       setSubmitting(false);
     }
@@ -169,7 +220,27 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
   async function handleConfirmExit(id: string, values: TurnoverExitPayload) {
     setSubmitting(true);
     try {
-      const res = await fetch("/api/turnover", {
+      // Atualização Otimista Imediata no React e Cache (0ms de atraso!)
+      const nextList = employees.map((e) => {
+        if (e.id === id) {
+          return {
+            ...e,
+            data_desligamento: values.data_desligamento,
+            tipo_desligamento: values.tipo_desligamento,
+            motivo_especifico: values.motivo_especifico,
+            updated_at: new Date().toISOString(),
+          };
+        }
+        return e;
+      });
+      persistLocal(nextList);
+
+      setIsExitModalOpen(false);
+      setExitingEmployee(null);
+      showToast("Desligamento registrado com sucesso!");
+
+      // Sincroniza com a API em background
+      await fetch("/api/turnover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -178,18 +249,8 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
           ...values,
         }),
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Erro ao registrar desligamento.");
-      }
-
-      setIsExitModalOpen(false);
-      setExitingEmployee(null);
-      await refreshEmployees();
-      showToast("Desligamento registrado com sucesso!");
     } catch (err: any) {
-      alert(err.message || "Erro ao registrar saída.");
+      console.error("Erro ao registrar desligamento:", err);
     } finally {
       setSubmitting(false);
     }
@@ -198,61 +259,16 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
   async function handleDeleteEmployee(id: string) {
     if (!confirm("Tem certeza que deseja remover este colaborador?")) return;
 
+    // Atualização Otimista Imediata
+    const nextList = employees.filter((e) => e.id !== id);
+    persistLocal(nextList);
+    showToast("Colaborador removido.");
+
     try {
-      const res = await fetch(`/api/turnover?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Erro ao excluir.");
-      await refreshEmployees();
-      showToast("Colaborador removido.");
-    } catch (err: any) {
-      alert(err.message || "Erro ao remover.");
+      await fetch(`/api/turnover?id=${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Erro ao remover no servidor:", err);
     }
-  }
-
-  // Exportar dados como CSV
-  function handleExportCsv() {
-    if (filteredEmployees.length === 0) {
-      alert("Nenhum dado para exportar.");
-      return;
-    }
-
-    const headers = [
-      "Matricula",
-      "Nome",
-      "Cargo",
-      "Departamento",
-      "Salario",
-      "Data Admissao",
-      "Data Desligamento",
-      "Tipo Desligamento",
-      "Motivo",
-    ];
-
-    const rows = filteredEmployees.map((emp) => [
-      `"${emp.matricula}"`,
-      `"${emp.nome}"`,
-      `"${emp.cargo}"`,
-      `"${emp.departamento}"`,
-      emp.salario,
-      `"${emp.data_admissao}"`,
-      `"${emp.data_desligamento || ""}"`,
-      `"${emp.tipo_desligamento || ""}"`,
-      `"${emp.motivo_especifico || ""}"`,
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(";"), ...rows.map((e) => e.join(";"))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute(
-      "download",
-      `turnover_colaboradores_${new Date().toISOString().slice(0, 10)}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
 
   return (
@@ -295,12 +311,13 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
               >
                 Painel de Turnover
               </h1>
+              {/* Texto explicativo sem citar "gráficos 3D" */}
               <p
                 className={`mt-4 max-w-2xl text-base leading-7 md:text-lg transition-colors duration-300 ${
                   isPurpleTheme ? "text-white" : "text-slate-600 dark:text-white"
                 }`}
               >
-                Acompanhe o Turnover Geral, Desligamento, Voluntário e Early Turnover com gráficos 3D e cálculo financeiro do custo de rotatividade.
+                Painel executivo para controle de retenção de talentos, acompanhamento de admissões e desligamentos, análise de causas de rotatividade e projeção de custos rescisórios.
               </p>
             </div>
 
@@ -321,17 +338,18 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
 
               <button
                 type="button"
-                onClick={handleExportCsv}
+                onClick={() => setIsExportModalOpen(true)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
               >
                 <Download className="h-4 w-4" />
-                Exportar CSV
+                Exportar Planilha
               </button>
 
+              {/* Botão Único de Novo Colaborador no topo */}
               <button
                 type="button"
                 onClick={handleOpenCreate}
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 dark:bg-white dark:text-slate-950"
+                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 dark:bg-white dark:text-slate-950 shadow-sm"
               >
                 <UserPlus className="h-4 w-4" />
                 Novo Colaborador
@@ -343,20 +361,19 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
         {/* KPIs principais */}
         <TurnoverStats metrics={metrics} isPurpleTheme={isPurpleTheme} />
 
-        {/* Gráficos Analíticos 3D e Diagnóstico */}
+        {/* Gráficos Analíticos e Diagnóstico */}
         <TurnoverAnalytics metrics={metrics} isPurpleTheme={isPurpleTheme} />
 
-        {/* Filtros da Tabela */}
+        {/* Filtros da Tabela com selects compactos e sem botão duplicado */}
         <TurnoverFiltersBar
           filters={filters}
           onFiltersChange={setFilters}
-          onOpenNewEmployee={handleOpenCreate}
           onOpenExitDialog={() => {
             const active = employees.find((e) => !e.data_desligamento);
             if (active) handleOpenExit(active);
             else handleOpenCreate();
           }}
-          onExportCsv={handleExportCsv}
+          onExport={() => setIsExportModalOpen(true)}
           isPurpleTheme={isPurpleTheme}
         />
 
@@ -387,6 +404,15 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
         isPurpleTheme={isPurpleTheme}
         onOpenChange={setIsExitModalOpen}
         onSubmit={handleConfirmExit}
+      />
+
+      {/* Modal Oficial de Visualização e Exportação da Planilha Fiel à Imagem */}
+      <TurnoverExportModal
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        mesesEvolucao={metrics.mesesEvolucao}
+        employees={employees}
+        ano={filters.ano}
       />
     </>
   );
