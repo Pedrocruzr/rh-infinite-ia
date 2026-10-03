@@ -31,53 +31,109 @@ function generateCphGaugeSvg(cph: number, setor: string): string {
     z2End = 6000;
   }
 
-  const maxScale = Math.max(z2End * 1.5, Math.max(8000, cph * 1.25));
-  const W = 480, H = 76, bx = 12, bw = 456, bh = 24, by = 22;
+  const W = 520, H = 100;
+  const bx = 16, bw = 488, bh = 34, by = 42;
+  const segW = bw / 3;
 
-  const p1 = Math.min(100, Math.max(0, (z1End / maxScale) * 100));
-  const p2 = Math.min(100, Math.max(0, (z2End / maxScale) * 100));
+  // Calcula a posição do ponteiro nos 3 segmentos
+  let pinX = bx + segW / 2;
+  let activeZone = 0; // 0: enxuta, 1: media, 2: acima
+  if (cph <= z1End) {
+    activeZone = 0;
+    const ratio = Math.max(0.15, Math.min(0.85, z1End > 0 ? cph / z1End : 0.5));
+    pinX = bx + ratio * segW;
+  } else if (cph <= z2End) {
+    activeZone = 1;
+    const ratio = Math.max(0.15, Math.min(0.85, (cph - z1End) / (z2End - z1End)));
+    pinX = bx + segW + ratio * segW;
+  } else {
+    activeZone = 2;
+    const ratio = Math.max(0.2, Math.min(0.85, (cph - z2End) / (z2End * 3)));
+    pinX = bx + 2 * segW + ratio * segW;
+  }
+
+  pinX = Math.max(bx + 18, Math.min(bx + bw - 18, pinX));
 
   const zones = [
-    { from: 0, to: p1, color: "#10b981", label: "Operação Enxuta" },
-    { from: p1, to: p2, color: "#3b82f6", label: "Média de Mercado" },
-    { from: p2, to: 100, color: "#f59e0b", label: "Atenção / Alto Custo" },
+    {
+      x: bx,
+      w: segW,
+      color: "#10b981",
+      title: "Operação Enxuta",
+      range: `Até ${brl(z1End)}`,
+      isActive: activeZone === 0,
+    },
+    {
+      x: bx + segW,
+      w: segW,
+      color: "#3b82f6",
+      title: "Média de Mercado",
+      range: `${brl(z1End)} a ${brl(z2End)}`,
+      isActive: activeZone === 1,
+    },
+    {
+      x: bx + 2 * segW,
+      w: segW,
+      color: "#f59e0b",
+      title: "Acima da Média",
+      range: `> ${brl(z2End)}`,
+      isActive: activeZone === 2,
+    },
   ];
 
-  const zoneParts = zones.map((z) => {
-    const x = (bx + (z.from / 100) * bw).toFixed(1);
-    const w = (((z.to - z.from) / 100) * bw).toFixed(1);
-    const tx = (bx + ((z.from + z.to) / 2 / 100) * bw).toFixed(1);
-    return (
-      `<rect x="${x}" y="${by}" width="${w}" height="${bh}" fill="${z.color}" opacity="0.88"/>` +
-      `<text x="${tx}" y="${by + bh / 2 + 4}" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="700" font-family="system-ui, -apple-system, sans-serif">${z.label}</text>`
-    );
-  }).join("");
+  const zoneBgs = zones
+    .map(
+      (z) =>
+        `<rect x="${z.x.toFixed(1)}" y="${by}" width="${z.w.toFixed(1)}" height="${bh}" fill="${z.color}" opacity="${z.isActive ? "0.95" : "0.78"}"/>`
+    )
+    .join("");
 
-  const cphPct = Math.min(98, Math.max(2, (cph / maxScale) * 100));
-  const ix = Math.min(bx + bw - 14, Math.max(bx + 14, bx + (cphPct / 100) * bw));
-  const iy = by + bh / 2;
+  const separators = `
+    <line x1="${(bx + segW).toFixed(1)}" y1="${by}" x2="${(bx + segW).toFixed(1)}" y2="${by + bh}" stroke="#ffffff" stroke-width="2" opacity="0.7"/>
+    <line x1="${(bx + 2 * segW).toFixed(1)}" y1="${by}" x2="${(bx + 2 * segW).toFixed(1)}" y2="${by + bh}" stroke="#ffffff" stroke-width="2" opacity="0.7"/>
+  `;
 
-  const indicator =
-    `<circle cx="${ix.toFixed(1)}" cy="${iy}" r="15" fill="#0f172a" stroke="#ffffff" stroke-width="2.5"/>` +
-    `<circle cx="${ix.toFixed(1)}" cy="${iy}" r="5" fill="#38bdf8"/>`;
+  const zoneLabels = zones
+    .map((z) => {
+      const cx = (z.x + z.w / 2).toFixed(1);
+      return `
+      <text x="${cx}" y="${by + 14}" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">${z.title}</text>
+      <text x="${cx}" y="${by + 27}" font-size="9.5" font-weight="600" fill="rgba(255,255,255,0.92)" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">${z.range}</text>
+    `;
+    })
+    .join("");
 
-  const border = `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="none" stroke="#cbd5e1" stroke-width="1.5" rx="6"/>`;
-  const minLabel = `<text x="${bx}" y="${by + bh + 16}" font-size="10" fill="#64748b" font-weight="600">R$ 0</text>`;
-  const maxLabel = `<text x="${bx + bw}" y="${by + bh + 16}" font-size="10" fill="#64748b" font-weight="600" text-anchor="end">${brl(maxScale)}</text>`;
-  const currentLabel = `<text x="${ix.toFixed(1)}" y="${by - 6}" font-size="11" fill="#0f172a" font-weight="800" text-anchor="middle">Seu CpH: ${brl(cph)}</text>`;
+  const badgeW = 160;
+  const badgeH = 24;
+  const badgeX = Math.max(bx, Math.min(bx + bw - badgeW, pinX - badgeW / 2));
 
-  return `<svg viewBox="0 0 ${W} ${H + 12}" width="100%" style="display:block;margin:0 auto;max-width:480px;height:auto;" xmlns="http://www.w3.org/2000/svg">
-    ${currentLabel}
-    <g clip-path="url(#rounded-bar-gauge)">
-      <clipPath id="rounded-bar-gauge">
-        <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="6"/>
-      </clipPath>
-      ${zoneParts}
+  const pinTopBadge = `
+    <g>
+      <rect x="${badgeX.toFixed(1)}" y="4" width="${badgeW}" height="${badgeH}" rx="12" fill="#0f172a"/>
+      <text x="${(badgeX + badgeW / 2).toFixed(1)}" y="20" font-size="11" font-weight="700" fill="#38bdf8" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">Seu CpH: ${brl(cph)}</text>
+      <path d="M ${(pinX - 5).toFixed(1)} 28 L ${(pinX + 5).toFixed(1)} 28 L ${pinX.toFixed(1)} 36 Z" fill="#0f172a"/>
+    </g>
+  `;
+
+  const pinMarker = `
+    <circle cx="${pinX.toFixed(1)}" cy="${by + bh / 2}" r="13" fill="#0f172a" stroke="#ffffff" stroke-width="2.5"/>
+    <circle cx="${pinX.toFixed(1)}" cy="${by + bh / 2}" r="4.5" fill="#38bdf8"/>
+  `;
+
+  const border = `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="none" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;margin:0 auto;max-width:520px;height:auto;" xmlns="http://www.w3.org/2000/svg">
+    <clipPath id="gauge-clip-3tier">
+      <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="8"/>
+    </clipPath>
+    <g clip-path="url(#gauge-clip-3tier)">
+      ${zoneBgs}
+      ${separators}
+      ${zoneLabels}
     </g>
     ${border}
-    ${indicator}
-    ${minLabel}
-    ${maxLabel}
+    ${pinTopBadge}
+    ${pinMarker}
   </svg>`;
 }
 
@@ -265,10 +321,6 @@ export function buildCustoContratacaoReport(rawAnswers: Session) {
 
   <!-- CAPA / HEADER EXECUTIVO -->
   <div style="text-align:center;padding:24px 0 28px;border-bottom:2px solid #e2e8f0;">
-    <div style="display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#475569;padding:4px 14px;border-radius:9999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Auditoria Financeira & Talent Acquisition
-    </div>
     <h1 style="font-size:28px;font-weight:800;color:#0f172a;margin:0 0 6px;letter-spacing:-0.03em;">Relatório Executivo de Custo por Contratação (CpH)</h1>
     <p style="font-size:13px;color:#64748b;margin:0 0 18px;">Relatório gerado em ${dateStr}</p>
     

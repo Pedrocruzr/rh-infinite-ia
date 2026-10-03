@@ -368,14 +368,15 @@ Qual valor/hora vamos usar?`;
 
 Etapa 4d (continuação): duração do onboarding
 
-Agora preciso da quantidade de horas de onboarding obrigatório por novo contratado.
+Agora preciso da quantidade de horas de onboarding/integração obrigatória de CADA novo contratado.
 
 Pergunta:
-Quantas horas dura o onboarding obrigatório de cada novo contratado?
+Quantas horas de integração cada novo colaborador realiza individualmente?
+
+💡 Importante: Informe apenas as horas de 1 pessoa (não a soma de toda a equipe e não a jornada mensal). Exemplos comuns variam entre 8h (1 dia de integração), 20h ou 40h (1 semana).
 
 Exemplo detalhado:
 Se cada pessoa passa por 8 horas de integração:
-
 R$ ${session.custoHoraNovo ?? 15}/h × 8h = ${brMoney((session.custoHoraNovo ?? 15) * 8)} por pessoa
 
 Com ${session.contratacoes ?? 8} contratações, isso daria:
@@ -501,6 +502,20 @@ export function runCustoContratacaoStep(
         reply: `Não consegui entender o valor informado.
 
 ${questionFor(current, session)}`,
+      };
+    }
+
+    if (current === "horasOnboarding" && value > 160) {
+      const perPerson = Math.round(value / (session.contratacoes || 1));
+      return {
+        session,
+        currentField: current,
+        nextField: current,
+        completed: false,
+        finished: false,
+        reply: `⚠️ Você informou ${value} horas de integração por pessoa (o que equivaleria a mais de um mês inteiro de treinamento por colaborador antes de produzir).
+
+Se você informou o total somado de toda a equipe (${value}h ÷ ${session.contratacoes || 1} vagas = ${perPerson}h por pessoa) ou se digitou o salário por engano, por favor informe apenas as horas de integração individual de CADA colaborador (ex: 8, 16, 24 ou 40 horas).`,
       };
     }
 
