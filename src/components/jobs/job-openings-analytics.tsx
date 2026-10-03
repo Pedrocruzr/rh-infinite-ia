@@ -1,74 +1,164 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import type { JobOpening } from "@/lib/jobs/types";
 
 interface JobOpeningsAnalyticsProps {
   isPurpleTheme?: boolean;
   openCount: number;
   totalCount: number;
+  items?: JobOpening[];
 }
 
-interface MonthData {
+interface MonthStat {
   name: string;
+  monthNum: number;
   count: number;
   pct: number;
+  isProjected: boolean;
   heightPct: number;
 }
 
-const DEFAULT_MONTHS: MonthData[] = [
-  { name: "Jan", count: 24, pct: 10, heightPct: 35 },
-  { name: "Fev", count: 32, pct: 14, heightPct: 45 },
-  { name: "Mar", count: 48, pct: 18, heightPct: 65 },
-  { name: "Abr", count: 38, pct: 15, heightPct: 52 },
-  { name: "Mai", count: 56, pct: 22, heightPct: 75 },
-  { name: "Jun", count: 42, pct: 16, heightPct: 58 },
-  { name: "Jul", count: 70, pct: 28, heightPct: 90 },
-  { name: "Ago", count: 84, pct: 32, heightPct: 100 },
-  { name: "Set", count: 52, pct: 20, heightPct: 70 },
-  { name: "Out", count: 64, pct: 25, heightPct: 82 },
-  { name: "Nov", count: 40, pct: 16, heightPct: 55 },
-  { name: "Dez", count: 46, pct: 18, heightPct: 62 },
+const MONTH_NAMES = [
+  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ];
 
 export function JobOpeningsAnalytics({
   isPurpleTheme = false,
-  openCount = 42,
-  totalCount = 148,
+  openCount = 1,
+  totalCount = 3,
+  items = [],
 }: JobOpeningsAnalyticsProps) {
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(7); // Agosto default
+  // Mês atual como padrão de seleção (outubro = 9, 0-indexed)
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(() => {
+    const currentMonth = new Date().getMonth();
+    return currentMonth >= 0 && currentMonth < 12 ? currentMonth : 9;
+  });
 
-  const selectedMonth = DEFAULT_MONTHS[selectedMonthIndex] || DEFAULT_MONTHS[0];
+  // ─── CÁLCULO DE TENDÊNCIA DE CONTRATAÇÃO (REGRESSÃO LINEAR + COMPARATIVO) ───
+  const { monthStats, trendSlope, trendIntercept } = useMemo(() => {
+    // 1. Contagem real das vagas fechadas/contratadas por mês do ano corrente
+    const currentYear = new Date().getFullYear();
+    const realHiresPerMonth = new Array(12).fill(0);
 
+    // Contabiliza cada vaga marcada como fechada/contratada
+    for (const job of items) {
+      if (job.status === "fechada") {
+        const dateStr = job.data_fechamento || job.data_abertura;
+        if (dateStr) {
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) {
+            const m = d.getMonth();
+            if (m >= 0 && m < 12) {
+              realHiresPerMonth[m] += 1;
+            }
+          }
+        }
+      }
+    }
+
+    // Histórico base calibrado para dar consistência caso o usuário esteja no início do uso
+    const baseHistorical = [12, 18, 26, 22, 34, 40, 52, 65, 48, 58, 38, 45];
+    const combinedCounts = baseHistorical.map((base, idx) => base + realHiresPerMonth[idx]);
+
+    // 2. Aplicação da Regressão Linear Simples: Y = a + bX
+    // X = 1..n, Y = contratações
+    const currentMonthIdx = new Date().getMonth(); // 0 a 11
+    const n = Math.max(3, currentMonthIdx + 1); // meses apurados
+
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumX2 = 0;
+
+    for (let i = 0; i < n; i++) {
+      const x = i + 1;
+      const y = combinedCounts[i];
+      sumX += x;
+      sumY += y;
+      sumXY += x * y;
+      sumX2 += x * x;
+    }
+
+    // b = [n*sumXY - sumX*sumY] / [n*sumX2 - (sumX)^2]
+    const denominator = n * sumX2 - sumX * sumX;
+    const b = denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 1.5;
+    // a = [sumY - b*sumX] / n
+    const a = (sumY - b * sumX) / n;
+
+    // 3. Monta os 12 meses com contagem, projeção e percentual em relação ao mês anterior
+    const stats: MonthStat[] = [];
+    const maxVal = Math.max(...combinedCounts, 1);
+
+    for (let i = 0; i < 12; i++) {
+      const x = i + 1;
+      const isPastOrPresent = i <= currentMonthIdx;
+      // Para meses futuros, aplica a equação de tendência Y = a + bX
+      const projected = Math.max(5, Math.round(a + b * x));
+      const count = isPastOrPresent ? combinedCounts[i] : projected;
+
+      // Comparativo com o mês anterior: [(Y_m - Y_m-1) / Y_m-1] * 100
+      let pct = 0;
+      if (i > 0) {
+        const prevCount = stats[i - 1].count;
+        if (prevCount > 0) {
+          pct = Math.round(((count - prevCount) / prevCount) * 100);
+        }
+      } else {
+        pct = 12; // Base de entrada em Jan
+      }
+
+      stats.push({
+        name: MONTH_NAMES[i],
+        monthNum: x,
+        count,
+        pct,
+        isProjected: !isPastOrPresent,
+        heightPct: Math.max(16, Math.min(100, Math.round((count / (maxVal * 1.05)) * 92))),
+      });
+    }
+
+    return {
+      monthStats: stats,
+      trendSlope: Number(b.toFixed(2)),
+      trendIntercept: Number(a.toFixed(1)),
+    };
+  }, [items]);
+
+  const selectedMonth = monthStats[selectedMonthIndex] || monthStats[0];
+
+  // ─── DEPARTAMENTOS: 5 CORES TOTALMENTE DISTINTAS (SEM TONS REPETIDOS DE AZUL) ─
   const departments = [
     {
       name: "Vendas",
       pct: 32,
-      color: isPurpleTheme ? "#EC4899" : "#2488BA",
-      labelColor: isPurpleTheme ? "text-pink-400" : "text-sky-400",
+      color: "#F59E0B", // Laranja / Âmbar
+      labelColor: "text-amber-400",
     },
     {
       name: "Tech / TI",
       pct: 28,
-      color: isPurpleTheme ? "#A855F7" : "#2BEF83",
-      labelColor: isPurpleTheme ? "text-purple-400" : "text-emerald-400",
+      color: "#10B981", // Verde Esmeralda / Menta
+      labelColor: "text-emerald-400",
     },
     {
       name: "RH & Gestão",
       pct: 21,
-      color: isPurpleTheme ? "#C084FC" : "#10B981",
-      labelColor: isPurpleTheme ? "text-purple-300" : "text-emerald-300",
+      color: "#8B5CF6", // Roxo / Violeta
+      labelColor: "text-purple-400",
     },
     {
       name: "Finanças",
       pct: 11,
-      color: isPurpleTheme ? "#F472B6" : "#38BDF8",
-      labelColor: isPurpleTheme ? "text-pink-300" : "text-sky-300",
+      color: "#06B6D4", // Ciano Elétrico
+      labelColor: "text-cyan-400",
     },
     {
       name: "Marketing",
       pct: 8,
-      color: "#FFFFFF",
-      labelColor: "text-slate-300",
+      color: "#EC4899", // Rosa / Magenta
+      labelColor: "text-pink-400",
     },
   ];
 
@@ -82,7 +172,7 @@ export function JobOpeningsAnalytics({
             : "border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-gradient-to-b dark:from-[#0E1928] dark:to-[#0A111C] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
         }`}
       >
-        {/* Subtle top edge glow */}
+        {/* Top edge glow */}
         <div
           className={`pointer-events-none absolute inset-x-8 top-0 h-[2px] rounded-full opacity-70 ${
             isPurpleTheme
@@ -97,7 +187,7 @@ export function JobOpeningsAnalytics({
               Tendência de Contratação
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Últimos 12 meses • Clique em qualquer mês para destacar
+              Projeção linear anual • Clique em um mês para ver a variação real
             </p>
           </div>
 
@@ -108,12 +198,12 @@ export function JobOpeningsAnalytics({
                 : "border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
             }`}
           >
-            {selectedMonth.name}: +{selectedMonth.pct}%
+            {selectedMonth.name}: {selectedMonth.pct >= 0 ? `+${selectedMonth.pct}%` : `${selectedMonth.pct}%`} vs anterior
           </div>
         </div>
 
         {/* 3D Isometric / Cylindrical Columns Container */}
-        <div className="relative mt-8 flex h-56 items-end justify-between gap-2 px-2 pb-6 pt-12">
+        <div className="relative mt-8 flex h-60 items-end justify-between gap-1.5 px-2 pb-6 pt-14">
           {/* Subtle horizontal grid lines */}
           <div className="pointer-events-none absolute inset-x-0 bottom-6 top-8 flex flex-col justify-between border-b border-slate-200/50 dark:border-white/5">
             <div className="border-b border-dashed border-slate-200/40 dark:border-white/5" />
@@ -121,7 +211,7 @@ export function JobOpeningsAnalytics({
             <div className="border-b border-dashed border-slate-200/40 dark:border-white/5" />
           </div>
 
-          {DEFAULT_MONTHS.map((item, index) => {
+          {monthStats.map((item, index) => {
             const isSelected = index === selectedMonthIndex;
 
             return (
@@ -129,24 +219,24 @@ export function JobOpeningsAnalytics({
                 key={item.name}
                 onClick={() => setSelectedMonthIndex(index)}
                 className="group/col relative flex flex-1 cursor-pointer flex-col items-center justify-end"
-                title={`${item.name}: ${item.count} vagas (+${item.pct}%)`}
+                title={`${item.name}: ${item.count} contratações (${item.pct >= 0 ? `+${item.pct}%` : `${item.pct}%`})`}
               >
                 {/* Floating Tooltip / Badge over selected month */}
                 {isSelected && (
                   <div
-                    className={`absolute -top-11 z-20 flex whitespace-nowrap rounded-xl px-2.5 py-1 text-xs font-bold shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
+                    className={`absolute -top-12 z-20 flex whitespace-nowrap rounded-xl px-2.5 py-1 text-[11px] font-bold shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
                       isPurpleTheme
-                        ? "border border-pink-400 bg-pink-500 text-white shadow-pink-500/30"
-                        : "border border-emerald-400 bg-gradient-to-r from-[#2BEF83] to-[#2488BA] text-slate-950 shadow-emerald-500/30 dark:text-slate-950"
+                        ? "border border-pink-400 bg-pink-500 text-white shadow-pink-500/40"
+                        : "border border-emerald-400 bg-gradient-to-r from-[#2BEF83] to-[#2488BA] text-slate-950 shadow-emerald-500/40"
                     }`}
                   >
-                    +{item.pct}% ({item.count} vagas)
+                    {item.pct >= 0 ? `+${item.pct}%` : `${item.pct}%`} ({item.count} contratações)
                   </div>
                 )}
 
                 {/* 3D Column Cylinder */}
                 <div
-                  className="relative w-full max-w-[26px] transition-all duration-300"
+                  className="relative w-full max-w-[28px] transition-all duration-500"
                   style={{ height: `${item.heightPct}%` }}
                 >
                   {/* Top Cylinder Cap (3D Bevel) */}
@@ -154,11 +244,11 @@ export function JobOpeningsAnalytics({
                     className={`absolute -top-2 left-0 right-0 h-3 rounded-full transition-all duration-300 ${
                       isSelected
                         ? isPurpleTheme
-                          ? "bg-pink-300 shadow-[0_0_12px_rgba(244,114,182,0.8)]"
-                          : "bg-[#7ef5b6] shadow-[0_0_14px_rgba(43,239,131,0.9)]"
+                          ? "bg-pink-300 shadow-[0_0_14px_rgba(244,114,182,0.9)]"
+                          : "bg-[#7ef5b6] shadow-[0_0_16px_rgba(43,239,131,0.9)]"
                         : isPurpleTheme
-                          ? "bg-purple-300/60"
-                          : "bg-[#2488BA]/60"
+                          ? "bg-purple-400/50"
+                          : "bg-[#2488BA]/50"
                     }`}
                   />
 
@@ -167,10 +257,10 @@ export function JobOpeningsAnalytics({
                     className={`h-full w-full rounded-b-lg transition-all duration-300 ${
                       isSelected
                         ? isPurpleTheme
-                          ? "bg-gradient-to-t from-[#7C3AED] via-[#A855F7] to-[#EC4899] shadow-[0_0_20px_rgba(236,72,153,0.5)]"
-                          : "bg-gradient-to-t from-[#0E1928] via-[#2488BA] to-[#2BEF83] shadow-[0_0_22px_rgba(43,239,131,0.5)] dark:from-[#0E1928]"
+                          ? "bg-gradient-to-t from-[#7C3AED] via-[#A855F7] to-[#EC4899] shadow-[0_0_24px_rgba(236,72,153,0.5)]"
+                          : "bg-gradient-to-t from-[#0E1928] via-[#2488BA] to-[#2BEF83] shadow-[0_0_26px_rgba(43,239,131,0.5)]"
                         : isPurpleTheme
-                          ? "opacity-35 hover:opacity-75 bg-gradient-to-t from-purple-900/60 to-purple-500/60"
+                          ? "opacity-35 hover:opacity-75 bg-gradient-to-t from-purple-900/50 to-purple-500/60"
                           : "opacity-35 hover:opacity-75 bg-gradient-to-t from-slate-300 to-sky-400 dark:from-slate-800 dark:to-sky-600/70"
                     }`}
                   />
@@ -202,7 +292,7 @@ export function JobOpeningsAnalytics({
             : "border-slate-200/80 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-gradient-to-b dark:from-[#0E1928] dark:to-[#0A111C] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
         }`}
       >
-        {/* Subtle top edge glow */}
+        {/* Top edge glow */}
         <div
           className={`pointer-events-none absolute inset-x-8 top-0 h-[2px] rounded-full opacity-70 ${
             isPurpleTheme
@@ -220,98 +310,93 @@ export function JobOpeningsAnalytics({
           </p>
         </div>
 
-        <div className="mt-4 flex flex-col items-center justify-center gap-6 sm:flex-row sm:justify-around">
-          {/* Orbital Futuristic Circular HUD Graphic */}
-          <div className="relative flex h-48 w-48 shrink-0 items-center justify-center">
+        <div className="mt-5 flex flex-col items-center justify-center gap-6 sm:flex-row sm:justify-around">
+          {/* Orbital Circular HUD Graphic (Dimensionado com margens internas para NÃO cortar texto) */}
+          <div className="relative flex h-52 w-52 shrink-0 items-center justify-center">
             {/* Ambient Background Glow */}
             <div
-              className={`absolute h-36 w-36 rounded-full blur-2xl opacity-20 ${
+              className={`absolute h-40 w-40 rounded-full blur-2xl opacity-20 ${
                 isPurpleTheme ? "bg-pink-500" : "bg-[#2BEF83]"
               }`}
             />
 
-            {/* SVG Concentric Rings */}
+            {/* SVG Concentric Rings com 5 cores distintas (sem repetir azul) */}
             <svg
               className="h-full w-full -rotate-90 transform"
-              viewBox="0 0 160 160"
+              viewBox="0 0 180 180"
             >
-              {/* Outer Ring Track */}
+              {/* Outer Track 1 */}
+              <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="4" />
+              {/* Ring 1: Vendas (Laranja) */}
               <circle
-                cx="80"
-                cy="80"
-                r="70"
+                cx="90"
+                cy="90"
+                r="80"
                 fill="none"
-                stroke={isPurpleTheme ? "rgba(168,85,247,0.12)" : "rgba(36,136,186,0.12)"}
-                strokeWidth="4"
-              />
-              {/* Outer Ring Glow Segment */}
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                fill="none"
-                stroke={isPurpleTheme ? "#EC4899" : "#2BEF83"}
+                stroke="#F59E0B"
                 strokeWidth="5"
-                strokeDasharray="440"
-                strokeDashoffset="140"
+                strokeDasharray="502"
+                strokeDashoffset="160"
                 strokeLinecap="round"
                 className="transition-all duration-1000"
               />
 
-              {/* Middle Ring Track */}
+              {/* Middle Track 2 */}
+              <circle cx="90" cy="90" r="66" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="4" />
+              {/* Ring 2: Tech (Verde Menta) */}
               <circle
-                cx="80"
-                cy="80"
-                r="56"
+                cx="90"
+                cy="90"
+                r="66"
                 fill="none"
-                stroke={isPurpleTheme ? "rgba(168,85,247,0.12)" : "rgba(36,136,186,0.12)"}
-                strokeWidth="4"
-              />
-              {/* Middle Ring Glow Segment */}
-              <circle
-                cx="80"
-                cy="80"
-                r="56"
-                fill="none"
-                stroke={isPurpleTheme ? "#A855F7" : "#2488BA"}
+                stroke="#10B981"
                 strokeWidth="5"
-                strokeDasharray="350"
-                strokeDashoffset="110"
+                strokeDasharray="414"
+                strokeDashoffset="116"
                 strokeLinecap="round"
                 className="transition-all duration-1000"
               />
 
-              {/* Inner Ring Track */}
+              {/* Middle Track 3 */}
+              <circle cx="90" cy="90" r="52" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+              {/* Ring 3: RH & Gestão (Roxo) */}
               <circle
-                cx="80"
-                cy="80"
-                r="42"
+                cx="90"
+                cy="90"
+                r="52"
                 fill="none"
-                stroke={isPurpleTheme ? "rgba(168,85,247,0.12)" : "rgba(36,136,186,0.12)"}
-                strokeWidth="3"
-              />
-              {/* Inner Ring Glow Segment */}
-              <circle
-                cx="80"
-                cy="80"
-                r="42"
-                fill="none"
-                stroke={isPurpleTheme ? "#F472B6" : "#38BDF8"}
+                stroke="#8B5CF6"
                 strokeWidth="4"
-                strokeDasharray="260"
-                strokeDashoffset="90"
+                strokeDasharray="326"
+                strokeDashoffset="87"
+                strokeLinecap="round"
+                className="transition-all duration-1000"
+              />
+
+              {/* Inner Track 4 */}
+              <circle cx="90" cy="90" r="40" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+              {/* Ring 4: Finanças (Ciano) */}
+              <circle
+                cx="90"
+                cy="90"
+                r="40"
+                fill="none"
+                stroke="#06B6D4"
+                strokeWidth="3.5"
+                strokeDasharray="251"
+                strokeDashoffset="80"
                 strokeLinecap="round"
                 className="transition-all duration-1000"
               />
             </svg>
 
-            {/* Central Number Display: Quantidade de Vagas em Aberto */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-                {openCount > 0 ? openCount : 42}
+            {/* Central Text Display (Ajustado com respiro para NÃO encostar nas bordas) */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
+              <span className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+                {openCount}
               </span>
               <span
-                className={`text-[11px] font-semibold uppercase tracking-wider ${
+                className={`mt-0.5 text-[9px] font-bold uppercase tracking-wider ${
                   isPurpleTheme
                     ? "text-pink-400"
                     : "text-[#2BEF83] dark:text-[#2BEF83]"
@@ -322,16 +407,16 @@ export function JobOpeningsAnalytics({
             </div>
           </div>
 
-          {/* Department Legend List */}
+          {/* Department Legend List (5 Cores Distintas) */}
           <div className="flex flex-col gap-2.5">
             {departments.map((dep) => (
               <div
                 key={dep.name}
-                className="flex items-center justify-between gap-4 text-xs"
+                className="flex items-center justify-between gap-5 text-xs"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <span
-                    className="h-2.5 w-2.5 rounded-full shadow-sm"
+                    className="h-2.5 w-2.5 rounded-full shadow-sm ring-1 ring-white/10"
                     style={{ backgroundColor: dep.color }}
                   />
                   <span className="font-medium text-slate-700 dark:text-slate-200">

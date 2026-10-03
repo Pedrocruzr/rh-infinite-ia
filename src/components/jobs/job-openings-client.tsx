@@ -14,7 +14,6 @@ import { JobOpeningFormDialog } from "./job-opening-form-dialog";
 import { JobOpeningsBoard } from "./job-openings-board";
 import { JobOpeningsFilters } from "./job-openings-filters";
 import { JobOpeningsStats } from "./job-openings-stats";
-import { JobOpeningsTable } from "./job-openings-table";
 import { JobOpeningsAnalytics } from "./job-openings-analytics";
 
 interface JobOpeningsClientProps {
@@ -208,14 +207,32 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   return (
     <>
       <div className="flex flex-col gap-6">
-        <section className="rounded-[2rem] border border-slate-200/80 bg-white/80 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+        <section
+          className={`rounded-[2rem] border p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 ${
+            isPurpleTheme
+              ? "border-purple-500/20 bg-gradient-to-b from-[#180e29]/90 to-[#0e071a]/95 shadow-[0_24px_80px_rgba(168,85,247,0.15)]"
+              : "border-slate-200/80 bg-white/80 dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]"
+          }`}
+        >
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+              <div
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] transition-all duration-300 ${
+                  isPurpleTheme
+                    ? "border-pink-500/30 bg-pink-500/10 text-pink-300"
+                    : "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200"
+                }`}
+              >
                 <Sparkles className="h-3.5 w-3.5" />
                 Operação de recrutamento
               </div>
-              <h1 className="mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl">
+              <h1
+                className={`mt-6 text-4xl font-semibold tracking-[-0.05em] md:text-5xl transition-all duration-300 ${
+                  isPurpleTheme
+                    ? "bg-gradient-to-r from-purple-400 via-pink-400 to-rose-300 bg-clip-text text-transparent"
+                    : "text-slate-950 dark:text-white"
+                }`}
+              >
                 Painel de Vagas
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300 md:text-lg">
@@ -271,6 +288,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           isPurpleTheme={isPurpleTheme}
           openCount={stats.open}
           totalCount={stats.total}
+          items={items}
         />
 
         <JobOpeningsFilters
@@ -278,6 +296,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           total={filteredItems.length}
           onChange={(next) => setFilters((current) => ({ ...current, ...next }))}
           onClear={() => setFilters(DEFAULT_FILTERS)}
+          isPurpleTheme={isPurpleTheme}
         />
 
         {error ? (
@@ -297,14 +316,8 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           onEdit={openEditDialog}
           onDelete={handleDelete}
           onStatusChange={handleStatusChange}
+          onMarkHired={(item) => handleStatusChange(item, "fechada")}
           isPurpleTheme={isPurpleTheme}
-        />
-
-        <JobOpeningsTable
-          items={filteredItems}
-          onEdit={openEditDialog}
-          onDelete={handleDelete}
-          onStatusChange={handleStatusChange}
         />
       </div>
 

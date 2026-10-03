@@ -3,13 +3,14 @@
 import { JOB_STATUS_OPTIONS } from "@/lib/jobs/constants";
 import { formatDateBR, getStatusBadgeClass, getStatusLabel } from "@/lib/jobs/utils";
 import type { JobOpening, JobStatus } from "@/lib/jobs/types";
-import { Clock, Calendar, Check, Pause, Play, Edit3, Trash2 } from "lucide-react";
+import { Clock, Calendar, Check, Pause, Play, Edit3, Trash2, UserCheck } from "lucide-react";
 
 interface JobOpeningsBoardProps {
   items: JobOpening[];
   onEdit: (item: JobOpening) => void;
   onDelete: (id: string) => void;
   onStatusChange: (item: JobOpening, status: JobStatus) => void;
+  onMarkHired?: (item: JobOpening) => void;
   isPurpleTheme?: boolean;
 }
 
@@ -18,6 +19,7 @@ export function JobOpeningsBoard({
   onEdit,
   onDelete,
   onStatusChange,
+  onMarkHired,
   isPurpleTheme = false,
 }: JobOpeningsBoardProps) {
   return (
@@ -141,14 +143,31 @@ export function JobOpeningsBoard({
                           />
                         </div>
                         {item.data_fechamento && (
-                          <p className="mt-1.5 text-[11px] text-slate-400">
-                            Fechada em: {formatDateBR(item.data_fechamento)}
+                          <p className="mt-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                            ✓ Contratação finalizada em: {formatDateBR(item.data_fechamento)}
                           </p>
                         )}
                       </div>
 
                       {/* Actions Row */}
                       <div className="mt-3.5 flex flex-wrap items-center gap-1.5 pt-1">
+                        {/* BOTÃO CONTRATADO: Adiciona à Tendência de Contratação */}
+                        {item.status !== "fechada" && (
+                          <button
+                            type="button"
+                            onClick={() => (onMarkHired ? onMarkHired(item) : onStatusChange(item, "fechada"))}
+                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm transition-all duration-300 ${
+                              isPurpleTheme
+                                ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-pink-500/20 hover:scale-105"
+                                : "bg-gradient-to-r from-[#2BEF83] to-[#2488BA] text-slate-950 shadow-emerald-500/20 hover:scale-105 dark:text-slate-950"
+                            }`}
+                            title="Marcar como Contratado e somar à Tendência de Contratação do mês"
+                          >
+                            <UserCheck className="h-3.5 w-3.5" />
+                            Contratado
+                          </button>
+                        )}
+
                         {item.status !== "em_aberto" && (
                           <button
                             type="button"
@@ -160,7 +179,7 @@ export function JobOpeningsBoard({
                           </button>
                         )}
 
-                        {item.status !== "pausada" && (
+                        {item.status !== "pausada" && item.status !== "fechada" && (
                           <button
                             type="button"
                             onClick={() => onStatusChange(item, "pausada")}
