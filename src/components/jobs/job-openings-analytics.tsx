@@ -77,7 +77,7 @@ export function JobOpeningsAnalytics({
     }
 
     const currentMonthIdx = new Date().getMonth(); // Outubro = 9
-    const maxReal = Math.max(...realHiresPerMonth);
+    const maxReal = Math.max(...realHiresPerMonth, 1);
 
     // Regressão Linear Simples Y = a + bX (apenas com base no histórico real dos meses transcorridos)
     const n = Math.max(1, currentMonthIdx + 1);
@@ -103,8 +103,10 @@ export function JobOpeningsAnalytics({
 
     for (let i = 0; i < 12; i++) {
       const x = i + 1;
-      // Contagem 100% estrita e real: reflete exclusivamente o que o usuário cadastrou/contratou
-      const count = realHiresPerMonth[i];
+      const isFuture = i > currentMonthIdx;
+      // Projeção estimada por regressão linear para meses futuros (Novembro, Dezembro)
+      const projected = Math.max(0, Math.round(a + b * x));
+      const count = isFuture ? projected : realHiresPerMonth[i];
 
       // Comparativo com o mês anterior
       let pct = 0;
@@ -122,8 +124,7 @@ export function JobOpeningsAnalytics({
       // Altura visual proporcional: se tiver contratações, cresce de 25% a 92%; se 0, fica na base (10%)
       let heightPct = 10;
       if (count > 0) {
-        const referenceMax = Math.max(maxReal, 1);
-        heightPct = Math.max(25, Math.min(95, Math.round((count / referenceMax) * 88)));
+        heightPct = Math.max(25, Math.min(95, Math.round((count / maxReal) * 88)));
       }
 
       stats.push({
@@ -131,7 +132,7 @@ export function JobOpeningsAnalytics({
         monthNum: x,
         count,
         pct,
-        isProjected: false,
+        isProjected: isFuture,
         heightPct,
       });
     }
@@ -141,39 +142,143 @@ export function JobOpeningsAnalytics({
 
   const selectedMonth = monthStats[selectedMonthIndex] || monthStats[0];
 
-  // ─── DEPARTAMENTOS: 5 CORES TOTALMENTE DISTINTAS (SEM TONS DE AZUL) ─────────
-  const departments = [
-    {
-      name: "Vendas",
-      pct: 32,
-      color: "#F59E0B", // Laranja / Âmbar
-      labelColor: "text-amber-400",
-    },
-    {
-      name: "Tech / TI",
-      pct: 28,
-      color: "#10B981", // Verde Esmeralda / Menta
-      labelColor: "text-emerald-400",
-    },
-    {
-      name: "RH & Gestão",
-      pct: 21,
-      color: "#8B5CF6", // Roxo / Violeta
-      labelColor: "text-purple-400",
-    },
-    {
-      name: "Finanças",
-      pct: 11,
-      color: "#06B6D4", // Ciano Elétrico
-      labelColor: "text-cyan-400",
-    },
-    {
-      name: "Marketing",
-      pct: 8,
-      color: "#EC4899", // Rosa / Magenta
-      labelColor: "text-pink-400",
-    },
-  ];
+  // ─── DEPARTAMENTOS: CÁLCULO 100% DINÂMICO BASEADO NAS VAGAS EM ABERTO ───────
+  const departments = useMemo(() => {
+    // Analisa as vagas em aberto (ou todas cadastradas se não houver em aberto)
+    const openJobs = items.filter((job) => job.status === "em_aberto");
+    const activeList = openJobs.length > 0 ? openJobs : items;
+    const totalJobs = activeList.length;
+
+    const counts = {
+      vendas: 0,
+      tech: 0,
+      rh: 0,
+      financas: 0,
+      marketing: 0,
+    };
+
+    for (const job of activeList) {
+      const name = (job.nome_vaga || "").toLowerCase();
+      if (
+        name.includes("vend") ||
+        name.includes("comercial") ||
+        name.includes("sdr") ||
+        name.includes("bdr") ||
+        name.includes("closer") ||
+        name.includes("inside sales") ||
+        name.includes("prospec") ||
+        name.includes("consultor")
+      ) {
+        counts.vendas++;
+      } else if (
+        name.includes("tech") ||
+        name.includes("ti") ||
+        name.includes("dev") ||
+        name.includes("software") ||
+        name.includes("front") ||
+        name.includes("back") ||
+        name.includes("full") ||
+        name.includes("engenheir") ||
+        name.includes("dados") ||
+        name.includes("qa") ||
+        name.includes("suporte") ||
+        name.includes("programad") ||
+        name.includes("ux") ||
+        name.includes("ui")
+      ) {
+        counts.tech++;
+      } else if (
+        name.includes("rh") ||
+        name.includes("humano") ||
+        name.includes("recrut") ||
+        name.includes("talent") ||
+        name.includes("gest") ||
+        name.includes("people") ||
+        name.includes("dp") ||
+        name.includes("psicol")
+      ) {
+        counts.rh++;
+      } else if (
+        name.includes("finan") ||
+        name.includes("contab") ||
+        name.includes("fisc") ||
+        name.includes("tesour") ||
+        name.includes("fatur") ||
+        name.includes("audit") ||
+        name.includes("controlad")
+      ) {
+        counts.financas++;
+      } else if (
+        name.includes("mkt") ||
+        name.includes("marketing") ||
+        name.includes("growth") ||
+        name.includes("copy") ||
+        name.includes("design") ||
+        name.includes("social") ||
+        name.includes("trafego") ||
+        name.includes("tráfego") ||
+        name.includes("comunic") ||
+        name.includes("midia") ||
+        name.includes("mídia")
+      ) {
+        counts.marketing++;
+      } else {
+        // Classificação padrão quando o cargo for generalista
+        counts.tech++;
+      }
+    }
+
+    const calcPct = (count: number) =>
+      totalJobs > 0 ? Math.round((count / totalJobs) * 100) : 0;
+
+    return [
+      {
+        name: "Vendas",
+        count: counts.vendas,
+        pct: calcPct(counts.vendas),
+        color: "#F59E0B", // Laranja / Âmbar
+        labelColor: "text-amber-400",
+        r: 98,
+        circumference: 615,
+      },
+      {
+        name: "Tech / TI",
+        count: counts.tech,
+        pct: calcPct(counts.tech),
+        color: "#10B981", // Verde Esmeralda / Menta
+        labelColor: "text-emerald-400",
+        r: 85,
+        circumference: 534,
+      },
+      {
+        name: "RH & Gestão",
+        count: counts.rh,
+        pct: calcPct(counts.rh),
+        color: "#8B5CF6", // Roxo / Violeta
+        labelColor: "text-purple-400",
+        r: 72,
+        circumference: 452,
+      },
+      {
+        name: "Finanças",
+        count: counts.financas,
+        pct: calcPct(counts.financas),
+        color: "#06B6D4", // Ciano Elétrico
+        labelColor: "text-cyan-400",
+        r: 59,
+        circumference: 370,
+      },
+      {
+        name: "Marketing",
+        count: counts.marketing,
+        pct: calcPct(counts.marketing),
+        color: "#EC4899", // Rosa / Magenta
+        labelColor: "text-pink-400",
+        r: 46,
+        circumference: 289,
+      },
+    ];
+  }, [items]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-12">
@@ -213,13 +318,27 @@ export function JobOpeningsAnalytics({
           </div>
 
           <div
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
-              isPurpleTheme
-                ? "border border-pink-500/40 bg-pink-500/15 text-pink-200"
-                : "border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
+            className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all duration-300 ${
+              selectedMonth.isProjected
+                ? isPurpleTheme
+                  ? "border border-purple-400/50 bg-purple-500/20 text-purple-200 shadow-sm"
+                  : "border border-sky-400/40 bg-sky-500/15 text-sky-600 dark:text-sky-300 shadow-sm"
+                : isPurpleTheme
+                  ? "border border-pink-500/40 bg-pink-500/15 text-pink-200"
+                  : "border border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
             }`}
           >
-            {selectedMonth.name}: {selectedMonth.count} {selectedMonth.count === 1 ? "contratação" : "contratações"}
+            {selectedMonth.isProjected ? (
+              <span>
+                {selectedMonth.name}: Projeção estimada de contratação ({selectedMonth.count}{" "}
+                {selectedMonth.count === 1 ? "vaga" : "vagas"})
+              </span>
+            ) : (
+              <span>
+                {selectedMonth.name}: {selectedMonth.count}{" "}
+                {selectedMonth.count === 1 ? "contratação" : "contratações"}
+              </span>
+            )}
           </div>
         </div>
 
@@ -240,18 +359,36 @@ export function JobOpeningsAnalytics({
                 key={item.name}
                 onClick={() => setSelectedMonthIndex(index)}
                 className="group/col relative flex h-full flex-1 cursor-pointer flex-col items-center justify-end"
-                title={`${item.name}: ${item.count} contratações`}
+                title={
+                  item.isProjected
+                    ? `${item.name}: Projeção estimada de ${item.count} contratação`
+                    : `${item.name}: ${item.count} contratações`
+                }
               >
                 {/* Floating Tooltip / Badge over selected month */}
                 {isSelected && (
                   <div
                     className={`absolute -top-12 z-20 flex whitespace-nowrap rounded-xl px-2.5 py-1 text-[11px] font-bold shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 ${
-                      isPurpleTheme
-                        ? "border border-pink-400 bg-pink-500 text-white shadow-pink-500/50"
-                        : "border border-emerald-400 bg-gradient-to-r from-[#2BEF83] to-[#2488BA] text-slate-950 shadow-emerald-500/50"
+                      item.isProjected
+                        ? isPurpleTheme
+                          ? "border border-purple-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-purple-500/40"
+                          : "border border-sky-400 bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-sky-500/40"
+                        : isPurpleTheme
+                          ? "border border-pink-400 bg-pink-500 text-white shadow-pink-500/50"
+                          : "border border-emerald-400 bg-gradient-to-r from-[#2BEF83] to-[#2488BA] text-slate-950 shadow-emerald-500/50"
                     }`}
                   >
-                    {item.pct > 0 ? `+${item.pct}%` : `${item.pct}%`} ({item.count} {item.count === 1 ? "contratação" : "contratações"})
+                    {item.isProjected ? (
+                      <span>
+                        Projeção estimada de contratação: {item.count}{" "}
+                        {item.count === 1 ? "vaga" : "vagas"}
+                      </span>
+                    ) : (
+                      <span>
+                        {item.pct > 0 ? `+${item.pct}%` : `${item.pct}%`} ({item.count}{" "}
+                        {item.count === 1 ? "contratação" : "contratações"})
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -279,17 +416,25 @@ export function JobOpeningsAnalytics({
                       className={`w-full rounded-b-lg transition-all duration-300 ${
                         item.heightPct > 15 ? "flex-1" : "h-1"
                       } ${
-                        isSelected
-                          ? isPurpleTheme
-                            ? "bg-gradient-to-t from-[#7C3AED] via-[#A855F7] to-[#EC4899] shadow-[0_0_24px_rgba(236,72,153,0.6)]"
-                            : "bg-gradient-to-t from-[#0E1928] via-[#2488BA] to-[#2BEF83] shadow-[0_0_26px_rgba(43,239,131,0.6)]"
-                          : isPurpleTheme
-                            ? item.count > 0
-                              ? "bg-gradient-to-t from-purple-900/80 to-purple-500/80 hover:opacity-90"
-                              : "opacity-25 hover:opacity-50 bg-gradient-to-t from-purple-900/40 to-purple-500/40"
-                            : item.count > 0
-                              ? "bg-gradient-to-t from-slate-800 to-sky-500 hover:opacity-90"
-                              : "opacity-25 hover:opacity-50 bg-gradient-to-t from-slate-800 to-sky-700/50"
+                        item.isProjected
+                          ? isSelected
+                            ? isPurpleTheme
+                              ? "border-2 border-dashed border-pink-300 bg-gradient-to-t from-purple-800/80 to-pink-500/80 shadow-[0_0_20px_rgba(236,72,153,0.5)]"
+                              : "border-2 border-dashed border-sky-300 bg-gradient-to-t from-slate-800/80 to-sky-500/80 shadow-[0_0_20px_rgba(56,189,248,0.5)]"
+                            : isPurpleTheme
+                              ? "border border-dashed border-purple-400/40 bg-purple-900/30 hover:opacity-80"
+                              : "border border-dashed border-sky-400/40 bg-sky-950/30 hover:opacity-80"
+                          : isSelected
+                            ? isPurpleTheme
+                              ? "bg-gradient-to-t from-[#7C3AED] via-[#A855F7] to-[#EC4899] shadow-[0_0_24px_rgba(236,72,153,0.6)]"
+                              : "bg-gradient-to-t from-[#0E1928] via-[#2488BA] to-[#2BEF83] shadow-[0_0_26px_rgba(43,239,131,0.6)]"
+                            : isPurpleTheme
+                              ? item.count > 0
+                                ? "bg-gradient-to-t from-purple-900/80 to-purple-500/80 hover:opacity-90"
+                                : "opacity-25 hover:opacity-50 bg-gradient-to-t from-purple-900/40 to-purple-500/40"
+                              : item.count > 0
+                                ? "bg-gradient-to-t from-slate-800 to-sky-500 hover:opacity-90"
+                                : "opacity-25 hover:opacity-50 bg-gradient-to-t from-slate-800 to-sky-700/50"
                       }`}
                     />
                   </div>
@@ -297,7 +442,7 @@ export function JobOpeningsAnalytics({
 
                 {/* Month Label */}
                 <span
-                  className={`mt-2 text-[11px] font-bold transition-colors ${
+                  className={`mt-2 flex flex-col items-center text-[11px] font-bold transition-colors ${
                     isSelected
                       ? isPurpleTheme
                         ? "text-pink-300 underline underline-offset-4"
@@ -307,7 +452,12 @@ export function JobOpeningsAnalytics({
                         : "text-slate-400 dark:text-slate-400"
                   }`}
                 >
-                  {item.name}
+                  <span>{item.name}</span>
+                  {item.isProjected && (
+                    <span className="text-[9px] font-medium opacity-65">
+                      proj.
+                    </span>
+                  )}
                 </span>
               </div>
             );
@@ -359,73 +509,49 @@ export function JobOpeningsAnalytics({
               }`}
             />
 
-            {/* SVG Concentric Rings com 5 cores distintas */}
+            {/* SVG Concentric Rings com 5 cores distintas calculadas dinamicamente */}
             <svg
               className="h-full w-full -rotate-90 transform"
               viewBox="0 0 220 220"
             >
-              {/* Ring 1 Track & Arc: Vendas (Laranja #F59E0B) */}
-              <circle cx="110" cy="110" r="98" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
-              <circle
-                cx="110"
-                cy="110"
-                r="98"
-                fill="none"
-                stroke="#F59E0B"
-                strokeWidth="5"
-                strokeDasharray="615"
-                strokeDashoffset="200"
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
+              {departments.map((dep) => {
+                const strokeDashoffset =
+                  dep.pct > 0
+                    ? dep.circumference - (dep.circumference * dep.pct) / 100
+                    : dep.circumference;
 
-              {/* Ring 2 Track & Arc: Tech (Verde Menta #10B981) */}
-              <circle cx="110" cy="110" r="84" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
-              <circle
-                cx="110"
-                cy="110"
-                r="84"
-                fill="none"
-                stroke="#10B981"
-                strokeWidth="5"
-                strokeDasharray="527"
-                strokeDashoffset="150"
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
-
-              {/* Ring 3 Track & Arc: RH & Gestão (Roxo #8B5CF6) */}
-              <circle cx="110" cy="110" r="70" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-              <circle
-                cx="110"
-                cy="110"
-                r="70"
-                fill="none"
-                stroke="#8B5CF6"
-                strokeWidth="4"
-                strokeDasharray="439"
-                strokeDashoffset="120"
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
-
-              {/* Ring 4 Track & Arc: Finanças (Ciano #06B6D4) */}
-              <circle cx="110" cy="110" r="58" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
-              <circle
-                cx="110"
-                cy="110"
-                r="58"
-                fill="none"
-                stroke="#06B6D4"
-                strokeWidth="3.5"
-                strokeDasharray="364"
-                strokeDashoffset="110"
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
+                return (
+                  <g key={dep.name}>
+                    {/* Ring Track de fundo */}
+                    <circle
+                      cx="110"
+                      cy="110"
+                      r={dep.r}
+                      fill="none"
+                      stroke="rgba(255,255,255,0.06)"
+                      strokeWidth={dep.r > 70 ? "4" : "3.5"}
+                    />
+                    {/* Ring Arc colorido proporcional às vagas reais */}
+                    {dep.pct > 0 && (
+                      <circle
+                        cx="110"
+                        cy="110"
+                        r={dep.r}
+                        fill="none"
+                        stroke={dep.color}
+                        strokeWidth={dep.r > 70 ? "5" : "4"}
+                        strokeDasharray={dep.circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                    )}
+                  </g>
+                );
+              })}
             </svg>
 
-            {/* Central Text Display com amplo respiro (raio interno = 58px / diâmetro = 116px) */}
+            {/* Central Text Display com amplo respiro (raio interno = 46px / diâmetro = 92px) */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
               <span
                 className={`text-3xl font-black tracking-tight ${
@@ -439,12 +565,12 @@ export function JobOpeningsAnalytics({
                   isPurpleTheme ? "text-pink-300" : "text-emerald-600 dark:text-[#2BEF83]"
                 }`}
               >
-                Vagas em Aberto
+                {openCount === 1 ? "Vaga em Aberto" : "Vagas em Aberto"}
               </span>
             </div>
           </div>
 
-          {/* Department Legend List: Nomes legíveis em qualquer versão */}
+          {/* Department Legend List: Nomes e porcentagens 100% dinâmicos e fiéis */}
           <div className="flex flex-col gap-2.5">
             {departments.map((dep) => (
               <div
@@ -464,9 +590,14 @@ export function JobOpeningsAnalytics({
                     {dep.name}
                   </span>
                 </div>
-                <span className={`font-bold ${dep.labelColor}`}>
-                  {dep.pct}%
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`font-bold ${dep.labelColor}`}>
+                    {dep.pct}%
+                  </span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400">
+                    ({dep.count} {dep.count === 1 ? "vaga" : "vagas"})
+                  </span>
+                </div>
               </div>
             ))}
           </div>
