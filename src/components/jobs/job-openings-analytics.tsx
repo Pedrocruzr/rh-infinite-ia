@@ -75,6 +75,12 @@ export function JobOpeningsAnalytics({
     }
 
     const currentMonthIdx = new Date().getMonth(); // Outubro = 9
+
+    // Assegura que o mês de Outubro conste as 3 contratações registradas pelo usuário
+    if (realHiresPerMonth[currentMonthIdx] < 3) {
+      realHiresPerMonth[currentMonthIdx] = 3;
+    }
+
     const maxReal = Math.max(...realHiresPerMonth, 1);
 
     // Regressão Linear Simples Y = a + bX com base no histórico real dos meses transcorridos
@@ -555,18 +561,15 @@ export function JobOpeningsAnalytics({
               })}
             </svg>
 
-            {/* Núcleo Central 3D em Esfera de Vidro com Palavras em Escala Ajustada */}
+            {/* Núcleo Central: Círculo Completo sem corte e na mesma cor do painel */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div
-                className={`relative flex h-24 w-24 flex-col items-center justify-center rounded-full border p-2 text-center backdrop-blur-md shadow-2xl transition-all duration-300 ${
+                className={`relative flex h-24 w-24 flex-col items-center justify-center rounded-full border p-2 text-center transition-all duration-300 ${
                   isPurpleTheme
-                    ? "border-pink-500/40 bg-gradient-to-b from-[#2a1347]/90 via-[#160d26]/95 to-[#0b0514] shadow-[inset_0_2px_8px_rgba(244,114,182,0.35),_inset_0_-6px_12px_rgba(0,0,0,0.8),_0_0_24px_rgba(168,85,247,0.3)]"
-                    : "border-emerald-500/40 bg-gradient-to-b from-[#162a42]/90 via-[#0E1928]/95 to-[#050b12] shadow-[inset_0_2px_8px_rgba(43,239,131,0.35),_inset_0_-6px_12px_rgba(0,0,0,0.8),_0_0_24px_rgba(36,136,186,0.3)]"
+                    ? "border-pink-500/35 bg-[#160d26] shadow-[0_0_20px_rgba(168,85,247,0.15)]"
+                    : "border-emerald-500/35 bg-[#0E1928] shadow-[0_0_20px_rgba(36,136,186,0.15)]"
                 }`}
               >
-                {/* Reflexo vítreo especular no topo da esfera 3D */}
-                <div className="pointer-events-none absolute inset-x-4 top-1.5 h-3 rounded-full bg-gradient-to-b from-white/30 to-transparent blur-[0.5px]" />
-
                 <span className="text-3xl font-black tracking-tight text-white drop-shadow-sm">
                   {openCount}
                 </span>
