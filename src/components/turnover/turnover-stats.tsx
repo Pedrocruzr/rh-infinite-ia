@@ -200,8 +200,8 @@ export function TurnoverStats({ metrics, isPurpleTheme }: TurnoverStatsProps) {
       <div
         className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-all duration-300 ${
           isPurpleTheme
-            ? "border-pink-500/30 bg-gradient-to-br from-[#23153c] to-[#160d26] text-white shadow-pink-950/20"
-            : "border-sky-500/20 bg-gradient-to-br from-sky-50/70 to-blue-50/50 text-slate-900 dark:border-sky-400/20 dark:bg-[#102033]/90 dark:text-white"
+            ? "border-purple-500/25 bg-[#1a0f2e]/90 text-white shadow-purple-950/30"
+            : "border-slate-200/80 bg-white/90 text-slate-900 shadow-slate-200/50 dark:border-white/10 dark:bg-[#102033]/80 dark:text-white"
         }`}
       >
         <div className="flex items-center justify-between">
