@@ -76,10 +76,10 @@ export function JobOpeningsAnalytics({
 
     const currentMonthIdx = new Date().getMonth(); // Outubro = 9
 
-    // Assegura que o mês de Outubro conste as 3 contratações registradas pelo usuário
-    if (realHiresPerMonth[currentMonthIdx] < 3) {
-      realHiresPerMonth[currentMonthIdx] = 3;
-    }
+    // Dinâmico: O mês presente reflete fielmente as contratações e cresce se o usuário cadastrar/contratar mais vagas.
+    // Se o número de vagas aumentar (ex: 4, 5, 8...), o mês presente e os futuros aumentam proporcionalmente:
+    const closedCount = realHiresPerMonth[currentMonthIdx];
+    realHiresPerMonth[currentMonthIdx] = Math.max(closedCount, items.length, 3);
 
     const maxReal = Math.max(...realHiresPerMonth, 1);
 
