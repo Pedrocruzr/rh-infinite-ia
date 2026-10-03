@@ -212,3 +212,19 @@ export function formatJobTitleWithArea(cleanName: string, area: JobDepartment): 
   if (!area) return trimmed;
   return `${trimmed} • ${area}`;
 }
+
+export function getDepartmentConfig(deptName: string): DepartmentConfig {
+  const found = JOB_DEPARTMENTS.find(
+    (d) => d.name.toLowerCase() === (deptName || "").toLowerCase()
+  );
+  return (
+    found || {
+      id: "adm",
+      name: "Administração (ADM)",
+      color: "#8B5CF6",
+      labelColor: "text-purple-400",
+      badgeBg: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+    }
+  );
+}
+

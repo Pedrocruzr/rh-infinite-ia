@@ -12,6 +12,7 @@ export const STATIC_WORKSPACE_SEARCH_ITEMS: WorkspaceSearchItem[] = [
   { title: "Agentes", href: "/app/agentes", category: "Navegação", keywords: ["hub", "stackers", "agents"] },
   { title: "Relatórios Stackers", href: "/app/recrutador/assessments", category: "Navegação", keywords: ["relatorios", "assessments", "downloads"] },
   { title: "Painel de Vagas", href: "/app/painel-de-vagas", category: "Navegação", keywords: ["vagas", "jobs"] },
+  { title: "Painel de Turnover", href: "/app/painel-de-turnover", category: "Navegação", keywords: ["turnover", "retencao", "rotatividade", "demissao", "admissao"] },
   { title: "CLT IA", href: "/app/agentes/clt-ia", category: "Pesquisa", keywords: ["clt", "leis", "trabalho", "legislacao"] },
   { title: "Tutorial", href: "/app/tutorial", category: "Navegação", keywords: ["ajuda", "guia"] },
   { title: "Suporte", href: "/app/suporte", category: "Navegação", keywords: ["help", "atendimento"] },

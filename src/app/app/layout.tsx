@@ -11,6 +11,7 @@ import {
   FileText,
   Scale,
   Settings2,
+  UserMinus,
 } from "lucide-react";
 import { InternalTopbar } from "@/components/layout/internal-topbar";
 
@@ -190,6 +191,7 @@ export default async function InternalAppLayout({
     { href: "/app/agentes", label: "Agentes", icon: Bot },
     { href: "/app/recrutador/assessments", label: "Relatórios Stackers", icon: FileText },
     { href: "/app/painel-de-vagas", label: "Painel de Vagas", icon: BriefcaseBusiness },
+    { href: "/app/painel-de-turnover", label: "Painel de Turnover", icon: UserMinus },
     { href: "/app/agentes/clt-ia", label: "CLT IA", icon: Scale },
     { href: "/app/tutorial", label: "Tutorial", icon: BookOpen },
     { href: "/app/suporte", label: "Suporte", icon: CircleHelp },
