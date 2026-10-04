@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BriefcaseBusiness, Download, Sparkles, Lock, X, ArrowRight, Palette } from "lucide-react";
+import { BriefcaseBusiness, Download, Sparkles, Lock, X, ArrowRight, Palette, Clock } from "lucide-react";
 
 import type {
   JobFilters,
@@ -325,6 +325,39 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           onClear={() => setFilters(DEFAULT_FILTERS)}
           isPurpleTheme={isPurpleTheme}
         />
+
+        {/* LEGENDA DO SLA DE FECHAMENTO */}
+        <div
+          className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-xs transition-all duration-300 ${
+            isPurpleTheme
+              ? "border-purple-500/20 bg-[#160d26]/80 text-purple-200 shadow-sm"
+              : "border-slate-200/80 bg-white/80 text-slate-600 dark:border-white/10 dark:bg-[#0E1928]/80 dark:text-slate-300 shadow-sm"
+          }`}
+        >
+          <div className="flex items-center gap-2 font-semibold">
+            <Clock className={`h-4 w-4 ${isPurpleTheme ? "text-pink-400" : "text-sky-500 dark:text-[#2BEF83]"}`} />
+            <span className={isPurpleTheme ? "text-white" : "text-slate-900 dark:text-white"}>
+              Legenda do SLA de Fechamento (Meta: 30 dias):
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 font-medium text-emerald-700 dark:text-[#2BEF83]">
+              <span className="h-2 w-2 rounded-full bg-[#2BEF83] shadow-[0_0_8px_rgba(43,239,131,0.8)]" />
+              <span><strong>Verde:</strong> No prazo (até 15 dias em aberto)</span>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-700 dark:text-amber-300">
+              <span className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+              <span><strong>Amarelo:</strong> Atenção (de 16 a 30 dias em aberto)</span>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-1 font-medium text-red-700 dark:text-red-400">
+              <span className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+              <span><strong>Vermelho:</strong> SLA Estourado (mais de 30 dias em aberto)</span>
+            </div>
+          </div>
+        </div>
 
         {error ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
