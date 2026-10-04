@@ -143,6 +143,8 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
     if (!confirmed) return;
 
     setError("");
+    const prevItems = [...items];
+    setItems((prev) => prev.filter((j) => j.id !== id));
 
     try {
       const response = await fetch(`/api/job-openings/${id}`, {
@@ -153,15 +155,32 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
         const payload = await response.json();
         throw new Error(payload?.error || "Erro ao excluir vaga.");
       }
-
-      await refreshItems();
     } catch (err) {
+      setItems(prevItems);
       setError(err instanceof Error ? err.message : "Erro ao excluir vaga.");
     }
   }
 
   async function handleStatusChange(item: JobOpening, status: JobStatus) {
     setError("");
+    const prevItems = [...items];
+    const newClosingDate =
+      status === "fechada"
+        ? new Date().toISOString().slice(0, 10)
+        : null;
+
+    // Atualização otimista imediata: reflete instantaneamente no quadro, nas caixas superiores e nos dois gráficos
+    setItems((prev) =>
+      prev.map((j) =>
+        j.id === item.id
+          ? {
+              ...j,
+              status,
+              data_fechamento: newClosingDate,
+            }
+          : j
+      )
+    );
 
     try {
       const response = await fetch(`/api/job-openings/${item.id}`, {
@@ -171,10 +190,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
         },
         body: JSON.stringify({
           status,
-          data_fechamento:
-            status === "fechada"
-              ? new Date().toISOString().slice(0, 10)
-              : null,
+          data_fechamento: newClosingDate,
         }),
       });
 
@@ -184,8 +200,13 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
         throw new Error(payload?.error || "Erro ao alterar status.");
       }
 
-      await refreshItems();
+      if (payload?.data) {
+        setItems((prev) =>
+          prev.map((j) => (j.id === item.id ? { ...j, ...payload.data } : j))
+        );
+      }
     } catch (err) {
+      setItems(prevItems);
       setError(
         err instanceof Error ? err.message : "Erro ao alterar status."
       );

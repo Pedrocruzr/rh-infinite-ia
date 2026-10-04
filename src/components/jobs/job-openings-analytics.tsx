@@ -40,14 +40,17 @@ export function JobOpeningsAnalytics({
   // ─── CÁLCULO DE CONTRATAÇÕES + REGRESSÃO LINEAR NOS MESES FUTUROS ──────────
   const { monthStats } = useMemo(() => {
     const realHiresPerMonth = new Array(12).fill(0);
+    const currentMonthIdx = new Date().getMonth(); // Outubro = 9
+    const currentYear = new Date().getFullYear();
 
     for (const job of items) {
+      // Apenas vagas FECHADAS representam contratações concluídas
       if (job.status === "fechada") {
         const dateStr = job.data_fechamento || job.data_abertura;
+        let m = currentMonthIdx;
+
         if (dateStr) {
           const clean = String(dateStr).trim().slice(0, 10);
-          let m = -1;
-
           if (clean.includes("-")) {
             const parts = clean.split("-");
             if (parts.length === 3) {
@@ -58,28 +61,21 @@ export function JobOpeningsAnalytics({
             if (parts.length === 3) {
               m = parseInt(parts[1], 10) - 1;
             }
-          }
-
-          if (m < 0 || m > 11) {
+          } else {
             const d = new Date(dateStr);
             if (!isNaN(d.getTime())) {
               m = d.getMonth();
             }
           }
+        }
 
-          if (m >= 0 && m < 12) {
-            realHiresPerMonth[m] += 1;
-          }
+        if (m >= 0 && m < 12) {
+          realHiresPerMonth[m] += 1;
+        } else {
+          realHiresPerMonth[currentMonthIdx] += 1;
         }
       }
     }
-
-    const currentMonthIdx = new Date().getMonth(); // Outubro = 9
-
-    // Dinâmico: O mês presente reflete fielmente as contratações e cresce se o usuário cadastrar/contratar mais vagas.
-    // Se o número de vagas aumentar (ex: 4, 5, 8...), o mês presente e os futuros aumentam proporcionalmente:
-    const closedCount = realHiresPerMonth[currentMonthIdx];
-    realHiresPerMonth[currentMonthIdx] = Math.max(closedCount, items.length, 3);
 
     const maxReal = Math.max(...realHiresPerMonth, 1);
 
@@ -108,8 +104,8 @@ export function JobOpeningsAnalytics({
     for (let i = 0; i < 12; i++) {
       const x = i + 1;
       const isFuture = i > currentMonthIdx;
-      // Projeção estimada por regressão linear para meses futuros (Novembro, Dezembro)
-      const projected = Math.max(0, Math.round(a + b * x));
+      // Projeção estimada por regressão linear para meses futuros (apenas se houver contratações históricas)
+      const projected = sumY > 0 ? Math.max(0, Math.round(a + b * x)) : 0;
       const count = isFuture ? projected : realHiresPerMonth[i];
 
       // Comparativo com o mês anterior
@@ -125,10 +121,11 @@ export function JobOpeningsAnalytics({
         }
       }
 
-      // Altura visual proporcional: se tiver contratações, cresce de 28% a 92%; se 0, fica na base (12%)
-      let heightPct = 12;
+      // Altura visual proporcional: se 0 contratações, fica na base sólida (10%)
+      // Se houver contratações, cresce proporcionalmente de 26% a 92%
+      let heightPct = 10;
       if (count > 0) {
-        heightPct = Math.max(28, Math.min(92, Math.round((count / maxReal) * 88)));
+        heightPct = Math.max(26, Math.min(92, Math.round((count / maxReal) * 88)));
       }
 
       stats.push({
@@ -146,18 +143,18 @@ export function JobOpeningsAnalytics({
 
   const selectedMonth = monthStats[selectedMonthIndex] || monthStats[0];
 
-  // ─── DEPARTAMENTOS: CÁLCULO 100% DINÂMICO CONECTADO ÀS ÁREAS REAIS ──────────
+  // ─── DEPARTAMENTOS: CÁLCULO 100% DINÂMICO CONECTADO ÀS VAGAS EM ABERTO ──────────
   const departments = useMemo(() => {
+    // Vagas em aberto do processo seletivo ativo
     const openJobs = items.filter((job) => job.status === "em_aberto");
-    const activeList = openJobs.length > 0 ? openJobs : items;
-    const totalJobs = activeList.length;
+    const totalOpen = openJobs.length;
 
     const counts: Record<string, number> = {};
     for (const dep of JOB_DEPARTMENTS) {
       counts[dep.name] = 0;
     }
 
-    for (const job of activeList) {
+    for (const job of openJobs) {
       const { area } = parseJobTitleAndArea(job.nome_vaga);
       if (counts[area] !== undefined) {
         counts[area]++;
@@ -167,7 +164,7 @@ export function JobOpeningsAnalytics({
     }
 
     const calcPct = (count: number) =>
-      totalJobs > 0 ? Math.round((count / totalJobs) * 100) : 0;
+      totalOpen > 0 ? Math.round((count / totalOpen) * 100) : 0;
 
     // Raios concêntricos de 98 até 44 para 7 áreas com respiro abundante para a esfera central
     return JOB_DEPARTMENTS.map((dept, idx) => {
@@ -234,9 +231,11 @@ export function JobOpeningsAnalytics({
           >
             {selectedMonth.isProjected ? (
               <span>
-                {selectedMonth.name}: Projeção estimada de contratação ({selectedMonth.count}{" "}
+                {selectedMonth.name}: Projeção estimada ({selectedMonth.count}{" "}
                 {selectedMonth.count === 1 ? "vaga" : "vagas"})
               </span>
+            ) : selectedMonth.count === 0 ? (
+              <span>{selectedMonth.name}: 0 contratações</span>
             ) : (
               <span>
                 {selectedMonth.name}: {selectedMonth.count}{" "}
@@ -309,6 +308,8 @@ export function JobOpeningsAnalytics({
                       <span>
                         Projeção estimada: {item.count} {item.count === 1 ? "vaga" : "vagas"}
                       </span>
+                    ) : item.count === 0 ? (
+                      <span>0 contratações</span>
                     ) : (
                       <span>
                         {item.pct > 0 ? `+${item.pct}%` : `${item.pct}%`} ({item.count}{" "}

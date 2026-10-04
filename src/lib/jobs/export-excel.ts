@@ -48,7 +48,7 @@ export function computeJobOpeningsMonthlyStats(
       const dtAbert = parseDate(job.data_abertura);
       const dtFech = parseDate(job.data_fechamento);
       return dtAbert && dtAbert <= dataLimiteDezAnterior && (!dtFech || dtFech > dataLimiteDezAnterior);
-    }).length || Math.max(items.filter((j) => j.status === "em_aberto").length, 3);
+    }).length;
 
   const mesesEvolucao: MonthJobStat[] = MESES.map((mes) => {
     const dataInicioMes = new Date(ano, mes.numero - 1, 1);
@@ -84,9 +84,9 @@ export function computeJobOpeningsMonthlyStats(
     // Se o mês corrente tiver vagas registradas
     const currentMonthIdx = new Date().getMonth();
     if (mes.numero - 1 === currentMonthIdx) {
-      totalVagas = Math.max(totalVagas, items.length, 3);
-      fechadas = Math.max(fechadas, items.filter((j) => j.status === "fechada").length);
-      aberturas = Math.max(aberturas, items.filter((j) => j.status === "em_aberto").length);
+      totalVagas = Math.max(totalVagas, items.length);
+      fechadas = items.filter((j) => j.status === "fechada").length;
+      aberturas = items.filter((j) => j.status === "em_aberto").length;
     }
 
     const baseCalculo = Math.max(totalVagas, fechadas, 1);
