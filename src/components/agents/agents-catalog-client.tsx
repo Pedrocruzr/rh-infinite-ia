@@ -51,7 +51,7 @@ export function AgentsCatalogClient({ agents }: Props) {
     <section className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-10">
       <div className="flex flex-col gap-4">
         <div>
-          <div className="text-sm text-muted-foreground">RH Infinite IA</div>
+          <div className="text-sm text-muted-foreground">System Stacker</div>
           <h1 className="text-4xl font-semibold tracking-tight">
             Catálogo de Agentes
           </h1>

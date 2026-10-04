@@ -4,8 +4,8 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ClarityScript } from "@/components/clarity-script";
 
 export const metadata: Metadata = {
-  title: "RH Infinite IA",
-  description: "Workspace RH Infinite IA",
+  title: "Stack",
+  description: "System Stacker",
 };
 
 export default function RootLayout({
