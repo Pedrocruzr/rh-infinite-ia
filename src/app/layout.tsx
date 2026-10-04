@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ClarityScript } from "@/components/clarity-script";
 
 export const metadata: Metadata = {
-  title: "Stack",
+  title: "Stacker",
   description: "System Stacker",
 };
 

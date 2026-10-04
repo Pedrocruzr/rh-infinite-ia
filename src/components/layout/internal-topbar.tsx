@@ -87,6 +87,17 @@ export function InternalTopbar({
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
+
+          <Link href="/app/agentes" className="flex items-center gap-2">
+            <img
+              src="/brand/Ativo 12.png"
+              alt="Stacker"
+              className="h-8 w-8 object-contain"
+            />
+            <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+              Stacker
+            </span>
+          </Link>
         </div>
 
         <div className="min-w-0 flex-1 sm:flex-none">

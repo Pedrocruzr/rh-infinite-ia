@@ -15,6 +15,7 @@ import { JobOpeningsBoard } from "./job-openings-board";
 import { JobOpeningsFilters } from "./job-openings-filters";
 import { JobOpeningsStats } from "./job-openings-stats";
 import { JobOpeningsAnalytics } from "./job-openings-analytics";
+import { JobOpeningsExportModal } from "./job-openings-export-modal";
 
 interface JobOpeningsClientProps {
   initialItems: JobOpening[];
@@ -39,6 +40,7 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isPurpleTheme, setIsPurpleTheme] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   useEffect(() => {
     const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
@@ -261,11 +263,11 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
 
               <button
                 type="button"
-                onClick={() => exportJobOpeningsToCsv(filteredItems)}
+                onClick={() => setIsExportModalOpen(true)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:text-slate-950 dark:border-white/10 dark:bg-white/6 dark:text-slate-100 dark:hover:border-sky-400/30"
               >
                 <Download className="h-4 w-4" />
-                Exportar CSV
+                Exportar Planilha
               </button>
 
               <button
@@ -411,6 +413,13 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           </div>
         </div>
       )}
+
+      {/* Modal Oficial de Exportação (Modelo Turnover com Gráfico e PDF 1 Página) */}
+      <JobOpeningsExportModal
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        items={items}
+      />
     </>
   );
 }
