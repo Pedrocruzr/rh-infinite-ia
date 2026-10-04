@@ -203,8 +203,14 @@ export function TurnoverExportModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-2 sm:p-4 backdrop-blur-md overflow-y-auto">
-      <div className="w-full max-w-4xl max-h-[96vh] overflow-y-auto rounded-3xl bg-white text-slate-900 shadow-2xl p-4 sm:p-6">
+    <div
+      onClick={() => onOpenChange(false)}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-2 sm:p-4 backdrop-blur-md overflow-y-auto cursor-pointer"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-4xl max-h-[96vh] overflow-y-auto rounded-3xl bg-white text-slate-900 shadow-2xl p-4 sm:p-6 cursor-default"
+      >
         {/* BARRA SUPERIOR DE AÇÕES */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
           <div>
