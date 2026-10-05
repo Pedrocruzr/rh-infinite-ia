@@ -61,7 +61,7 @@ function BloqueadoContent() {
               </a>
             ) : plan === "recrutamento" ? (
               <a
-                href="https://pay.kiwify.com.br/pt8zNzz"
+                href="https://www.asaas.com/c/zk0bke5r9tjucy02"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full"
@@ -70,7 +70,8 @@ function BloqueadoContent() {
                   type="button"
                   className="h-12 w-full justify-center rounded-2xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center gap-2"
                 >
-                  Ativar Stacker de Recrutamento & Seleção
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  Ativar Recrutamento & Seleção (R$ 297,00/mês)
                 </Button>
               </a>
             ) : (

@@ -452,6 +452,151 @@ export function SubscriptionPlans({
           </div>
         </section>
       )}
+
+      {/* Planos Stacker: Recrutamento & Seleção e Stacks Infinity */}
+      <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300">
+            Assinaturas Disponíveis
+          </div>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+            Planos Stacker & Checkout Integrado Asaas
+          </h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Assine ou faça upgrade do seu plano com faturamento imediato via PIX, Cartão ou pelo link direto do Asaas.
+          </p>
+        </div>
+
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
+          {/* Card Recrutamento & Seleção */}
+          <div className="flex flex-col justify-between rounded-2xl border-2 border-sky-500/30 bg-gradient-to-b from-sky-500/5 to-transparent p-6 shadow-sm dark:border-sky-400/20 dark:from-sky-400/5">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+                  Recrutamento & Seleção
+                </span>
+                {(activePlanCode === "recrutamento" || activePlanCode === "recrutamento_selecao") && (
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                    Plano Ativo
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-3 text-xl font-bold">Stacker Recrutamento</h3>
+              <p className="mt-4 text-3xl font-extrabold">
+                R$ 297<span className="text-sm font-normal text-slate-500">/mês</span>
+              </p>
+              <ul className="mt-5 space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+                <li>• <strong>20 créditos mensais</strong> para gestão de vagas e triagem</li>
+                <li>• Painel de Vagas Kanban + SLA de Fechamento com IA</li>
+                <li>• E-book Recrutamento Inteligente + Templates inclusos</li>
+                <li>• Envio automático de acesso via Titan Mail</li>
+              </ul>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {(activePlanCode === "recrutamento" || activePlanCode === "recrutamento_selecao") ? (
+                <button
+                  disabled
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-400 dark:bg-white/5 dark:text-neutral-500"
+                >
+                  Plano Ativo
+                </button>
+              ) : (
+                <div className="grid gap-2 grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("recrutamento", "PIX")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-sky-600 bg-sky-600 px-2 text-xs font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
+                  >
+                    {loadingKey === "upgrade:recrutamento:PIX" ? "Gerando..." : "Comprar com PIX"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("recrutamento", "CREDIT_CARD")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-2 text-xs font-semibold text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100"
+                  >
+                    {loadingKey === "upgrade:recrutamento:CREDIT_CARD" ? "Abrindo..." : "Comprar com Cartão"}
+                  </button>
+                </div>
+              )}
+              <a
+                href="https://www.asaas.com/c/zk0bke5r9tjucy02"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300 bg-white/60 px-3 text-xs font-medium text-slate-700 transition hover:border-sky-400 hover:text-sky-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-white"
+              >
+                Checkout Direto Asaas (R$ 297,00) →
+              </a>
+            </div>
+          </div>
+
+          {/* Card Stacks Infinity */}
+          <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-slate-50/80 p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                  Plano Completo
+                </span>
+                {activePlanCode === "start" && (
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                    Plano Ativo
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-3 text-xl font-bold">Stacks Infinity</h3>
+              <p className="mt-4 text-3xl font-extrabold">
+                R$ 297<span className="text-sm font-normal text-slate-500">/mês</span>
+              </p>
+              <ul className="mt-5 space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+                <li>• <strong>29 créditos mensais</strong> para todos os agentes de IA</li>
+                <li>• Módulos de Turnover, Clima, Feedbacks e Descrição de Cargos</li>
+                <li>• Suporte prioritário via WhatsApp</li>
+                <li>• Renovação mensal automática via Asaas</li>
+              </ul>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {activePlanCode === "start" ? (
+                <button
+                  disabled
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-400 dark:bg-white/5 dark:text-neutral-500"
+                >
+                  Plano Ativo
+                </button>
+              ) : (
+                <div className="grid gap-2 grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("start", "PIX")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-950 bg-slate-950 px-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-60 dark:border-white dark:bg-white dark:text-slate-950"
+                  >
+                    {loadingKey === "upgrade:start:PIX" ? "Gerando..." : "Comprar com PIX"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleUpgradePlan("start", "CREDIT_CARD")}
+                    disabled={loadingKey !== null}
+                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-2 text-xs font-semibold text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100"
+                  >
+                    {loadingKey === "upgrade:start:CREDIT_CARD" ? "Abrindo..." : "Comprar com Cartão"}
+                  </button>
+                </div>
+              )}
+              <a
+                href="https://www.asaas.com/c/qmacegbjbnml820m"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300 bg-white/60 px-3 text-xs font-medium text-slate-700 transition hover:border-sky-400 hover:text-sky-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-white"
+              >
+                Checkout Direto Asaas (R$ 297,00) →
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

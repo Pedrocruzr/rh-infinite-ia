@@ -64,29 +64,54 @@ export async function POST(request: Request) {
     if (hasEmailConfig && email && (payment?.status === "saved_for_later_registration" || payment?.status === "processed_immediately")) {
       try {
         const welcomeName = name || "Cliente";
-        const isProfileTest = payment?.planCode === "perfil_comportamental";
+        const isRecrutamento =
+          payment?.planCode === "recrutamento" ||
+          payment?.planCode === "recrutamento_selecao" ||
+          Number(payment?.value) === 297 ||
+          String(payment?.description || "").toLowerCase().includes("recrutamento");
+        const isProfileTest =
+          payment?.planCode === "perfil_comportamental" ||
+          String(payment?.planCode || "").startsWith("perfil_");
         
-        const planName = isProfileTest ? "Perfil Comportamental" : "Stacks Infinity";
-        const planCredits = isProfileTest ? "9" : "29";
+        let planName = "Stacks Infinity";
+        let planCredits = "29";
+
+        if (isRecrutamento) {
+          planName = "Recrutamento & Seleção";
+          planCredits = "20";
+        } else if (isProfileTest) {
+          planName = "Perfil Comportamental";
+          planCredits = "9";
+        }
+
+        const planParam = isRecrutamento
+          ? "&plan=recrutamento"
+          : isProfileTest
+          ? "&plan=perfil_comportamental"
+          : "";
 
         // HTML Templates
         let emailHtml = "";
         let emailSubject = "";
 
         if (payment?.status === "saved_for_later_registration") {
-          emailSubject = isProfileTest 
-            ? "Bem-vindo à Stacker! Conclua o seu cadastro e resgate seus bônus 🎁"
-            : "Bem-vindo à Stacker! Conclua o seu cadastro 🚀";
+          if (isRecrutamento) {
+            emailSubject = "Bem-vindo ao Stacker Recrutamento & Seleção! Conclua o seu cadastro 🚀";
+          } else if (isProfileTest) {
+            emailSubject = "Bem-vindo à Stacker! Conclua o seu cadastro e resgate seus bônus 🎁";
+          } else {
+            emailSubject = "Bem-vindo à Stacker! Conclua o seu cadastro 🚀";
+          }
 
           emailHtml = `
             <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
               <h2 style="color: #0284c7; margin-top: 0; font-size: 24px;">Parabéns pela aquisição do plano ${planName}! 🚀</h2>
               <p>Olá, <strong>${welcomeName}</strong>,</p>
-              <p>Ficamos muito felizes em ter você conosco. Sua compra foi confirmada com sucesso!</p>
-              <p>Para começar a usar a plataforma e liberar os seus <strong>${planCredits} créditos</strong> do plano, você precisa apenas concluir o seu cadastro inicial.</p>
+              <p>Ficamos muito felizes em ter você conosco. Sua assinatura foi confirmada com sucesso!</p>
+              <p>Para começar a usar a plataforma e liberar os seus <strong>${planCredits} créditos mensais</strong>, basta concluir o seu cadastro inicial clicando no botão abaixo:</p>
               
               <div style="margin: 30px 0; text-align: center;">
-                <a href="https://app.stackercompany.com.br/cadastro?email=${encodeURIComponent(email)}&name=${encodeURIComponent(welcomeName)}" style="background-color: #0284c7; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Concluir meu Cadastro</a>
+                <a href="https://app.stackercompany.com.br/cadastro?email=${encodeURIComponent(email)}&name=${encodeURIComponent(welcomeName)}${planParam}" style="background-color: #0284c7; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Concluir meu Cadastro</a>
               </div>
               
               <p style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #f59e0b; border-radius: 4px; font-size: 14px;">
@@ -94,13 +119,11 @@ export async function POST(request: Request) {
               </p>
 
               <div style="margin-top: 30px; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background-color: #f8fafc;">
-                <h3 style="color: #0f172a; margin-top: 0; font-size: 16px;">🎁 ${isProfileTest ? "Seus Bônus Exclusivos inclusos:" : "Seu Bônus Exclusivo incluso:"}</h3>
+                <h3 style="color: #0f172a; margin-top: 0; font-size: 16px;">🎁 Seus Bônus Exclusivos inclusos:</h3>
                 <ul style="padding-left: 20px; margin-bottom: 0; line-height: 1.6;">
                   <li><strong>Bônus 1:</strong> <a href="https://app.stackercompany.com.br/downloads/ebook-recrutamento-inteligente.pdf" style="color: #0284c7;">E-book Recrutamento e Seleção Inteligente</a> (PDF)</li>
-                  ${isProfileTest ? `
                   <li><strong>Bônus 2:</strong> <a href="https://app.stackercompany.com.br/downloads/10-prompts-descricao-cargo.pdf" style="color: #0284c7;">10 Prompts para Descrição de Cargo</a> (PDF)</li>
                   <li><strong>Bônus 3:</strong> <a href="https://app.stackercompany.com.br/downloads/50-perguntas-entrevista.xlsx" style="color: #0284c7;">50 Perguntas para Entrevista por Competência</a> (Excel/Planilha)</li>
-                  ` : ""}
                 </ul>
               </div>
               
@@ -110,7 +133,10 @@ export async function POST(request: Request) {
             </div>
           `;
         } else {
-          emailSubject = "Seu plano Stacker já está ativo! 🚀";
+          emailSubject = isRecrutamento
+            ? "Seu plano Stacker Recrutamento & Seleção já está ativo! 🚀"
+            : "Seu plano Stacker já está ativo! 🚀";
+
           emailHtml = `
             <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
               <h2 style="color: #0284c7; margin-top: 0; font-size: 24px;">Seu plano Stacker já está ativo! 🚀</h2>
@@ -123,13 +149,11 @@ export async function POST(request: Request) {
               </div>
 
               <div style="margin-top: 30px; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background-color: #f8fafc;">
-                <h3 style="color: #0f172a; margin-top: 0; font-size: 16px;">🎁 ${isProfileTest ? "Seus Bônus Exclusivos inclusos:" : "Seu Bônus Exclusivo incluso:"}</h3>
+                <h3 style="color: #0f172a; margin-top: 0; font-size: 16px;">🎁 Seus Bônus Exclusivos inclusos:</h3>
                 <ul style="padding-left: 20px; margin-bottom: 0; line-height: 1.6;">
                   <li><strong>Bônus 1:</strong> <a href="https://app.stackercompany.com.br/downloads/ebook-recrutamento-inteligente.pdf" style="color: #0284c7;">E-book Recrutamento e Seleção Inteligente</a> (PDF)</li>
-                  ${isProfileTest ? `
                   <li><strong>Bônus 2:</strong> <a href="https://app.stackercompany.com.br/downloads/10-prompts-descricao-cargo.pdf" style="color: #0284c7;">10 Prompts para Descrição de Cargo</a> (PDF)</li>
                   <li><strong>Bônus 3:</strong> <a href="https://app.stackercompany.com.br/downloads/50-perguntas-entrevista.xlsx" style="color: #0284c7;">50 Perguntas para Entrevista por Competência</a> (Excel/Planilha)</li>
-                  ` : ""}
                 </ul>
               </div>
               

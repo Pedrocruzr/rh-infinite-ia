@@ -72,6 +72,15 @@ export async function POST(request: Request) {
 
       if (!planError && data) {
         plan = data;
+      } else if (requestedPlanCode === "recrutamento" || requestedPlanCode === "recrutamento_selecao") {
+        plan = {
+          id: "plan_recrutamento_fallback",
+          code: "recrutamento",
+          name: "Recrutamento & Seleção",
+          monthly_credits: 20,
+          price_cents: 29700,
+          active: true,
+        };
       }
     }
 
@@ -104,9 +113,10 @@ export async function POST(request: Request) {
 
 
     const isProfilePlan = plan.code === "perfil_comportamental" || plan.code.startsWith("perfil_");
-    if (plan.code !== "start" && !isProfilePlan) {
+    const isRecrutamentoPlan = plan.code === "recrutamento" || plan.code === "recrutamento_selecao";
+    if (plan.code !== "start" && !isProfilePlan && !isRecrutamentoPlan) {
       return NextResponse.json(
-        { error: "Apenas os planos Stacks Infinity e Perfil Comportamental estão disponíveis no momento." },
+        { error: "Plano indisponível para checkout no momento." },
         { status: 400 }
       );
     }
