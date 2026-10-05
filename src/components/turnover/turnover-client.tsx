@@ -30,8 +30,9 @@ const DEFAULT_FILTERS: TurnoverFiltersType = {
   ano: 2026,
 };
 
-const CACHE_KEY = "rh_turnover_employees_cache_v3";
-const PREV_CACHE_KEY = "rh_turnover_employees_cache_v2";
+const CACHE_KEY = "rh_turnover_employees_cache_v4";
+const PREV_CACHE_KEY_V3 = "rh_turnover_employees_cache_v3";
+const PREV_CACHE_KEY_V2 = "rh_turnover_employees_cache_v2";
 const DELETED_CACHE_KEY = "rh_turnover_deleted_ids_v1";
 
 function getDeletedIds(): Set<string> {
@@ -126,9 +127,9 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
   useEffect(() => {
     let localFound: TurnoverEmployee[] = [];
     try {
-      const cachedV3 = localStorage.getItem(CACHE_KEY);
-      if (cachedV3) {
-        const parsed = JSON.parse(cachedV3);
+      const cachedV4 = localStorage.getItem(CACHE_KEY);
+      if (cachedV4) {
+        const parsed = JSON.parse(cachedV4);
         if (Array.isArray(parsed) && parsed.length > 0) {
           localFound = parsed;
         }
@@ -136,7 +137,17 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
 
       // Migração suave do cache anterior caso exista
       if (localFound.length === 0) {
-        const cachedV2 = localStorage.getItem(PREV_CACHE_KEY);
+        const cachedV3 = localStorage.getItem(PREV_CACHE_KEY_V3);
+        if (cachedV3) {
+          const parsed = JSON.parse(cachedV3);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localFound = parsed;
+          }
+        }
+      }
+
+      if (localFound.length === 0) {
+        const cachedV2 = localStorage.getItem(PREV_CACHE_KEY_V2);
         if (cachedV2) {
           const parsed = JSON.parse(cachedV2);
           if (Array.isArray(parsed) && parsed.length > 0) {
