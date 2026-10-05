@@ -1,10 +1,28 @@
 import { JobOpeningsClient } from "@/components/jobs/job-openings-client";
 import { resolveJobOpeningsAccess } from "@/lib/jobs/auth";
+import { getUserPlanType, isFeatureAllowed } from "@/lib/auth/access-control";
+import { FeatureLockedScreen } from "@/components/layout/feature-locked-screen";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
 export default async function PainelDeVagasPage() {
   const access = await resolveJobOpeningsAccess();
+  const cookieStore = await cookies();
+  const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+
+  if (access.userId && access.db) {
+    const planType = await getUserPlanType(access.db, { id: access.userId }, simulatedPlan);
+
+    if (!isFeatureAllowed(planType, "painel-de-vagas")) {
+      return (
+        <FeatureLockedScreen
+          featureName="Painel de Vagas"
+          description="O Painel de Vagas com métricas de SLA e gestão Kanban é exclusivo dos planos Recrutamento & Seleção e Stacks Infinity. O seu plano atual dá acesso exclusivo aos Testes de Perfil Comportamental."
+        />
+      );
+    }
+  }
 
   let initialItems: any[] = [];
 

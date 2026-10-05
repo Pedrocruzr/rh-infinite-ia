@@ -7,6 +7,7 @@ import { ArrowRight, Sparkles, Lock, X } from "lucide-react";
 import { agents } from "@/lib/agents";
 import { agentsCatalog } from "@/lib/catalog/agents";
 import { createClient } from "@/lib/supabase/client";
+import { resolvePlanType, isAgentAllowed } from "@/lib/auth/access-control";
 
 const SECTION_CONFIG = [
   {
@@ -285,26 +286,8 @@ export default function AgentesPage() {
 
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                   {sectionAgents.map((agent) => {
-                    const isProfilePlan = planCode === "perfil_comportamental" || planCode.startsWith("perfil_");
-                    const isRecrutamentoPlan = planCode === "recrutamento" || planCode === "recrutamento_selecao";
-                    const isRecrutamentoAllowed = new Set([
-                      "taxa-aderencia-vaga",
-                      "teste-perfil-comportamental",
-                      "teste-perfil-disc",
-                      "agente-teste-bigfive",
-                      "entrevistador-automatizado",
-                      "mentor-dinamicas",
-                      "parecer-tecnico-entrevista",
-                      "custo-contratacao",
-                      "custo-por-contratacao",
-                      "clt-ia",
-                    ]).has(agent.slug);
-
-                    const isBlocked = isProfilePlan 
-                      ? agent.slug !== "teste-perfil-comportamental" 
-                      : isRecrutamentoPlan 
-                        ? !isRecrutamentoAllowed 
-                        : false;
+                    const planType = resolvePlanType(planCode);
+                    const isBlocked = !isAgentAllowed(planType, agent.slug);
 
                     if (isBlocked) {
                       return (

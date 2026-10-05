@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { executeAgentRuntime } from "@/lib/agents/runtime";
 import { agents } from "@/lib/agents";
+import { resolvePlanType, isAgentAllowed } from "@/lib/auth/access-control";
 
 export async function POST(request: Request) {
   try {
@@ -67,40 +68,24 @@ export async function POST(request: Request) {
         .maybeSingle();
       actualPlanCode = plan?.code;
     }
-
-    const isProfilePlan = actualPlanCode === "perfil_comportamental" || (actualPlanCode ? actualPlanCode.startsWith("perfil_") : false);
-    if (isProfilePlan && body?.slug !== "teste-perfil-comportamental") {
-      return NextResponse.json(
-        {
-          ok: false,
-          stage: "plan_restriction",
-          error: "Este agente não está disponível no seu plano. Atualize sua assinatura para desbloquear todos os agentes.",
-        },
-        { status: 403 }
-      );
+    if (!actualPlanCode) {
+      actualPlanCode = user.user_metadata?.signup_plan;
     }
 
-    const isRecrutamentoPlan = actualPlanCode === "recrutamento" || actualPlanCode === "recrutamento_selecao";
+    const planType = resolvePlanType(actualPlanCode);
+    const isRecrutamentoPlan = planType === "recrutamento";
 
-    const RECRUTAMENTO_ALLOWED_SLUGS = new Set([
-      "taxa-aderencia-vaga",
-      "teste-perfil-comportamental",
-      "teste-perfil-disc",
-      "agente-teste-bigfive",
-      "entrevistador-automatizado",
-      "mentor-dinamicas",
-      "parecer-tecnico-entrevista",
-      "custo-contratacao",
-      "custo-por-contratacao",
-      "clt-ia",
-    ]);
+    if (!isAgentAllowed(planType, body?.slug || "")) {
+      const errorMsg =
+        planType === "recrutamento"
+          ? "Este agente não está disponível no seu plano de Recrutamento & Seleção. Atualize sua assinatura para desbloquear todos os agentes."
+          : "Este agente não está disponível no seu plano de Perfil Comportamental. Atualize sua assinatura para desbloquear todos os agentes.";
 
-    if (isRecrutamentoPlan && !RECRUTAMENTO_ALLOWED_SLUGS.has(body?.slug || "")) {
       return NextResponse.json(
         {
           ok: false,
           stage: "plan_restriction",
-          error: "Este agente não está disponível no seu plano de Recrutamento & Seleção. Atualize sua assinatura para desbloquear todos os agentes.",
+          error: errorMsg,
         },
         { status: 403 }
       );

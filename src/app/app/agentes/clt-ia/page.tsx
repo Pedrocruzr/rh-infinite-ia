@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import { ArrowLeft, Search, Send, Lock, Sparkles, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { resolvePlanType, isFeatureAllowed } from "@/lib/auth/access-control";
 
 type Message = {
   id: string;
@@ -189,7 +190,8 @@ export default function CltIaPage() {
     [messages]
   );
 
-  if (planCode === "perfil_comportamental" || planCode.startsWith("perfil_")) {
+  const planType = resolvePlanType(planCode);
+  if (!isFeatureAllowed(planType, "clt-ia")) {
     return (
       <main className="h-[100dvh] overflow-hidden bg-background text-foreground dark:bg-[#05070b] dark:text-[#f3f5f7]">
         <div className="mx-auto flex h-full max-w-[1320px] flex-col px-4 py-4 sm:px-6 sm:py-5">

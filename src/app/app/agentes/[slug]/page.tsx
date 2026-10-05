@@ -5,6 +5,11 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { AgentWorkspaceClient } from "@/components/agents/agent-workspace-client";
 import { agentsCatalog } from "@/lib/catalog/agents";
 
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { getUserPlanType, isAgentAllowed } from "@/lib/auth/access-control";
+import { FeatureLockedScreen } from "@/components/layout/feature-locked-screen";
+
 interface AgentPageProps {
   params: Promise<{
     slug: string;
@@ -18,6 +23,35 @@ export default async function AgentPage({ params }: AgentPageProps) {
 
   if (!agent) {
     notFound();
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+
+  const planType = await getUserPlanType(supabase, user, simulatedPlan);
+
+  if (!isAgentAllowed(planType, slug)) {
+    const availablePlans =
+      planType === "recrutamento"
+        ? "Stacks Infinity (Plano Completo)"
+        : "Recrutamento & Seleção ou Stacks Infinity";
+
+    const description =
+      planType === "recrutamento"
+        ? `O agente "${agent.name}" é exclusivo do Plano Completo Stacks Infinity. O seu plano atual de Recrutamento & Seleção dá acesso aos 8 agentes de seleção, aos painéis de vagas e turnover e ao CLT IA.`
+        : `O agente "${agent.name}" é exclusivo dos planos Recrutamento & Seleção e Stacks Infinity. O seu plano atual dá acesso exclusivo aos Testes de Perfil Comportamental (DISC e Big Five).`;
+
+    return (
+      <FeatureLockedScreen
+        featureName={agent.name}
+        description={description}
+        availablePlans={availablePlans}
+      />
+    );
   }
 
   return (

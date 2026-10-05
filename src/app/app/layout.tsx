@@ -14,6 +14,7 @@ import {
   UserMinus,
 } from "lucide-react";
 import { InternalTopbar } from "@/components/layout/internal-topbar";
+import { resolvePlanType, isFeatureAllowed } from "@/lib/auth/access-control";
 
 export const dynamic = "force-dynamic";
 
@@ -187,16 +188,34 @@ export default async function InternalAppLayout({
   const navLinkClass =
     "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-neutral-700 transition hover:bg-neutral-100 hover:text-neutral-950 dark:text-neutral-300 dark:hover:bg-[#0d1a2b] dark:hover:text-neutral-100";
 
-  const navigation = [
-    { href: "/app/agentes", label: "Agentes", icon: Bot },
-    { href: "/app/recrutador/assessments", label: "Relatórios Stackers", icon: FileText },
-    { href: "/app/painel-de-vagas", label: "Painel de Vagas", icon: BriefcaseBusiness },
-    { href: "/app/painel-de-turnover", label: "Painel de Turnover", icon: UserMinus },
-    { href: "/app/agentes/clt-ia", label: "CLT IA", icon: Scale },
-    { href: "/app/tutorial", label: "Tutorial", icon: BookOpen },
-    { href: "/app/suporte", label: "Suporte", icon: CircleHelp },
-    { href: "/app/configuracoes", label: "Configurações", icon: Settings2 },
+  const effectivePlanCode =
+    simulatedPlan ||
+    plan?.code ||
+    user.user_metadata?.signup_plan ||
+    "completo";
+  const planType = resolvePlanType(effectivePlanCode);
+
+  const allNavigation = [
+    { href: "/app/agentes", label: "Agentes", icon: Bot, feature: "agentes" },
+    { href: "/app/recrutador/assessments", label: "Relatórios Stackers", icon: FileText, feature: "assessments" },
+    { href: "/app/painel-de-vagas", label: "Painel de Vagas", icon: BriefcaseBusiness, feature: "painel-de-vagas" },
+    { href: "/app/painel-de-turnover", label: "Painel de Turnover", icon: UserMinus, feature: "painel-de-turnover" },
+    { href: "/app/agentes/clt-ia", label: "CLT IA", icon: Scale, feature: "clt-ia" },
+    { href: "/app/tutorial", label: "Tutorial", icon: BookOpen, feature: "tutorial" },
+    { href: "/app/suporte", label: "Suporte", icon: CircleHelp, feature: "suporte" },
+    { href: "/app/configuracoes", label: "Configurações", icon: Settings2, feature: "configuracoes" },
   ] as const;
+
+  const navigation = allNavigation.filter((item) => {
+    if (
+      item.feature === "painel-de-vagas" ||
+      item.feature === "painel-de-turnover" ||
+      item.feature === "clt-ia"
+    ) {
+      return isFeatureAllowed(planType, item.feature as any);
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-white text-black dark:bg-[#07111f] dark:text-neutral-100">
