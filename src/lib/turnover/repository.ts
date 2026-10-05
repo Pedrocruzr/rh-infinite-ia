@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { resolveJobOpeningsAccess } from "@/lib/jobs/auth";
 import type { TurnoverEmployee, TurnoverEmployeePayload, TurnoverExitPayload } from "./types";
 
@@ -289,9 +290,85 @@ function writeFallbackData(data: TurnoverEmployee[]) {
   }
 }
 
+function getAdminSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !serviceKey) return null;
+  return createSupabaseClient(url, serviceKey);
+}
+
+async function saveToCloudVault(userId: string | null, employees: TurnoverEmployee[]): Promise<void> {
+  try {
+    const admin = getAdminSupabase();
+    if (!admin || !Array.isArray(employees) || employees.length === 0) return;
+
+    const targets = ["turnover_vault:global_backup"];
+    if (userId) {
+      targets.push(`turnover_vault:${userId}`);
+    }
+
+    for (const eventId of targets) {
+      await admin.from("webhook_events").upsert(
+        {
+          event_id: eventId,
+          event_type: "TURNOVER_VAULT",
+          provider: "stacker",
+          payload: {
+            employees,
+            total: employees.length,
+            last_saved_at: new Date().toISOString(),
+            version: 4,
+          },
+          processing_status: "processed",
+        },
+        { onConflict: "event_id" }
+      );
+    }
+  } catch (err) {
+    console.warn("[turnover/vault] Failed to save to cloud vault:", err);
+  }
+}
+
+async function readFromCloudVault(userId: string | null): Promise<TurnoverEmployee[] | null> {
+  try {
+    const admin = getAdminSupabase();
+    if (!admin) return null;
+
+    const targets: string[] = [];
+    if (userId) {
+      targets.push(`turnover_vault:${userId}`);
+    }
+    targets.push("turnover_vault:global_backup");
+
+    for (const eventId of targets) {
+      const { data, error } = await admin
+        .from("webhook_events")
+        .select("payload")
+        .eq("event_id", eventId)
+        .maybeSingle();
+
+      if (
+        !error &&
+        data?.payload?.employees &&
+        Array.isArray(data.payload.employees) &&
+        data.payload.employees.length > 0
+      ) {
+        return data.payload.employees as TurnoverEmployee[];
+      }
+    }
+  } catch (err) {
+    console.warn("[turnover/vault] Failed to read from cloud vault:", err);
+  }
+  return null;
+}
+
 export async function getTurnoverEmployees(): Promise<TurnoverEmployee[]> {
+  let userId: string | null = null;
   try {
     const access = await resolveJobOpeningsAccess();
+    userId = access.userId;
     if (access.userId && access.db) {
       const { data, error } = await access.db
         .from("turnover_records")
@@ -299,32 +376,28 @@ export async function getTurnoverEmployees(): Promise<TurnoverEmployee[]> {
         .eq("user_id", access.userId)
         .order("created_at", { ascending: false });
 
-      if (!error && Array.isArray(data)) {
-        if (data.length > 0) {
-          return data;
-        }
-
-        // Se o usuário ainda não tiver registros na tabela no banco, inicializa com a base de seed
-        try {
-          const seedsToInsert = SEED_EMPLOYEES.map((e) => ({
-            ...e,
-            user_id: access.userId,
-            created_at: e.created_at || new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }));
-          const insertRes = await access.db.from("turnover_records").insert(seedsToInsert).select("*");
-          if (!insertRes.error && Array.isArray(insertRes.data) && insertRes.data.length > 0) {
-            return insertRes.data;
-          }
-        } catch (seedErr) {
-          console.warn("[turnover/repository] Could not seed user database:", seedErr);
-        }
+      if (!error && Array.isArray(data) && data.length > 0) {
+        // Mantém o Cloud Vault sempre atualizado com os dados do banco
+        void saveToCloudVault(userId, data);
+        return data;
       }
     }
   } catch (err) {
-    console.warn("[turnover/repository] Supabase query failed, falling back to local storage:", err);
+    console.warn("[turnover/repository] Supabase query failed, attempting cloud vault:", err);
   }
 
+  // Camada 2: Cloud Vault Permanente no Supabase (resiliente e garantido no PostgreSQL na nuvem!)
+  try {
+    const fromVault = await readFromCloudVault(userId);
+    if (fromVault && fromVault.length > 0) {
+      writeFallbackData(fromVault);
+      return fromVault;
+    }
+  } catch (vaultErr) {
+    console.warn("[turnover/repository] Cloud vault read failed:", vaultErr);
+  }
+
+  // Camada 3: Fallback local / Seed
   return readFallbackData();
 }
 
@@ -346,8 +419,11 @@ export async function createTurnoverEmployee(
     updated_at: new Date().toISOString(),
   };
 
+  let userId: string | null = null;
+
   try {
     const access = await resolveJobOpeningsAccess();
+    userId = access.userId;
     if (access.userId && access.db) {
       const { data, error } = await access.db
         .from("turnover_records")
@@ -359,9 +435,10 @@ export async function createTurnoverEmployee(
         .single();
 
       if (!error && data) {
-        // Atualiza também o fallback local por redundância
         const current = readFallbackData();
-        writeFallbackData([data, ...current.filter((e) => e.id !== data.id)]);
+        const updated = [data, ...current.filter((e) => e.id !== data.id)];
+        writeFallbackData(updated);
+        void saveToCloudVault(userId, updated);
         return data;
       }
     }
@@ -372,6 +449,7 @@ export async function createTurnoverEmployee(
   const current = readFallbackData();
   const updated = [newEmp, ...current.filter((e) => e.id !== newEmp.id)];
   writeFallbackData(updated);
+  void saveToCloudVault(userId, updated);
   return newEmp;
 }
 
@@ -379,8 +457,10 @@ export async function updateTurnoverEmployee(
   id: string,
   payload: Partial<TurnoverEmployeePayload>
 ): Promise<TurnoverEmployee | null> {
+  let userId: string | null = null;
   try {
     const access = await resolveJobOpeningsAccess();
+    userId = access.userId;
     if (access.userId && access.db) {
       const { data, error } = await access.db
         .from("turnover_records")
@@ -399,6 +479,7 @@ export async function updateTurnoverEmployee(
         if (index !== -1) {
           current[index] = data;
           writeFallbackData(current);
+          void saveToCloudVault(userId, current);
         }
         return data;
       }
@@ -418,6 +499,7 @@ export async function updateTurnoverEmployee(
   };
   current[index] = updatedItem;
   writeFallbackData(current);
+  void saveToCloudVault(userId, current);
   return updatedItem;
 }
 
@@ -433,8 +515,10 @@ export async function registerTurnoverExit(
 }
 
 export async function deleteTurnoverEmployee(id: string): Promise<boolean> {
+  let userId: string | null = null;
   try {
     const access = await resolveJobOpeningsAccess();
+    userId = access.userId;
     if (access.userId && access.db) {
       const { error } = await access.db
         .from("turnover_records")
@@ -444,7 +528,9 @@ export async function deleteTurnoverEmployee(id: string): Promise<boolean> {
 
       if (!error) {
         const current = readFallbackData();
-        writeFallbackData(current.filter((e) => e.id !== id));
+        const filtered = current.filter((e) => e.id !== id);
+        writeFallbackData(filtered);
+        void saveToCloudVault(userId, filtered);
         return true;
       }
     }
@@ -455,14 +541,17 @@ export async function deleteTurnoverEmployee(id: string): Promise<boolean> {
   const current = readFallbackData();
   const filtered = current.filter((e) => e.id !== id);
   writeFallbackData(filtered);
+  void saveToCloudVault(userId, filtered);
   return true;
 }
 
 export async function syncTurnoverEmployees(
   employeesToSync: TurnoverEmployee[]
 ): Promise<TurnoverEmployee[]> {
+  let userId: string | null = null;
   try {
     const access = await resolveJobOpeningsAccess();
+    userId = access.userId;
     if (access.userId && access.db && Array.isArray(employeesToSync) && employeesToSync.length > 0) {
       const rows = employeesToSync.map((e) => ({
         id: e.id,
@@ -486,6 +575,7 @@ export async function syncTurnoverEmployees(
         .select("*");
 
       if (!error && Array.isArray(data)) {
+        void saveToCloudVault(userId, data);
         return data;
       }
     }
@@ -493,7 +583,7 @@ export async function syncTurnoverEmployees(
     console.warn("[turnover/repository] Bulk sync failed:", err);
   }
 
-  // Fallback: faz merge no arquivo local
+  // Fallback e Cloud Vault: faz merge e persiste na nuvem
   const current = readFallbackData();
   const map = new Map<string, TurnoverEmployee>();
   for (const item of current) {
@@ -504,5 +594,6 @@ export async function syncTurnoverEmployees(
   }
   const merged = Array.from(map.values());
   writeFallbackData(merged);
+  void saveToCloudVault(userId, merged);
   return merged;
 }
