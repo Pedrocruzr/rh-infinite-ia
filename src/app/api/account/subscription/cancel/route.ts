@@ -63,14 +63,14 @@ export async function POST(request: Request) {
 
       // Send email alert to support
       const resendApiKey = process.env.RESEND_API_KEY;
-      const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.online";
+      const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.com.br";
 
       if (resendApiKey) {
         try {
           const resend = new Resend(resendApiKey);
           await resend.emails.send({
             from: resendFrom,
-            to: "suporte@stackercompany.online",
+            to: "suporte@stackercompany.com.br",
             subject: `🚨 Alerta de Cancelamento - ${user.email}`,
             html: `
               <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">

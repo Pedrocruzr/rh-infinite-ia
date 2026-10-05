@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAsaasConfig } from "@/lib/billing/asaas/config";
 import { handleAsaasWebhook } from "@/lib/billing/asaas/service";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, sendRenewalExpiredEmail } from "@/lib/email";
 
 export async function GET() {
   return NextResponse.json({ ok: true, message: "Asaas webhook endpoint active." });
@@ -57,9 +57,17 @@ export async function POST(request: Request) {
 
     const resendApiKey = process.env.RESEND_API_KEY;
     const smtpHost = process.env.SMTP_HOST;
-    const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.online";
+    const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.com.br";
 
     const hasEmailConfig = !!(smtpHost || resendApiKey);
+
+    if (hasEmailConfig && email && payload.event === "PAYMENT_OVERDUE") {
+      try {
+        await sendRenewalExpiredEmail({ to: email, name });
+      } catch (err) {
+        console.error("Erro ao enviar email de aviso de renovacao:", err);
+      }
+    }
 
     if (hasEmailConfig && email && (payment?.status === "saved_for_later_registration" || payment?.status === "processed_immediately")) {
       try {
@@ -129,7 +137,7 @@ export async function POST(request: Request) {
               </div>
               
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail ou escrever para <a href="mailto:suporte@stackercompany.online" style="color: #0284c7;">suporte@stackercompany.online</a>.</p>
+              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail ou escrever para <a href="mailto:suporte@stackercompany.com.br" style="color: #0284c7;">suporte@stackercompany.com.br</a>.</p>
               <p style="font-size: 14px; color: #64748b; margin-top: 5px;"><strong>Equipe Stacker</strong></p>
             </div>
           `;
@@ -159,7 +167,7 @@ export async function POST(request: Request) {
               </div>
               
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail ou escrever para <a href="mailto:suporte@stackercompany.online" style="color: #0284c7;">suporte@stackercompany.online</a>.</p>
+              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail ou escrever para <a href="mailto:suporte@stackercompany.com.br" style="color: #0284c7;">suporte@stackercompany.com.br</a>.</p>
               <p style="font-size: 14px; color: #64748b; margin-top: 5px;"><strong>Equipe Stacker</strong></p>
             </div>
           `;

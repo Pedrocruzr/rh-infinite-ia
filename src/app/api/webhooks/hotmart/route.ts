@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     // 4. Send welcoming email to customer
     const resendApiKey = process.env.RESEND_API_KEY;
     const smtpHost = process.env.SMTP_HOST;
-    const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.online";
+    const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.com.br";
 
     const hasEmailConfig = !!(smtpHost || resendApiKey);
 
