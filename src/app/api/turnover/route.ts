@@ -4,6 +4,7 @@ import {
   deleteTurnoverEmployee,
   getTurnoverEmployees,
   registerTurnoverExit,
+  syncTurnoverEmployees,
   updateTurnoverEmployee,
 } from "@/lib/turnover/repository";
 
@@ -27,6 +28,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const action = body?.action;
+
+    // Sincronização em lote resiliente (garante que nada inserido no cliente seja perdido)
+    if (action === "sync") {
+      const items = Array.isArray(body?.employees) ? body.employees : [];
+      const synced = await syncTurnoverEmployees(items);
+      return NextResponse.json({ ok: true, data: synced, employees: synced });
+    }
 
     // Ação rápida de registrar desligamento (aceita "exit" ou "register_exit")
     if (action === "exit" || action === "register_exit") {

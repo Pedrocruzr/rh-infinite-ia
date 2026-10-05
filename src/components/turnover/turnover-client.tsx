@@ -30,7 +30,62 @@ const DEFAULT_FILTERS: TurnoverFiltersType = {
   ano: 2026,
 };
 
-const CACHE_KEY = "rh_turnover_employees_cache_v2";
+const CACHE_KEY = "rh_turnover_employees_cache_v3";
+const PREV_CACHE_KEY = "rh_turnover_employees_cache_v2";
+const DELETED_CACHE_KEY = "rh_turnover_deleted_ids_v1";
+
+function getDeletedIds(): Set<string> {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(DELETED_CACHE_KEY) : null;
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return new Set(arr);
+    }
+  } catch {}
+  return new Set();
+}
+
+function addDeletedId(id: string) {
+  try {
+    const set = getDeletedIds();
+    set.add(id);
+    localStorage.setItem(DELETED_CACHE_KEY, JSON.stringify(Array.from(set)));
+  } catch {}
+}
+
+function mergeEmployeeLists(
+  current: TurnoverEmployee[],
+  incoming: TurnoverEmployee[]
+): TurnoverEmployee[] {
+  const deleted = getDeletedIds();
+  const map = new Map<string, TurnoverEmployee>();
+
+  // 1. Preserva todos os registros locais existentes
+  for (const emp of current) {
+    if (emp && emp.id && !deleted.has(emp.id)) {
+      map.set(emp.id, emp);
+    }
+  }
+
+  // 2. Mescla com os que vieram do servidor sem descartar inclusões locais
+  for (const emp of incoming) {
+    if (!emp || !emp.id || deleted.has(emp.id)) continue;
+    if (map.has(emp.id)) {
+      const existing = map.get(emp.id)!;
+      map.set(emp.id, {
+        ...existing,
+        ...emp,
+        data_desligamento: existing.data_desligamento || emp.data_desligamento || null,
+        tipo_desligamento: existing.tipo_desligamento || emp.tipo_desligamento || null,
+        motivo_especifico: existing.motivo_especifico || emp.motivo_especifico || null,
+      });
+    } else {
+      map.set(emp.id, emp);
+    }
+  }
+
+  return Array.from(map.values());
+}
 
 export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
   const [employees, setEmployees] = useState<TurnoverEmployee[]>(initialEmployees);
@@ -57,37 +112,83 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
     }, 3500);
   }
 
+  // Salva no cache do navegador sempre que o array de colaboradores mudar
+  function persistLocal(newEmps: TurnoverEmployee[]) {
+    const deleted = getDeletedIds();
+    const cleanList = newEmps.filter((e) => !deleted.has(e.id));
+    setEmployees(cleanList);
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cleanList));
+    } catch {}
+  }
+
   // Sincronização inicial com cache do navegador para resiliência total
   useEffect(() => {
+    let localFound: TurnoverEmployee[] = [];
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
+      const cachedV3 = localStorage.getItem(CACHE_KEY);
+      if (cachedV3) {
+        const parsed = JSON.parse(cachedV3);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setEmployees(parsed);
+          localFound = parsed;
+        }
+      }
+
+      // Migração suave do cache anterior caso exista
+      if (localFound.length === 0) {
+        const cachedV2 = localStorage.getItem(PREV_CACHE_KEY);
+        if (cachedV2) {
+          const parsed = JSON.parse(cachedV2);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localFound = parsed;
+          }
         }
       }
     } catch {}
 
-    void refreshEmployees();
+    const deleted = getDeletedIds();
+    const mergedInitial = mergeEmployeeLists(
+      localFound.filter((e) => !deleted.has(e.id)),
+      (initialEmployees || []).filter((e) => !deleted.has(e.id))
+    );
+
+    if (mergedInitial.length > 0) {
+      persistLocal(mergedInitial);
+    }
+
+    void refreshEmployees(mergedInitial);
   }, []);
 
-  // Salva no cache do navegador sempre que o array de colaboradores mudar
-  function persistLocal(newEmps: TurnoverEmployee[]) {
-    setEmployees(newEmps);
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(newEmps));
-    } catch {}
-  }
-
-  async function refreshEmployees() {
+  async function refreshEmployees(fallbackCurrent?: TurnoverEmployee[]) {
     setLoading(true);
     try {
       const res = await fetch("/api/turnover", { cache: "no-store" });
       const payload = await res.json();
       const list = payload?.data || payload?.employees;
-      if (res.ok && Array.isArray(list) && list.length > 0) {
-        persistLocal(list);
+      if (res.ok && Array.isArray(list)) {
+        setEmployees((prev) => {
+          const base = prev && prev.length > 0 ? prev : fallbackCurrent || [];
+          const merged = mergeEmployeeLists(base, list);
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(merged));
+          } catch {}
+
+          // Se houver colaboradores no merged que não vieram do servidor, sincroniza-os em background
+          const remoteIds = new Set(list.map((e: TurnoverEmployee) => e.id));
+          const missingOnRemote = merged.filter((e) => !remoteIds.has(e.id));
+          if (missingOnRemote.length > 0) {
+            void fetch("/api/turnover", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "sync",
+                employees: merged,
+              }),
+            });
+          }
+
+          return merged;
+        });
       }
     } catch (err) {
       console.warn("Aviso ao sincronizar colaboradores com a API:", err);
@@ -258,6 +359,9 @@ export function TurnoverClient({ initialEmployees }: TurnoverClientProps) {
 
   async function handleDeleteEmployee(id: string) {
     if (!confirm("Tem certeza que deseja remover este colaborador?")) return;
+
+    // Registra exclusão explícita para que nunca mais reapareça
+    addDeletedId(id);
 
     // Atualização Otimista Imediata
     const nextList = employees.filter((e) => e.id !== id);

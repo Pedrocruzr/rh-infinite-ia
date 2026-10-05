@@ -128,5 +128,18 @@
     "tipo_desligamento": "voluntario",
     "motivo_especifico": "Salário / Remuneração",
     "created_at": "2025-01-15T10:00:00Z"
+  },
+  {
+    "id": "emp-011",
+    "matricula": "MAT-1011",
+    "nome": "Rodrigo Albuquerque Santana",
+    "cargo": "Analista de Suporte Tech",
+    "departamento": "Tech / TI",
+    "salario": 4500,
+    "data_admissao": "2026-10-02",
+    "data_desligamento": "2026-10-05",
+    "tipo_desligamento": "voluntario",
+    "motivo_especifico": "Oportunidade de Carreira",
+    "created_at": "2026-10-02T10:00:00Z"
   }
 ]
