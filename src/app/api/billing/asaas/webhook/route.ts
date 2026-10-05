@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
     const resendApiKey = process.env.RESEND_API_KEY;
     const smtpHost = process.env.SMTP_HOST;
-    const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.com.br";
+    const resendFrom = process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.online";
 
     const hasEmailConfig = !!(smtpHost || resendApiKey);
 
@@ -68,20 +68,21 @@ export async function POST(request: Request) {
           payment?.planCode === "recrutamento" ||
           payment?.planCode === "recrutamento_selecao" ||
           Number(payment?.value) === 297 ||
+          Number(payment?.value) === 197 ||
           String(payment?.description || "").toLowerCase().includes("recrutamento");
         const isProfileTest =
           payment?.planCode === "perfil_comportamental" ||
           String(payment?.planCode || "").startsWith("perfil_");
         
         let planName = "Stacks Infinity";
-        let planCredits = "29";
+        let planCreditsText = "29 créditos mensais";
 
         if (isRecrutamento) {
-          planName = "Recrutamento & Seleção";
-          planCredits = "20";
+          planName = "Recrutamento & Seleção (Acesso por 6 Meses)";
+          planCreditsText = "acesso liberado sem limite de créditos para os painéis e agentes de recrutamento";
         } else if (isProfileTest) {
           planName = "Perfil Comportamental";
-          planCredits = "9";
+          planCreditsText = "9 créditos de avaliações";
         }
 
         const planParam = isRecrutamento
@@ -107,15 +108,15 @@ export async function POST(request: Request) {
             <div style="font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
               <h2 style="color: #0284c7; margin-top: 0; font-size: 24px;">Parabéns pela aquisição do plano ${planName}! 🚀</h2>
               <p>Olá, <strong>${welcomeName}</strong>,</p>
-              <p>Ficamos muito felizes em ter você conosco. Sua assinatura foi confirmada com sucesso!</p>
-              <p>Para começar a usar a plataforma e liberar os seus <strong>${planCredits} créditos mensais</strong>, basta concluir o seu cadastro inicial clicando no botão abaixo:</p>
+              <p>Ficamos muito felizes em ter você conosco. Seu pagamento foi confirmado com sucesso!</p>
+              <p>Para começar a usar a plataforma e liberar o seu <strong>${planCreditsText}</strong>, basta concluir o seu cadastro inicial clicando no botão abaixo:</p>
               
               <div style="margin: 30px 0; text-align: center;">
                 <a href="https://app.stackercompany.com.br/cadastro?email=${encodeURIComponent(email)}&name=${encodeURIComponent(welcomeName)}${planParam}" style="background-color: #0284c7; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Concluir meu Cadastro</a>
               </div>
               
               <p style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #f59e0b; border-radius: 4px; font-size: 14px;">
-                ⚠️ <strong>Atenção:</strong> Ao se cadastrar, certifique-se de usar exatamente o mesmo e-mail desta compra (<strong>${email}</strong>), pois é a ele que seus créditos e assinatura estão associados.
+                ⚠️ <strong>Atenção:</strong> Ao se cadastrar, certifique-se de usar exatamente o mesmo e-mail desta compra (<strong>${email}</strong>), pois é a ele que seu acesso e plano estão associados.
               </p>
 
               <div style="margin-top: 30px; padding: 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background-color: #f8fafc;">
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
               </div>
               
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail.</p>
+              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail ou escrever para <a href="mailto:suporte@stackercompany.online" style="color: #0284c7;">suporte@stackercompany.online</a>.</p>
               <p style="font-size: 14px; color: #64748b; margin-top: 5px;"><strong>Equipe Stacker</strong></p>
             </div>
           `;
@@ -142,7 +143,7 @@ export async function POST(request: Request) {
               <h2 style="color: #0284c7; margin-top: 0; font-size: 24px;">Seu plano Stacker já está ativo! 🚀</h2>
               <p>Olá, <strong>${welcomeName}</strong>,</p>
               <p>Sua compra do plano <strong>${planName}</strong> foi confirmada com sucesso!</p>
-              <p>Como você já possuía uma conta cadastrada com esse e-mail na Stacker, o seu plano e os seus <strong>${planCredits} créditos</strong> já foram liberados e estão prontos para uso.</p>
+              <p>Como você já possuía uma conta cadastrada com esse e-mail na Stacker, o seu <strong>${planCreditsText}</strong> já foi liberado e está pronto para uso.</p>
               
               <div style="margin: 30px 0; text-align: center;">
                 <a href="https://app.stackercompany.com.br/login" style="background-color: #0284c7; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">Acessar o Painel</a>
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
               </div>
               
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail.</p>
+              <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Se precisar de qualquer suporte, basta responder diretamente a este e-mail ou escrever para <a href="mailto:suporte@stackercompany.online" style="color: #0284c7;">suporte@stackercompany.online</a>.</p>
               <p style="font-size: 14px; color: #64748b; margin-top: 5px;"><strong>Equipe Stacker</strong></p>
             </div>
           `;

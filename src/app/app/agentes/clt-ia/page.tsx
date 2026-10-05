@@ -44,7 +44,7 @@ export default function CltIaPage() {
               .maybeSingle()
               .then((planRes: any) => {
                 const plan = planRes.data;
-                if (plan?.code === "start" || plan?.code?.startsWith("perfil_")) {
+                if (plan?.code) {
                   setPlanCode(plan.code);
                 }
               });

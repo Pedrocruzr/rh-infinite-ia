@@ -182,6 +182,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
   }
 
   const isProfilePlan = plan?.code === "perfil_comportamental" || (plan?.code ? plan.code.startsWith("perfil_") : false);
+  const isRecrutamentoPlan = plan?.code === "recrutamento" || plan?.code === "recrutamento_selecao";
 
   const activeBalance =
     (creditGrants ?? []).reduce((sum, item: any) => {
@@ -198,7 +199,7 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
     plan?.name || startPlan?.name || "Stacks Infinity";
   const displayPlanName = subscription?.id ? activePlanName : "Sem plano ativo";
   const displayPlanPrice = subscription?.id
-    ? (plan ? formatCurrency(plan.price_cents) : "R$ 297,00")
+    ? (plan ? (isRecrutamentoPlan ? "R$ 297,00 (Acesso por 6 Meses)" : formatCurrency(plan.price_cents)) : "R$ 297,00")
     : "Escolha um plano para começar";
 
   return (
@@ -288,13 +289,13 @@ export default async function AssinaturaPage({ searchParams }: AssinaturaPagePro
 
           <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-[#102033]/72">
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {isProfilePlan ? "Avaliações disponíveis" : "Créditos disponíveis"}
+              {isRecrutamentoPlan ? "Acesso aos Recursos" : isProfilePlan ? "Avaliações disponíveis" : "Créditos disponíveis"}
             </p>
             <p className="mt-3 text-2xl font-semibold tracking-tight">
-              {isProfilePlan ? Math.floor(activeBalance / 3) : activeBalance}
+              {isRecrutamentoPlan ? "Ilimitado" : isProfilePlan ? Math.floor(activeBalance / 3) : activeBalance}
             </p>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {isProfilePlan ? "Saldo atual de avaliações" : "Saldo atual da sua carteira"}
+              {isRecrutamentoPlan ? "Painéis e agentes de seleção inclusos" : isProfilePlan ? "Saldo atual de avaliações" : "Saldo atual da sua carteira"}
             </p>
           </div>
 

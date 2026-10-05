@@ -14,7 +14,7 @@ export async function sendEmail({ to, from, subject, html }: SendEmailInput) {
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
   
-  const fromEmail = from || process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.com.br";
+  const fromEmail = from || process.env.RESEND_FROM_EMAIL || "suporte@stackercompany.online";
 
   if (smtpHost && smtpUser && smtpPass) {
     // Send via SMTP (Titan Mail / Hostgator)

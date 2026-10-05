@@ -80,18 +80,30 @@ export async function POST(request: Request) {
       );
     }
 
-    if (actualPlanCode === "recrutamento_selecao") {
-      const activeAgent = agents.find((a) => a.slug === body?.slug);
-      if (activeAgent && activeAgent.category !== "Recrutamento & Seleção") {
-        return NextResponse.json(
-          {
-            ok: false,
-            stage: "plan_restriction",
-            error: "Este agente não está disponível no seu plano de Recrutamento & Seleção. Atualize sua assinatura para desbloquear todos os agentes.",
-          },
-          { status: 403 }
-        );
-      }
+    const isRecrutamentoPlan = actualPlanCode === "recrutamento" || actualPlanCode === "recrutamento_selecao";
+
+    const RECRUTAMENTO_ALLOWED_SLUGS = new Set([
+      "taxa-aderencia-vaga",
+      "teste-perfil-comportamental",
+      "teste-perfil-disc",
+      "agente-teste-bigfive",
+      "entrevistador-automatizado",
+      "mentor-dinamicas",
+      "parecer-tecnico-entrevista",
+      "custo-contratacao",
+      "custo-por-contratacao",
+      "clt-ia",
+    ]);
+
+    if (isRecrutamentoPlan && !RECRUTAMENTO_ALLOWED_SLUGS.has(body?.slug || "")) {
+      return NextResponse.json(
+        {
+          ok: false,
+          stage: "plan_restriction",
+          error: "Este agente não está disponível no seu plano de Recrutamento & Seleção. Atualize sua assinatura para desbloquear todos os agentes.",
+        },
+        { status: 403 }
+      );
     }
 
     const normalizedStatus = (subscription?.status || "").toLowerCase();
@@ -120,25 +132,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate credits balance before execution
-    const { data: wallet } = await supabase
-      .from("credit_wallets")
-      .select("balance")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    const currentBalance = wallet?.balance ?? 0;
+    // Validate credits balance before execution (bypassed for Recrutamento plan)
     const requiredCredits = agent.credit_cost ?? 1;
 
-    if (currentBalance < requiredCredits) {
-      return NextResponse.json(
-        {
-          ok: false,
-          stage: "credits_check",
-          error: `Saldo de créditos insuficiente. Este agente custa ${requiredCredits} créditos, mas você possui apenas ${currentBalance}.`,
-        },
-        { status: 403 }
-      );
+    if (!isRecrutamentoPlan) {
+      const { data: wallet } = await supabase
+        .from("credit_wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      const currentBalance = wallet?.balance ?? 0;
+
+      if (currentBalance < requiredCredits) {
+        return NextResponse.json(
+          {
+            ok: false,
+            stage: "credits_check",
+            error: `Saldo de créditos insuficiente. Este agente custa ${requiredCredits} créditos, mas você possui apenas ${currentBalance}.`,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const runtimeResult = await executeAgentRuntime({
@@ -155,7 +170,7 @@ export async function POST(request: Request) {
         status: "success",
         input_summary: body?.objective || body?.context || "execução manual",
         output_summary: runtimeResult.text,
-        credits_consumed: agent.credit_cost ?? 1,
+        credits_consumed: isRecrutamentoPlan ? 0 : requiredCredits,
         prompt_version: runtimeResult.model,
         metadata: {
           context: body?.context ?? "",
@@ -178,30 +193,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error: usageError } = await supabase
-      .from("usage_events")
-      .insert({
-        user_id: user.id,
-        agent_id: agent.id,
-        agent_run_id: insertedRun.id,
-        event_type: "agent_execution",
-        credits_delta: -(agent.credit_cost ?? 1),
-        metadata: {
-          slug: agent.slug,
-          mode: "real",
-          model: runtimeResult.model,
-        },
-      });
+    if (!isRecrutamentoPlan) {
+      const { error: usageError } = await supabase
+        .from("usage_events")
+        .insert({
+          user_id: user.id,
+          agent_id: agent.id,
+          agent_run_id: insertedRun.id,
+          event_type: "agent_execution",
+          credits_delta: -requiredCredits,
+          metadata: {
+            slug: agent.slug,
+            mode: "real",
+            model: runtimeResult.model,
+          },
+        });
 
-    if (usageError) {
-      return NextResponse.json(
-        {
-          ok: false,
-          stage: "insert_usage_event",
-          error: usageError?.message ?? "Falha ao criar usage_event",
-        },
-        { status: 500 }
-      );
+      if (usageError) {
+        return NextResponse.json(
+          {
+            ok: false,
+            stage: "insert_usage_event",
+            error: usageError?.message ?? "Falha ao criar usage_event",
+          },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({

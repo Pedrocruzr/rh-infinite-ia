@@ -286,10 +286,24 @@ export default function AgentesPage() {
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                   {sectionAgents.map((agent) => {
                     const isProfilePlan = planCode === "perfil_comportamental" || planCode.startsWith("perfil_");
+                    const isRecrutamentoPlan = planCode === "recrutamento" || planCode === "recrutamento_selecao";
+                    const isRecrutamentoAllowed = new Set([
+                      "taxa-aderencia-vaga",
+                      "teste-perfil-comportamental",
+                      "teste-perfil-disc",
+                      "agente-teste-bigfive",
+                      "entrevistador-automatizado",
+                      "mentor-dinamicas",
+                      "parecer-tecnico-entrevista",
+                      "custo-contratacao",
+                      "custo-por-contratacao",
+                      "clt-ia",
+                    ]).has(agent.slug);
+
                     const isBlocked = isProfilePlan 
                       ? agent.slug !== "teste-perfil-comportamental" 
-                      : planCode === "recrutamento_selecao" 
-                        ? agent.category !== "Recrutamento & Seleção" 
+                      : isRecrutamentoPlan 
+                        ? !isRecrutamentoAllowed 
                         : false;
 
                     if (isBlocked) {

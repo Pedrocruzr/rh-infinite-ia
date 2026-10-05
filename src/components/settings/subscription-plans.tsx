@@ -483,52 +483,69 @@ export function SubscriptionPlans({
               </div>
               <h3 className="mt-3 text-xl font-bold">Stacker Recrutamento</h3>
               <p className="mt-4 text-3xl font-extrabold">
-                R$ 297<span className="text-sm font-normal text-slate-500">/mês</span>
+                R$ 297<span className="text-sm font-normal text-slate-500"> / acesso por 6 meses</span>
               </p>
-              <ul className="mt-5 space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
-                <li>• <strong>20 créditos mensais</strong> para gestão de vagas e triagem</li>
-                <li>• Painel de Vagas Kanban + SLA de Fechamento com IA</li>
-                <li>• E-book Recrutamento Inteligente + Templates inclusos</li>
-                <li>• Envio automático de acesso via Titan Mail</li>
+              <p className="mt-1 text-xs font-semibold text-sky-600 dark:text-sky-400">
+                Cobrança única (não recorrente) • Acesso por 6 meses • Renovação após expirar por R$ 197
+              </p>
+              <ul className="mt-5 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                <li>• <strong>Sem limites de créditos</strong> nos recursos liberados</li>
+                <li>• <strong>Painel de Vagas</strong> Kanban + SLA de Fechamento com IA</li>
+                <li>• <strong>Painel de Turnover</strong> & Retenção</li>
+                <li>• <strong>CLT IA</strong> com consultas legislativas ilimitadas</li>
+                <li>• <strong>Agentes de Seleção:</strong> Taxa de Aderência, Perfil Comportamental, DISC, Big Five, Entrevistador Automatizado, Mentor de Dinâmicas, Parecer Técnico e Custo por Contratação</li>
+                <li>• <strong>Tabela com Preço de Aluno</strong> para pacotes extras de testes comportamentais</li>
               </ul>
             </div>
 
             <div className="mt-6 space-y-3">
               {(activePlanCode === "recrutamento" || activePlanCode === "recrutamento_selecao") ? (
-                <button
-                  disabled
-                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-400 dark:bg-white/5 dark:text-neutral-500"
-                >
-                  Plano Ativo
-                </button>
+                <div className="space-y-2">
+                  <button
+                    disabled
+                    className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-400 dark:bg-white/5 dark:text-neutral-500"
+                  >
+                    Plano Ativo (Acesso por 6 Meses)
+                  </button>
+                  <a
+                    href="https://www.asaas.com/c/ez5sb4gd3enwnyo2"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-100 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  >
+                    Renovação Semestral Antecipada (R$ 197,00) →
+                  </a>
+                </div>
               ) : (
-                <div className="grid gap-2 grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => void handleUpgradePlan("recrutamento", "PIX")}
-                    disabled={loadingKey !== null}
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-sky-600 bg-sky-600 px-2 text-xs font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
+                <div className="space-y-2">
+                  <div className="grid gap-2 grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleUpgradePlan("recrutamento", "PIX")}
+                      disabled={loadingKey !== null}
+                      className="inline-flex h-11 items-center justify-center rounded-xl border border-sky-600 bg-sky-600 px-2 text-xs font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
+                    >
+                      {loadingKey === "upgrade:recrutamento:PIX" ? "Gerando..." : "Comprar com PIX"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleUpgradePlan("recrutamento", "CREDIT_CARD")}
+                      disabled={loadingKey !== null}
+                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-2 text-xs font-semibold text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100"
+                    >
+                      {loadingKey === "upgrade:recrutamento:CREDIT_CARD" ? "Abrindo..." : "Comprar com Cartão"}
+                    </button>
+                  </div>
+                  <a
+                    href="https://www.asaas.com/c/km0ju78t6dknlg59"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300 bg-white/60 px-3 text-xs font-medium text-slate-700 transition hover:border-sky-400 hover:text-sky-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-white"
                   >
-                    {loadingKey === "upgrade:recrutamento:PIX" ? "Gerando..." : "Comprar com PIX"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleUpgradePlan("recrutamento", "CREDIT_CARD")}
-                    disabled={loadingKey !== null}
-                    className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-2 text-xs font-semibold text-slate-800 transition hover:border-sky-300 hover:text-slate-950 disabled:opacity-60 dark:border-white/10 dark:bg-white/6 dark:text-slate-100"
-                  >
-                    {loadingKey === "upgrade:recrutamento:CREDIT_CARD" ? "Abrindo..." : "Comprar com Cartão"}
-                  </button>
+                    Checkout Direto Asaas (R$ 297,00 - 6 Meses) →
+                  </a>
                 </div>
               )}
-              <a
-                href="https://www.asaas.com/c/zk0bke5r9tjucy02"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300 bg-white/60 px-3 text-xs font-medium text-slate-700 transition hover:border-sky-400 hover:text-sky-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:text-white"
-              >
-                Checkout Direto Asaas (R$ 297,00) →
-              </a>
             </div>
           </div>
 
@@ -595,6 +612,105 @@ export function SubscriptionPlans({
               </a>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Tabela com Preço de Aluno • Perfil Comportamental, DISC e Big Five */}
+      <section className="rounded-[2rem] border border-slate-200/80 bg-white/85 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#102033]/72 dark:shadow-[0_24px_80px_rgba(15,23,42,0.28)]">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">
+            Tabela com Preço de Aluno • Perfil Comportamental, DISC & Big Five
+          </div>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight">
+            Preço de Aluno para Testes Psicométricos
+          </h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Quem adquire o pacote de <strong>Recrutamento</strong> garante valores diferenciados e exclusivos por avaliação para os testes de Perfil Comportamental, DISC e Big Five.
+          </p>
+        </div>
+
+        <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200/80 bg-slate-50/50 dark:border-white/10 dark:bg-white/5">
+          <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+            <thead className="border-b border-slate-200 bg-slate-100/70 text-xs font-semibold uppercase tracking-wider text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+              <tr>
+                <th className="px-6 py-4">Plano</th>
+                <th className="px-6 py-4">Preço de Aluno</th>
+                <th className="px-6 py-4">Faixa de Avaliações</th>
+                <th className="px-6 py-4 text-right">Benefício</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200/70 dark:divide-white/5">
+              <tr className="hover:bg-slate-100/50 dark:hover:bg-white/5 transition">
+                <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
+                  Start
+                </td>
+                <td className="px-6 py-4 font-bold text-sky-600 dark:text-sky-400">
+                  R$ 90,30
+                </td>
+                <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
+                  1 a 4 avaliações/mês
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <span className="inline-flex rounded-lg bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                    Preço Especial Aluno
+                  </span>
+                </td>
+              </tr>
+              <tr className="hover:bg-slate-100/50 dark:hover:bg-white/5 transition">
+                <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
+                  Essencial
+                </td>
+                <td className="px-6 py-4 font-bold text-sky-600 dark:text-sky-400">
+                  R$ 62,58<span className="text-xs font-normal text-slate-500"> / teste (5 avaliações)</span>
+                </td>
+                <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
+                  5 a 11 avaliações/mês
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <span className="inline-flex rounded-lg bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                    Preço Especial Aluno
+                  </span>
+                </td>
+              </tr>
+              <tr className="hover:bg-slate-100/50 dark:hover:bg-white/5 transition">
+                <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
+                  Profissional
+                </td>
+                <td className="px-6 py-4 font-bold text-sky-600 dark:text-sky-400">
+                  R$ 52,32<span className="text-xs font-normal text-slate-500"> / teste (12 avaliações)</span>
+                </td>
+                <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
+                  12 a 19 avaliações/mês
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <span className="inline-flex rounded-lg bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                    Preço Especial Aluno
+                  </span>
+                </td>
+              </tr>
+              <tr className="hover:bg-slate-100/50 dark:hover:bg-white/5 transition">
+                <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
+                  Corporativo
+                </td>
+                <td className="px-6 py-4 font-bold text-purple-600 dark:text-purple-400">
+                  A partir de R$ 41,30<span className="text-xs font-normal text-slate-500"> / teste</span>
+                </td>
+                <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
+                  20+ avaliações/mês
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <a
+                    href="https://wa.me/5511999999999?text=Olá!%20Tenho%20o%20Stacker%20Recrutamento%20e%20gostaria%20de%20um%20orçamento%20Corporativo%20com%20preço%20de%20aluno."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 hover:border-slate-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                  >
+                    Falar com Consultor
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </div>

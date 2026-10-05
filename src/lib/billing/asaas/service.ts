@@ -182,18 +182,27 @@ async function createSubscription(
   customerId: string,
   input: CreateCheckoutInput
 ){
+  const isRecrutamento = input.planCode === "recrutamento" || input.planCode === "recrutamento_selecao";
   const isProfilePlan = input.planCode.startsWith("perfil_") || input.planCode === "perfil_comportamental";
   const evaluationCount = Math.floor(input.monthlyCredits / 3);
   const evaluationText = evaluationCount === 1 ? "1 avaliação/mês" : `${evaluationCount} avaliações/mês`;
-  const planCapacity = isProfilePlan ? evaluationText : `${input.monthlyCredits} créditos/mês`;
+  const planCapacity = isRecrutamento
+    ? "Acesso por 6 meses · Sem limite de créditos nos recursos liberados"
+    : isProfilePlan
+    ? evaluationText
+    : `${input.monthlyCredits} créditos/mês`;
+
+  const description = isRecrutamento
+    ? `${input.planName} - Acesso completo por 6 meses · Painel de Vagas, Turnover, CLT IA e Agentes de Seleção`
+    : `${input.planName} - ${planCapacity} · 1 usuário · todos os agentes liberados · preço travado por 12 meses`;
 
   const subscriptionPayload: Record<string, unknown> = {
     customer: customerId,
     billingType: input.method,
     value: centsToCurrencyValue(input.priceCents),
     nextDueDate: buildDueDate(1),
-    cycle: "MONTHLY",
-    description: `${input.planName} - ${planCapacity} · 1 usuário · todos os agentes liberados · preço travado por 12 meses`,
+    cycle: isRecrutamento ? "SEMIANNUALLY" : "MONTHLY",
+    description,
     externalReference: buildSubscriptionExternalReference(input),
   };
 

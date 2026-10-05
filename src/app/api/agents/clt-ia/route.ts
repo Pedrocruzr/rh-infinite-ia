@@ -1,6 +1,7 @@
 export const maxDuration = 60;
 
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { formatCltAnswer, searchCltKnowledge } from "@/lib/agents/clt-ia/pdf-search";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -49,11 +50,25 @@ export async function POST(request: Request) {
     // 2. Validate subscription status
     const { data: subscription } = await supabase
       .from("subscriptions")
-      .select("status, current_period_end")
+      .select("status, current_period_end, plan_id")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    const cookieStore = await cookies();
+    const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+    let actualPlanCode = simulatedPlan;
+    if (!actualPlanCode && subscription?.plan_id) {
+      const { data: plan } = await supabase
+        .from("plans")
+        .select("code")
+        .eq("id", subscription.plan_id)
+        .maybeSingle();
+      actualPlanCode = plan?.code;
+    }
+
+    const isRecrutamentoPlan = actualPlanCode === "recrutamento" || actualPlanCode === "recrutamento_selecao";
 
     const normalizedStatus = (subscription?.status || "").toLowerCase();
     const isMainActive = new Set(["active", "paid", "ativo"]).has(normalizedStatus);
@@ -89,23 +104,25 @@ export async function POST(request: Request) {
 
     const requiredCredits = agent?.credit_cost ?? 1;
 
-    // 4. Validate credits balance before execution
-    const { data: wallet } = await supabase
-      .from("credit_wallets")
-      .select("balance")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    // 4. Validate credits balance before execution (bypassed for Recrutamento plan)
+    if (!isRecrutamentoPlan) {
+      const { data: wallet } = await supabase
+        .from("credit_wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-    const currentBalance = wallet?.balance ?? 0;
+      const currentBalance = wallet?.balance ?? 0;
 
-    if (currentBalance < requiredCredits) {
-      return NextResponse.json(
-        {
-          ok: false,
-          reply: `Saldo de créditos insuficiente. Esta consulta custa ${requiredCredits} crédito, mas você possui apenas ${currentBalance}.`,
-        },
-        { status: 403 }
-      );
+      if (currentBalance < requiredCredits) {
+        return NextResponse.json(
+          {
+            ok: false,
+            reply: `Saldo de créditos insuficiente. Esta consulta custa ${requiredCredits} crédito, mas você possui apenas ${currentBalance}.`,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // 5. Execute search
@@ -120,7 +137,7 @@ export async function POST(request: Request) {
         status: "success",
         input_summary: query,
         output_summary: result.matches.slice(0, 3).map(m => m.article).join(", ") || "nenhum resultado",
-        credits_consumed: requiredCredits,
+        credits_consumed: isRecrutamentoPlan ? 0 : requiredCredits,
         prompt_version: "clt-search-v1",
         metadata: {
           query,
@@ -130,18 +147,20 @@ export async function POST(request: Request) {
       .select("id")
       .single();
 
-    await supabase
-      .from("usage_events")
-      .insert({
-        user_id: user.id,
-        agent_id: agent?.id || null,
-        agent_run_id: insertedRun?.id || null,
-        event_type: "agent_execution",
-        credits_delta: -requiredCredits,
-        metadata: {
-          slug: "clt-ia"
-        },
-      });
+    if (insertedRun && !isRecrutamentoPlan) {
+      await supabase
+        .from("usage_events")
+        .insert({
+          user_id: user.id,
+          agent_id: agent?.id || null,
+          agent_run_id: insertedRun.id,
+          event_type: "agent_execution",
+          credits_delta: -requiredCredits,
+          metadata: {
+            slug: "clt-ia"
+          },
+        });
+    }
 
     return NextResponse.json({
       ok: true,
