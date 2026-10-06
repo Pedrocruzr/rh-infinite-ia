@@ -50,7 +50,16 @@ A plataforma opera estritamente com 3 produtos/planos comerciais:
   5. Relatórios Stackers (`/app/recrutador/assessments`), Tutorial, Suporte e Configurações.
 - **Acesso Bloqueado**: Todos os demais agentes fora do escopo de recrutamento (Six Box, Pesquisa de Clima, Produtividade, Fit Cultural, Mapeamento de Competências, Onboarding Estratégico, PDI, Desligamento Humanizado) são protegidos com tela e modal de upgrade para o Plano Completo.
 
-### 4. Infraestrutura de E-mail e Disparos Transacionais
+### 4. Painel de Vagas (Start e Pro)
+- **Cobrança**:
+  - **Plano Start**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/0y34l34btd7nes2l`). Limite de até **10 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Pro**: R$ 97,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/l00vs7i12lhanhzv`). Limite de até **25 vagas** cadastradas (ativas, pausadas e fechadas).
+- **Acesso Liberado**:
+  - Exclusivamente o **Painel de Vagas Kanban** (`/app/painel-de-vagas`) com métricas e SLA de fechamento inteligente, respeitando a trava de 10 ou 25 vagas conforme o plano contratado.
+- **Acesso Bloqueado**:
+  - O usuário visualiza as outras funcionalidades na barra lateral e catálogo (Turnover, CLT IA, Robôs de IA), porém travadas — ao clicar, abre a tela/pop-up de upgrade para adquirir o pacote completo ou módulos adicionais.
+
+### 5. Infraestrutura de E-mail e Disparos Transacionais
 - **Remetente Oficial**: `suporte@stackercompany.com.br`
 - **Servidor SMTP**: `smtp.suite.uol` (Porta `587`, STARTTLS, com fallback TLS seguro)
 - **Credenciais**: Salvas em `.env.local` e nas variáveis de produção da Vercel (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `RESEND_FROM_EMAIL`).

@@ -72,12 +72,27 @@ export async function POST(request: Request) {
     if (hasEmailConfig && email && (payment?.status === "saved_for_later_registration" || payment?.status === "processed_immediately")) {
       try {
         const welcomeName = name || "Cliente";
+        const isVagasStart =
+          payment?.planCode === "vagas_start" ||
+          Number(payment?.value) === 67 ||
+          String(payment?.description || "").toLowerCase().includes("vagas start") ||
+          String(payment?.name || "").toLowerCase().includes("vagas - start");
+
+        const isVagasPro =
+          payment?.planCode === "vagas_pro" ||
+          Number(payment?.value) === 97 ||
+          String(payment?.description || "").toLowerCase().includes("vagas pro") ||
+          String(payment?.name || "").toLowerCase().includes("vagas - pro");
+
+        const isVagas = isVagasStart || isVagasPro;
+
         const isRecrutamento =
-          payment?.planCode === "recrutamento" ||
-          payment?.planCode === "recrutamento_selecao" ||
-          Number(payment?.value) === 297 ||
-          Number(payment?.value) === 197 ||
-          String(payment?.description || "").toLowerCase().includes("recrutamento");
+          !isVagas &&
+          (payment?.planCode === "recrutamento" ||
+            payment?.planCode === "recrutamento_selecao" ||
+            Number(payment?.value) === 297 ||
+            Number(payment?.value) === 197 ||
+            String(payment?.description || "").toLowerCase().includes("recrutamento"));
         const isProfileTest =
           payment?.planCode === "perfil_comportamental" ||
           String(payment?.planCode || "").startsWith("perfil_");
@@ -85,7 +100,13 @@ export async function POST(request: Request) {
         let planName = "Stacks Infinity";
         let planCreditsText = "29 créditos mensais";
 
-        if (isRecrutamento) {
+        if (isVagas) {
+          const vagasLimit = isVagasPro ? "25" : "10";
+          planName = isVagasPro
+            ? "Painel de Vagas Pro (Até 25 Vagas)"
+            : "Painel de Vagas Start (Até 10 Vagas)";
+          planCreditsText = `acesso liberado ao Painel de Vagas Kanban com limite de até ${vagasLimit} vagas (em aberto, pausadas e fechadas)`;
+        } else if (isRecrutamento) {
           planName = "Recrutamento & Seleção (Acesso por 6 Meses)";
           planCreditsText = "acesso liberado sem limite de créditos para os painéis e agentes de recrutamento";
         } else if (isProfileTest) {
@@ -93,7 +114,11 @@ export async function POST(request: Request) {
           planCreditsText = "9 créditos de avaliações";
         }
 
-        const planParam = isRecrutamento
+        const planParam = isVagas
+          ? isVagasPro
+            ? "&plan=vagas_pro"
+            : "&plan=vagas_start"
+          : isRecrutamento
           ? "&plan=recrutamento"
           : isProfileTest
           ? "&plan=perfil_comportamental"
@@ -104,7 +129,9 @@ export async function POST(request: Request) {
         let emailSubject = "";
 
         if (payment?.status === "saved_for_later_registration") {
-          if (isRecrutamento) {
+          if (isVagas) {
+            emailSubject = "Bem-vindo ao Painel de Vagas Stacker! Conclua o seu cadastro 📋";
+          } else if (isRecrutamento) {
             emailSubject = "Bem-vindo ao Stacker Recrutamento & Seleção! Conclua o seu cadastro 🚀";
           } else if (isProfileTest) {
             emailSubject = "Bem-vindo à Stacker! Conclua o seu cadastro e resgate seus bônus 🎁";
@@ -141,8 +168,9 @@ export async function POST(request: Request) {
               <p style="font-size: 14px; color: #64748b; margin-top: 5px;"><strong>Equipe Stacker</strong></p>
             </div>
           `;
-        } else {
-          emailSubject = isRecrutamento
+          emailSubject = isVagas
+            ? "Seu Painel de Vagas Stacker já está ativo! 📋"
+            : isRecrutamento
             ? "Seu plano Stacker Recrutamento & Seleção já está ativo! 🚀"
             : "Seu plano Stacker já está ativo! 🚀";
 

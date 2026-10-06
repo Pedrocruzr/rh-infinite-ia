@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { resolveJobOpeningsAccess } from "@/lib/jobs/auth";
 import { computeOpenDays } from "@/lib/jobs/utils";
 import type { JobStatus } from "@/lib/jobs/types";
+import { getUserPlanType, getJobOpeningsLimit } from "@/lib/auth/access-control";
+import { cookies } from "next/headers";
 
 export async function GET() {
   const access = await resolveJobOpeningsAccess();
@@ -72,6 +74,30 @@ export async function POST(request: NextRequest) {
       { error: "Vaga fechada exige data de fechamento." },
       { status: 400 }
     );
+  }
+
+  const cookieStore = await cookies();
+  const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+  const planType = await getUserPlanType(access.db, { id: access.userId }, simulatedPlan);
+
+  if (planType === "vagas") {
+    const { count } = await access.db
+      .from("job_openings")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", access.userId);
+
+    const limit = getJobOpeningsLimit(simulatedPlan);
+    if ((count ?? 0) >= limit) {
+      const planName = limit === 10 ? "Start (10 vagas)" : "Pro (25 vagas)";
+      return NextResponse.json(
+        {
+          error: `Você atingiu o limite de ${limit} vagas do seu plano ${planName}. Faça upgrade para continuar adicionando novas vagas.`,
+          code: "LIMIT_REACHED",
+          limit,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   const payload = {

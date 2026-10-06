@@ -1,4 +1,4 @@
-export type PlanType = "completo" | "recrutamento" | "perfil";
+export type PlanType = "completo" | "recrutamento" | "perfil" | "vagas";
 
 export const RECRUTAMENTO_AGENTS = new Set([
   "taxa-aderencia-vaga",
@@ -22,6 +22,16 @@ export const PERFIL_AGENTS = new Set([
 
 export function resolvePlanType(planCode?: string | null): PlanType {
   const code = String(planCode || "").trim().toLowerCase();
+
+  if (
+    code === "vagas" ||
+    code === "vagas_start" ||
+    code === "vagas_pro" ||
+    code === "painel_vagas" ||
+    code.includes("vagas")
+  ) {
+    return "vagas";
+  }
 
   if (
     code === "recrutamento" ||
@@ -49,6 +59,9 @@ export function isFeatureAllowed(
 ): boolean {
   if (planType === "completo") return true;
   if (planType === "recrutamento") return true;
+  if (planType === "vagas") {
+    return feature === "painel-de-vagas";
+  }
   if (planType === "perfil") return false;
   return true;
 }
@@ -61,7 +74,21 @@ export function isAgentAllowed(planType: PlanType, agentSlug: string): boolean {
   if (planType === "perfil") {
     return PERFIL_AGENTS.has(agentSlug);
   }
+  if (planType === "vagas") {
+    return false; // Todos os agentes travados, abrindo pop-up de upgrade
+  }
   return true;
+}
+
+export function getJobOpeningsLimit(planCode?: string | null): number {
+  const code = String(planCode || "").trim().toLowerCase();
+  if (code.includes("pro") || code === "97") {
+    return 25;
+  }
+  if (code.includes("start") || code === "67" || code.includes("vagas")) {
+    return 10;
+  }
+  return Infinity;
 }
 
 export async function getUserPlanType(

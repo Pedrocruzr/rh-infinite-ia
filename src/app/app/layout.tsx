@@ -207,12 +207,14 @@ export default async function InternalAppLayout({
   ] as const;
 
   const navigation = allNavigation.filter((item) => {
-    if (
-      item.feature === "painel-de-vagas" ||
-      item.feature === "painel-de-turnover" ||
-      item.feature === "clt-ia"
-    ) {
-      return isFeatureAllowed(planType, item.feature as any);
+    if (planType === "perfil") {
+      if (
+        item.feature === "painel-de-vagas" ||
+        item.feature === "painel-de-turnover" ||
+        item.feature === "clt-ia"
+      ) {
+        return false;
+      }
     }
     return true;
   });
