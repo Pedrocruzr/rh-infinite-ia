@@ -72,27 +72,44 @@ export async function POST(request: Request) {
     if (hasEmailConfig && email && (payment?.status === "saved_for_later_registration" || payment?.status === "processed_immediately")) {
       try {
         const welcomeName = name || "Cliente";
+        const desc = (String(payment?.description || "") + " " + String(payment?.name || "")).toLowerCase();
+
+        const isTurnoverStart =
+          payment?.planCode === "turnover_start" ||
+          ((Number(payment?.value) === 67 || desc.includes("turnover")) &&
+            (desc.includes("turnover start") || desc.includes("turnover - start") || (desc.includes("turnover") && Number(payment?.value) === 67)));
+
+        const isTurnoverPro =
+          payment?.planCode === "turnover_pro" ||
+          ((Number(payment?.value) === 97 || desc.includes("turnover")) &&
+            (desc.includes("turnover pro") || desc.includes("turnover - pro") || (desc.includes("turnover") && Number(payment?.value) === 97)));
+
+        const isTurnover = isTurnoverStart || isTurnoverPro;
+
         const isVagasStart =
-          payment?.planCode === "vagas_start" ||
-          Number(payment?.value) === 67 ||
-          String(payment?.description || "").toLowerCase().includes("vagas start") ||
-          String(payment?.name || "").toLowerCase().includes("vagas - start");
+          !isTurnover &&
+          (payment?.planCode === "vagas_start" ||
+            Number(payment?.value) === 67 ||
+            desc.includes("vagas start") ||
+            desc.includes("vagas - start"));
 
         const isVagasPro =
-          payment?.planCode === "vagas_pro" ||
-          Number(payment?.value) === 97 ||
-          String(payment?.description || "").toLowerCase().includes("vagas pro") ||
-          String(payment?.name || "").toLowerCase().includes("vagas - pro");
+          !isTurnover &&
+          (payment?.planCode === "vagas_pro" ||
+            Number(payment?.value) === 97 ||
+            desc.includes("vagas pro") ||
+            desc.includes("vagas - pro"));
 
         const isVagas = isVagasStart || isVagasPro;
 
         const isRecrutamento =
+          !isTurnover &&
           !isVagas &&
           (payment?.planCode === "recrutamento" ||
             payment?.planCode === "recrutamento_selecao" ||
             Number(payment?.value) === 297 ||
             Number(payment?.value) === 197 ||
-            String(payment?.description || "").toLowerCase().includes("recrutamento"));
+            desc.includes("recrutamento"));
         const isProfileTest =
           payment?.planCode === "perfil_comportamental" ||
           String(payment?.planCode || "").startsWith("perfil_");
@@ -100,7 +117,13 @@ export async function POST(request: Request) {
         let planName = "Stacks Infinity";
         let planCreditsText = "29 créditos mensais";
 
-        if (isVagas) {
+        if (isTurnover) {
+          const turnoverLimit = isTurnoverPro ? "25" : "10";
+          planName = isTurnoverPro
+            ? "Painel de Turnover Pro (Até 25 ativas e 25 desligamentos)"
+            : "Painel de Turnover Start (Até 10 ativas e 10 desligamentos)";
+          planCreditsText = `acesso liberado ao Painel de Turnover & Retenção com limite de até ${turnoverLimit} contas ativas e ${turnoverLimit} contas de desligamento`;
+        } else if (isVagas) {
           const vagasLimit = isVagasPro ? "25" : "10";
           planName = isVagasPro
             ? "Painel de Vagas Pro (Até 25 Vagas)"
@@ -114,7 +137,11 @@ export async function POST(request: Request) {
           planCreditsText = "9 créditos de avaliações";
         }
 
-        const planParam = isVagas
+        const planParam = isTurnover
+          ? isTurnoverPro
+            ? "&plan=turnover_pro"
+            : "&plan=turnover_start"
+          : isVagas
           ? isVagasPro
             ? "&plan=vagas_pro"
             : "&plan=vagas_start"
@@ -129,7 +156,9 @@ export async function POST(request: Request) {
         let emailSubject = "";
 
         if (payment?.status === "saved_for_later_registration") {
-          if (isVagas) {
+          if (isTurnover) {
+            emailSubject = "Bem-vindo ao Painel de Turnover Stacker! Conclua o seu cadastro 📊";
+          } else if (isVagas) {
             emailSubject = "Bem-vindo ao Painel de Vagas Stacker! Conclua o seu cadastro 📋";
           } else if (isRecrutamento) {
             emailSubject = "Bem-vindo ao Stacker Recrutamento & Seleção! Conclua o seu cadastro 🚀";
@@ -168,7 +197,9 @@ export async function POST(request: Request) {
               <p style="font-size: 14px; color: #64748b; margin-top: 5px;"><strong>Equipe Stacker</strong></p>
             </div>
           `;
-          emailSubject = isVagas
+          emailSubject = isTurnover
+            ? "Seu Painel de Turnover Stacker já está ativo! 📊"
+            : isVagas
             ? "Seu Painel de Vagas Stacker já está ativo! 📋"
             : isRecrutamento
             ? "Seu plano Stacker Recrutamento & Seleção já está ativo! 🚀"

@@ -19,7 +19,8 @@ export default async function PainelDeTurnoverPage() {
       return (
         <FeatureLockedScreen
           featureName="Painel de Turnover"
-          description="O Painel de Turnover & Retenção é exclusivo dos planos Recrutamento & Seleção e Stacks Infinity. O seu plano atual dá acesso exclusivo aos Testes de Perfil Comportamental."
+          description="O Painel de Turnover & Retenção é exclusivo dos planos Painel de Turnover, Recrutamento & Seleção e Stacks Infinity. O seu plano atual não inclui esta funcionalidade."
+          availablePlans="Painel de Turnover (Start/Pro), Recrutamento ou Stacks Infinity"
         />
       );
     }

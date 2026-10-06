@@ -13,7 +13,7 @@ Tudo o que for alterado ou incluído no Painel de Vagas (vagas em aberto, pausad
 3. **Gráfico de Vagas por Departamento**: HUD orbital e legendas reativas à distribuição real das posições em aberto por área.
 
 ## Arquitetura de Produtos e Controle de Acesso (`src/lib/auth/access-control.ts`)
-A plataforma opera estritamente com 3 produtos/planos comerciais:
+A plataforma opera estritamente com 5 produtos/planos comerciais:
 
 ### 1. Stacks Infinity (Sistema Stacker Completo)
 - **Cobrança**: Assinatura mensal recorrente de R$ 297/mês (Checkout Asaas: `https://www.asaas.com/c/qmacegbjbnml820m`).
@@ -59,7 +59,16 @@ A plataforma opera estritamente com 3 produtos/planos comerciais:
 - **Acesso Bloqueado**:
   - O usuário visualiza as outras funcionalidades na barra lateral e catálogo (Turnover, CLT IA, Robôs de IA), porém travadas — ao clicar, abre a tela/pop-up de upgrade para adquirir o pacote completo ou módulos adicionais.
 
-### 5. Infraestrutura de E-mail e Disparos Transacionais
+### 5. Painel de Turnover (Start e Pro)
+- **Cobrança**:
+  - **Plano Start**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/d3tj94s5is9kejo5`). Limite de até **10 contas ativas e 10 contas de desligamento**.
+  - **Plano Pro**: R$ 97,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/0elxvl20ckbd0b62`). Limite de até **25 contas ativas e 25 contas de desligamento**.
+- **Acesso Liberado**:
+  - Exclusivamente o **Painel de Turnover & Retenção** (`/app/painel-de-turnover`) com métricas analíticas e cálculo automático de taxas e custos de rotatividade, respeitando os limites contratados.
+- **Acesso Bloqueado**:
+  - O usuário visualiza as outras funcionalidades na barra lateral e catálogo (Vagas, CLT IA, Robôs de IA), porém travadas — ao clicar, abre a tela/pop-up de upgrade.
+
+### 6. Infraestrutura de E-mail e Disparos Transacionais
 - **Remetente Oficial**: `suporte@stackercompany.com.br`
 - **Servidor SMTP**: `smtp.suite.uol` (Porta `587`, STARTTLS, com fallback TLS seguro)
 - **Credenciais**: Salvas em `.env.local` e nas variáveis de produção da Vercel (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `RESEND_FROM_EMAIL`).

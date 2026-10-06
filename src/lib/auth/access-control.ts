@@ -1,4 +1,4 @@
-export type PlanType = "completo" | "recrutamento" | "perfil" | "vagas";
+export type PlanType = "completo" | "recrutamento" | "perfil" | "vagas" | "turnover";
 
 export const RECRUTAMENTO_AGENTS = new Set([
   "taxa-aderencia-vaga",
@@ -22,6 +22,16 @@ export const PERFIL_AGENTS = new Set([
 
 export function resolvePlanType(planCode?: string | null): PlanType {
   const code = String(planCode || "").trim().toLowerCase();
+
+  if (
+    code === "turnover" ||
+    code === "turnover_start" ||
+    code === "turnover_pro" ||
+    code === "painel_turnover" ||
+    code.includes("turnover")
+  ) {
+    return "turnover";
+  }
 
   if (
     code === "vagas" ||
@@ -62,6 +72,9 @@ export function isFeatureAllowed(
   if (planType === "vagas") {
     return feature === "painel-de-vagas";
   }
+  if (planType === "turnover") {
+    return feature === "painel-de-turnover";
+  }
   if (planType === "perfil") return false;
   return true;
 }
@@ -74,10 +87,21 @@ export function isAgentAllowed(planType: PlanType, agentSlug: string): boolean {
   if (planType === "perfil") {
     return PERFIL_AGENTS.has(agentSlug);
   }
-  if (planType === "vagas") {
+  if (planType === "vagas" || planType === "turnover") {
     return false; // Todos os agentes travados, abrindo pop-up de upgrade
   }
   return true;
+}
+
+export function getTurnoverLimits(planCode?: string | null): { maxAtivos: number; maxDesligados: number } {
+  const code = String(planCode || "").trim().toLowerCase();
+  if (code.includes("pro") || code === "97") {
+    return { maxAtivos: 25, maxDesligados: 25 };
+  }
+  if (code.includes("start") || code === "67" || code.includes("turnover")) {
+    return { maxAtivos: 10, maxDesligados: 10 };
+  }
+  return { maxAtivos: Infinity, maxDesligados: Infinity };
 }
 
 export function getJobOpeningsLimit(planCode?: string | null): number {

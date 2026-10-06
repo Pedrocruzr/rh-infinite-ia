@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { resolveJobOpeningsAccess } from "@/lib/jobs/auth";
+import { getUserPlanType, getTurnoverLimits, resolvePlanType } from "@/lib/auth/access-control";
 import {
   createTurnoverEmployee,
   deleteTurnoverEmployee,
@@ -28,6 +31,66 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const action = body?.action;
+
+    // Verificar controle de acesso e limites de plano
+    const access = await resolveJobOpeningsAccess();
+    const cookieStore = await cookies();
+    const simulatedPlan = cookieStore.get("simulated_plan_code")?.value;
+    const planType =
+      access.userId && access.db
+        ? await getUserPlanType(access.db, { id: access.userId }, simulatedPlan)
+        : simulatedPlan
+        ? resolvePlanType(simulatedPlan)
+        : "completo";
+
+    if (planType === "turnover") {
+      const limits = getTurnoverLimits(simulatedPlan);
+      const allCurrent = await getTurnoverEmployees();
+      const countAtivos = allCurrent.filter((e) => !e.data_desligamento).length;
+      const countDesligados = allCurrent.filter((e) => !!e.data_desligamento).length;
+      const planName =
+        limits.maxAtivos === 10
+          ? "Start (10 ativas / 10 desligadas)"
+          : "Pro (25 ativas / 25 desligadas)";
+
+      if (action === "exit" || action === "register_exit") {
+        if (countDesligados >= limits.maxDesligados) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: `Você atingiu o limite de ${limits.maxDesligados} contas de desligamento do seu plano ${planName}. Faça upgrade para o plano Pro para registrar até 25 desligamentos.`,
+              code: "LIMIT_REACHED",
+              limit: limits.maxDesligados,
+            },
+            { status: 403 }
+          );
+        }
+      } else if (!action || action === "create") {
+        const isDesligado = Boolean(body?.data_desligamento);
+        if (!isDesligado && countAtivos >= limits.maxAtivos) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: `Você atingiu o limite de ${limits.maxAtivos} contas ativas do seu plano ${planName}. Faça upgrade para o plano Pro para registrar até 25 contas ativas.`,
+              code: "LIMIT_REACHED",
+              limit: limits.maxAtivos,
+            },
+            { status: 403 }
+          );
+        }
+        if (isDesligado && countDesligados >= limits.maxDesligados) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: `Você atingiu o limite de ${limits.maxDesligados} contas de desligamento do seu plano ${planName}. Faça upgrade para o plano Pro para registrar até 25 desligamentos.`,
+              code: "LIMIT_REACHED",
+              limit: limits.maxDesligados,
+            },
+            { status: 403 }
+          );
+        }
+      }
+    }
 
     // Sincronização em lote resiliente (garante que nada inserido no cliente seja perdido)
     if (action === "sync") {
