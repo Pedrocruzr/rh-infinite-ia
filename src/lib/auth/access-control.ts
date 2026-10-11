@@ -95,10 +95,10 @@ export function isAgentAllowed(planType: PlanType, agentSlug: string): boolean {
 
 export function getTurnoverLimits(planCode?: string | null): { maxAtivos: number; maxDesligados: number } {
   const code = String(planCode || "").trim().toLowerCase();
-  if (code.includes("pro") || code === "97") {
+  if (code.includes("pro") || code === "67" || code === "97") {
     return { maxAtivos: 25, maxDesligados: 25 };
   }
-  if (code.includes("start") || code === "67" || code.includes("turnover")) {
+  if (code.includes("start") || code === "37" || code.includes("turnover")) {
     return { maxAtivos: 10, maxDesligados: 10 };
   }
   return { maxAtivos: Infinity, maxDesligados: Infinity };
@@ -106,10 +106,10 @@ export function getTurnoverLimits(planCode?: string | null): { maxAtivos: number
 
 export function getJobOpeningsLimit(planCode?: string | null): number {
   const code = String(planCode || "").trim().toLowerCase();
-  if (code.includes("pro") || code === "97") {
+  if (code.includes("pro") || code === "67" || code === "97") {
     return 25;
   }
-  if (code.includes("start") || code === "67" || code.includes("vagas")) {
+  if (code.includes("start") || code === "37" || code.includes("vagas")) {
     return 10;
   }
   return Infinity;

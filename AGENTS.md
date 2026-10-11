@@ -52,8 +52,8 @@ A plataforma opera estritamente com 5 produtos/planos comerciais:
 
 ### 4. Painel de Vagas (Start e Pro)
 - **Cobrança**:
-  - **Plano Start**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/0y34l34btd7nes2l`). Limite de até **10 vagas** cadastradas (ativas, pausadas e fechadas).
-  - **Plano Pro**: R$ 97,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/l00vs7i12lhanhzv`). Limite de até **25 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Start**: R$ 37,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/8gx4yrbxf3e7q95o`). Limite de até **10 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Pro**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/bnch9x8yje4u0a5j`). Limite de até **25 vagas** cadastradas (ativas, pausadas e fechadas).
 - **Acesso Liberado**:
   - Exclusivamente o **Painel de Vagas Kanban** (`/app/painel-de-vagas`) com métricas e SLA de fechamento inteligente, respeitando a trava de 10 ou 25 vagas conforme o plano contratado.
 - **Acesso Bloqueado**:
@@ -61,8 +61,8 @@ A plataforma opera estritamente com 5 produtos/planos comerciais:
 
 ### 5. Painel de Turnover (Start e Pro)
 - **Cobrança**:
-  - **Plano Start**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/d3tj94s5is9kejo5`). Limite de até **10 contas ativas e 10 contas de desligamento**.
-  - **Plano Pro**: R$ 97,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/0elxvl20ckbd0b62`). Limite de até **25 contas ativas e 25 contas de desligamento**.
+  - **Plano Start**: R$ 37,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/90uphhpc7dn4h57h`). Limite de até **10 contas ativas e 10 contas de desligamento**.
+  - **Plano Pro**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/9b6fiw8z1wiuc814`). Limite de até **25 contas ativas e 25 contas de desligamento**.
 - **Acesso Liberado**:
   - Exclusivamente o **Painel de Turnover & Retenção** (`/app/painel-de-turnover`) com métricas analíticas e cálculo automático de taxas e custos de rotatividade, respeitando os limites contratados.
 - **Acesso Bloqueado**:

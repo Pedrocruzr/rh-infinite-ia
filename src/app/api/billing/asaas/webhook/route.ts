@@ -74,29 +74,50 @@ export async function POST(request: Request) {
         const welcomeName = name || "Cliente";
         const desc = (String(payment?.description || "") + " " + String(payment?.name || "")).toLowerCase();
 
+        const linkId = String(payment?.paymentLinkId || "").toLowerCase();
+
         const isTurnoverStart =
           payment?.planCode === "turnover_start" ||
-          ((Number(payment?.value) === 67 || desc.includes("turnover")) &&
-            (desc.includes("turnover start") || desc.includes("turnover - start") || (desc.includes("turnover") && Number(payment?.value) === 67)));
+          linkId === "90uphhpc7dn4h57h" ||
+          linkId === "d3tj94s5is9kejo5" ||
+          ((Number(payment?.value) === 37 || Number(payment?.value) === 67) &&
+            desc.includes("turnover") &&
+            (desc.includes("start") || Number(payment?.value) === 37)) ||
+          desc.includes("turnover start") ||
+          desc.includes("turnover - start");
 
         const isTurnoverPro =
           payment?.planCode === "turnover_pro" ||
-          ((Number(payment?.value) === 97 || desc.includes("turnover")) &&
-            (desc.includes("turnover pro") || desc.includes("turnover - pro") || (desc.includes("turnover") && Number(payment?.value) === 97)));
+          linkId === "9b6fiw8z1wiuc814" ||
+          linkId === "0elxvl20ckbd0b62" ||
+          ((Number(payment?.value) === 67 || Number(payment?.value) === 97) &&
+            desc.includes("turnover") &&
+            (desc.includes("pro") || Number(payment?.value) === 67 || Number(payment?.value) === 97)) ||
+          desc.includes("turnover pro") ||
+          desc.includes("turnover - pro");
 
         const isTurnover = isTurnoverStart || isTurnoverPro;
 
         const isVagasStart =
           !isTurnover &&
           (payment?.planCode === "vagas_start" ||
-            Number(payment?.value) === 67 ||
+            linkId === "8gx4yrbxf3e7q95o" ||
+            linkId === "0y34l34btd7nes2l" ||
+            ((Number(payment?.value) === 37 || Number(payment?.value) === 67) &&
+              desc.includes("vagas") &&
+              (desc.includes("start") || Number(payment?.value) === 37)) ||
+            (Number(payment?.value) === 37 && !desc.includes("turnover")) ||
             desc.includes("vagas start") ||
             desc.includes("vagas - start"));
 
         const isVagasPro =
           !isTurnover &&
           (payment?.planCode === "vagas_pro" ||
-            Number(payment?.value) === 97 ||
+            linkId === "bnch9x8yje4u0a5j" ||
+            linkId === "l00vs7i12lhanhzv" ||
+            ((Number(payment?.value) === 67 || Number(payment?.value) === 97) &&
+              desc.includes("vagas") &&
+              (desc.includes("pro") || Number(payment?.value) === 67 || Number(payment?.value) === 97)) ||
             desc.includes("vagas pro") ||
             desc.includes("vagas - pro"));
 
