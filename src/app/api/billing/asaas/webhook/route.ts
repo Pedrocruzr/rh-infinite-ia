@@ -78,6 +78,7 @@ export async function POST(request: Request) {
 
         const isTurnoverStart =
           payment?.planCode === "turnover_start" ||
+          linkId === "3twtwlhdwkqnebux" ||
           linkId === "90uphhpc7dn4h57h" ||
           linkId === "d3tj94s5is9kejo5" ||
           ((Number(payment?.value) === 37 || Number(payment?.value) === 67) &&
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
 
         const isTurnoverPro =
           payment?.planCode === "turnover_pro" ||
+          linkId === "lk191f0wczpnxe9z" ||
           linkId === "9b6fiw8z1wiuc814" ||
           linkId === "0elxvl20ckbd0b62" ||
           ((Number(payment?.value) === 67 || Number(payment?.value) === 97) &&
@@ -101,6 +103,7 @@ export async function POST(request: Request) {
         const isVagasStart =
           !isTurnover &&
           (payment?.planCode === "vagas_start" ||
+            linkId === "v84leqwa2ll7eo66" ||
             linkId === "8gx4yrbxf3e7q95o" ||
             linkId === "0y34l34btd7nes2l" ||
             ((Number(payment?.value) === 37 || Number(payment?.value) === 67) &&
@@ -113,6 +116,7 @@ export async function POST(request: Request) {
         const isVagasPro =
           !isTurnover &&
           (payment?.planCode === "vagas_pro" ||
+            linkId === "hlmxju9u0vmme0ca" ||
             linkId === "bnch9x8yje4u0a5j" ||
             linkId === "l00vs7i12lhanhzv" ||
             ((Number(payment?.value) === 67 || Number(payment?.value) === 97) &&
@@ -141,15 +145,15 @@ export async function POST(request: Request) {
         if (isTurnover) {
           const turnoverLimit = isTurnoverPro ? "25" : "10";
           planName = isTurnoverPro
-            ? "Painel de Turnover Pro (Até 25 ativas e 25 desligamentos)"
-            : "Painel de Turnover Start (Até 10 ativas e 10 desligamentos)";
-          planCreditsText = `acesso liberado ao Painel de Turnover & Retenção com limite de até ${turnoverLimit} contas ativas e ${turnoverLimit} contas de desligamento`;
+            ? "Painel de Turnover Pro (Acesso Vitalício - Até 25 ativas e 25 desligamentos)"
+            : "Painel de Turnover Start (Acesso Vitalício - Até 10 ativas e 10 desligamentos)";
+          planCreditsText = `acesso vitalício liberado ao Painel de Turnover & Retenção com capacidade de até ${turnoverLimit} contas ativas e ${turnoverLimit} contas de desligamento`;
         } else if (isVagas) {
           const vagasLimit = isVagasPro ? "25" : "10";
           planName = isVagasPro
-            ? "Painel de Vagas Pro (Até 25 Vagas)"
-            : "Painel de Vagas Start (Até 10 Vagas)";
-          planCreditsText = `acesso liberado ao Painel de Vagas Kanban com limite de até ${vagasLimit} vagas (em aberto, pausadas e fechadas)`;
+            ? "Painel de Vagas Pro (Acesso Vitalício - Até 25 Vagas)"
+            : "Painel de Vagas Start (Acesso Vitalício - Até 10 Vagas)";
+          planCreditsText = `acesso vitalício liberado ao Painel de Vagas Kanban com limite de até ${vagasLimit} vagas (em aberto, pausadas e fechadas)`;
         } else if (isRecrutamento) {
           planName = "Recrutamento & Seleção (Acesso por 6 Meses)";
           planCreditsText = "acesso liberado sem limite de créditos para os painéis e agentes de recrutamento";

@@ -50,21 +50,23 @@ A plataforma opera estritamente com 5 produtos/planos comerciais:
   5. Relatórios Stackers (`/app/recrutador/assessments`), Tutorial, Suporte e Configurações.
 - **Acesso Bloqueado**: Todos os demais agentes fora do escopo de recrutamento (Six Box, Pesquisa de Clima, Produtividade, Fit Cultural, Mapeamento de Competências, Onboarding Estratégico, PDI, Desligamento Humanizado) são protegidos com tela e modal de upgrade para o Plano Completo.
 
-### 4. Painel de Vagas (Start e Pro)
+### 4. Painel de Vagas (Start, Pro e Personalizado - Acesso Vitalício)
 - **Cobrança**:
-  - **Plano Start**: R$ 37,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/8gx4yrbxf3e7q95o`). Limite de até **10 vagas** cadastradas (ativas, pausadas e fechadas).
-  - **Plano Pro**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/bnch9x8yje4u0a5j`). Limite de até **25 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Start**: R$ 37,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/v84leqwa2ll7eo66`). Limite de até **10 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Pro**: R$ 67,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/hlmxju9u0vmme0ca`). Limite de até **25 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Personalizado / Mais Volume**: Para empresas que precisarem de volume superior a 25 vagas, contato direto com o suporte (`suporte@stackercompany.com.br`).
 - **Acesso Liberado**:
-  - Exclusivamente o **Painel de Vagas Kanban** (`/app/painel-de-vagas`) com métricas e SLA de fechamento inteligente, respeitando a trava de 10 ou 25 vagas conforme o plano contratado.
+  - Exclusivamente o **Painel de Vagas Kanban** (`/app/painel-de-vagas`) com métricas e SLA de fechamento inteligente, respeitando a trava de 10 ou 25 vagas conforme o plano contratado. Acesso vitalício sem cobrança de mensalidade.
 - **Acesso Bloqueado**:
   - O usuário visualiza as outras funcionalidades na barra lateral e catálogo (Turnover, CLT IA, Robôs de IA), porém travadas — ao clicar, abre a tela/pop-up de upgrade para adquirir o pacote completo ou módulos adicionais.
 
-### 5. Painel de Turnover (Start e Pro)
+### 5. Painel de Turnover (Start, Pro e Personalizado - Acesso Vitalício)
 - **Cobrança**:
-  - **Plano Start**: R$ 37,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/90uphhpc7dn4h57h`). Limite de até **10 contas ativas e 10 contas de desligamento**.
-  - **Plano Pro**: R$ 67,00/mês recorrente (Checkout Asaas: `https://www.asaas.com/c/9b6fiw8z1wiuc814`). Limite de até **25 contas ativas e 25 contas de desligamento**.
+  - **Plano Start**: R$ 37,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/3twtwlhdwkqnebux`). Limite de até **10 contas ativas e 10 contas de desligamento**.
+  - **Plano Pro**: R$ 67,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/lk191f0wczpnxe9z`). Limite de até **25 contas ativas e 25 contas de desligamento**.
+  - **Plano Personalizado / Mais Volume**: Para empresas que precisarem de volume superior a 25 colaboradores/desligamentos, contato direto com o suporte (`suporte@stackercompany.com.br`).
 - **Acesso Liberado**:
-  - Exclusivamente o **Painel de Turnover & Retenção** (`/app/painel-de-turnover`) com métricas analíticas e cálculo automático de taxas e custos de rotatividade, respeitando os limites contratados.
+  - Exclusivamente o **Painel de Turnover & Retenção** (`/app/painel-de-turnover`) com métricas analíticas e cálculo automático de taxas e custos de rotatividade, respeitando os limites contratados. Acesso vitalício sem cobrança de mensalidade.
 - **Acesso Bloqueado**:
   - O usuário visualiza as outras funcionalidades na barra lateral e catálogo (Vagas, CLT IA, Robôs de IA), porém travadas — ao clicar, abre a tela/pop-up de upgrade.
 
