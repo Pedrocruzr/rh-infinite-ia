@@ -52,8 +52,8 @@ A plataforma opera estritamente com 5 produtos/planos comerciais:
 
 ### 4. Painel de Vagas (Start, Pro e Personalizado - Acesso Vitalício)
 - **Cobrança**:
-  - **Plano Start**: R$ 37,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/v84leqwa2ll7eo66`). Limite de até **10 vagas** cadastradas (ativas, pausadas e fechadas).
-  - **Plano Pro**: R$ 67,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/hlmxju9u0vmme0ca`). Limite de até **25 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Start**: R$ 37,00 pagamento único vitalício em até 6x no cartão ou à vista no PIX/Boleto (Checkout Asaas: `https://www.asaas.com/c/v84leqwa2ll7eo66`). Limite de até **10 vagas** cadastradas (ativas, pausadas e fechadas).
+  - **Plano Pro**: R$ 67,00 pagamento único vitalício em até 6x no cartão ou à vista no PIX/Boleto (Checkout Asaas: `https://www.asaas.com/c/hlmxju9u0vmme0ca`). Limite de até **25 vagas** cadastradas (ativas, pausadas e fechadas).
   - **Plano Personalizado / Mais Volume**: Para empresas que precisarem de volume superior a 25 vagas, contato direto com o suporte (`suporte@stackercompany.com.br`).
 - **Acesso Liberado**:
   - Exclusivamente o **Painel de Vagas Kanban** (`/app/painel-de-vagas`) com métricas e SLA de fechamento inteligente, respeitando a trava de 10 ou 25 vagas conforme o plano contratado. Acesso vitalício sem cobrança de mensalidade.
@@ -62,8 +62,8 @@ A plataforma opera estritamente com 5 produtos/planos comerciais:
 
 ### 5. Painel de Turnover (Start, Pro e Personalizado - Acesso Vitalício)
 - **Cobrança**:
-  - **Plano Start**: R$ 37,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/3twtwlhdwkqnebux`). Limite de até **10 contas ativas e 10 contas de desligamento**.
-  - **Plano Pro**: R$ 67,00 pagamento único vitalício (Checkout Asaas: `https://www.asaas.com/c/lk191f0wczpnxe9z`). Limite de até **25 contas ativas e 25 contas de desligamento**.
+  - **Plano Start**: R$ 37,00 pagamento único vitalício em até 6x no cartão ou à vista no PIX/Boleto (Checkout Asaas: `https://www.asaas.com/c/3twtwlhdwkqnebux`). Limite de até **10 contas ativas e 10 contas de desligamento**.
+  - **Plano Pro**: R$ 67,00 pagamento único vitalício em até 6x no cartão ou à vista no PIX/Boleto (Checkout Asaas: `https://www.asaas.com/c/lk191f0wczpnxe9z`). Limite de até **25 contas ativas e 25 contas de desligamento**.
   - **Plano Personalizado / Mais Volume**: Para empresas que precisarem de volume superior a 25 colaboradores/desligamentos, contato direto com o suporte (`suporte@stackercompany.com.br`).
 - **Acesso Liberado**:
   - Exclusivamente o **Painel de Turnover & Retenção** (`/app/painel-de-turnover`) com métricas analíticas e cálculo automático de taxas e custos de rotatividade, respeitando os limites contratados. Acesso vitalício sem cobrança de mensalidade.
