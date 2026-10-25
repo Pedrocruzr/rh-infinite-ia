@@ -1,10 +1,10 @@
 "use client";
 
-import { JOB_STATUS_OPTIONS } from "@/lib/jobs/constants";
+import { JOB_ORIGIN_CONFIG, JOB_STATUS_OPTIONS } from "@/lib/jobs/constants";
 import { formatDateBR, getStatusBadgeClass, getStatusLabel } from "@/lib/jobs/utils";
 import type { JobOpening, JobStatus } from "@/lib/jobs/types";
 import { parseJobTitleAndArea, JOB_DEPARTMENTS } from "@/lib/jobs/departments";
-import { Clock, Calendar, Check, Pause, Play, Edit3, Trash2, UserCheck } from "lucide-react";
+import { Clock, Calendar, Check, Pause, Play, Edit3, Trash2, UserCheck, Zap } from "lucide-react";
 
 interface JobOpeningsBoardProps {
   items: JobOpening[];
@@ -111,6 +111,8 @@ export function JobOpeningsBoard({
                       {(() => {
                         const { cleanName, area } = parseJobTitleAndArea(item.nome_vaga);
                         const deptConfig = JOB_DEPARTMENTS.find((d) => d.name === area);
+                        const canalName = item.canal_origem || "LinkedIn";
+                        const canalConfig = JOB_ORIGIN_CONFIG[canalName];
 
                         return (
                           <div className="flex items-start justify-between gap-3">
@@ -128,10 +130,27 @@ export function JobOpeningsBoard({
                                 >
                                   {area}
                                 </span>
+                                <span
+                                  className={`rounded-md border px-1.5 py-0.5 text-[9.5px] font-semibold ${
+                                    canalConfig
+                                      ? canalConfig.badgeBg
+                                      : "border-sky-500/30 bg-sky-500/15 text-sky-400"
+                                  }`}
+                                >
+                                  {canalName}
+                                </span>
                               </div>
-                              <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-400">
-                                <Calendar className="h-3 w-3 shrink-0" />
-                                <span>Aberta em {formatDateBR(item.data_abertura)}</span>
+                              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 dark:text-slate-400">
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar className="h-3 w-3 shrink-0" />
+                                  <span>Aberta em {formatDateBR(item.data_abertura)}</span>
+                                </div>
+                                {item.data_primeiro_contato && (
+                                  <div className="flex items-center gap-1 text-[11px] text-sky-400">
+                                    <Zap className="h-3 w-3 shrink-0" />
+                                    <span>1º contato: {formatDateBR(item.data_primeiro_contato)}</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -151,7 +170,7 @@ export function JobOpeningsBoard({
                         <div className="flex items-center justify-between text-[11px] font-medium text-slate-600 dark:text-slate-300">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            SLA de Fechamento
+                            Time to Fill (Prazo)
                           </span>
                           <span>{dias} dias em aberto</span>
                         </div>
@@ -162,9 +181,19 @@ export function JobOpeningsBoard({
                           />
                         </div>
                         {item.data_fechamento && (
-                          <p className="mt-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                            ✓ Contratação finalizada em: {formatDateBR(item.data_fechamento)}
-                          </p>
+                          <div className="mt-1.5 flex flex-wrap items-center justify-between text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                            <span>✓ Contratado em: {formatDateBR(item.data_fechamento)}</span>
+                            {item.data_primeiro_contato && (() => {
+                              const d1 = new Date(`${item.data_primeiro_contato}T00:00:00`);
+                              const d2 = new Date(`${item.data_fechamento}T00:00:00`);
+                              const diff = Math.max(0, Math.floor((d2.getTime() - d1.getTime()) / 86400000));
+                              return (
+                                <span className="text-sky-400 font-semibold">
+                                  • Time to Hire: {diff}d
+                                </span>
+                              );
+                            })()}
+                          </div>
                         )}
                       </div>
 

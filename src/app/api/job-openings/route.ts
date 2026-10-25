@@ -100,6 +100,13 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const data_primeiro_contato = body?.data_primeiro_contato
+    ? String(body.data_primeiro_contato).trim()
+    : null;
+  const canal_origem = body?.canal_origem
+    ? String(body.canal_origem).trim()
+    : "LinkedIn";
+
   const payload = {
     user_id: access.userId,
     nome_vaga,
@@ -110,13 +117,56 @@ export async function POST(request: NextRequest) {
       data_abertura,
       status === "fechada" ? data_fechamento : null
     ),
+    data_primeiro_contato,
+    canal_origem,
   };
 
-  const { data, error } = await access.db
+  let { data, error } = await access.db
     .from("job_openings")
     .insert(payload)
     .select("*")
     .single();
+
+  // Fallback de segurança: caso as novas colunas ainda não tenham sido migradas no Supabase
+  if (
+    error &&
+    (error.message?.includes("data_primeiro_contato") ||
+      error.message?.includes("canal_origem") ||
+      error.code === "PGRST204" ||
+      error.code === "42703")
+  ) {
+    const legacyPayload = {
+      user_id: access.userId,
+      nome_vaga,
+      data_abertura,
+      data_fechamento: status === "fechada" ? data_fechamento : null,
+      status,
+      dias_em_aberto: computeOpenDays(
+        data_abertura,
+        status === "fechada" ? data_fechamento : null
+      ),
+    };
+
+    const retry = await access.db
+      .from("job_openings")
+      .insert(legacyPayload)
+      .select("*")
+      .single();
+
+    if (retry.error) {
+      return NextResponse.json(
+        { error: "Erro ao criar vaga.", details: retry.error.message },
+        { status: 500 }
+      );
+    }
+
+    data = {
+      ...retry.data,
+      data_primeiro_contato,
+      canal_origem,
+    };
+    error = null;
+  }
 
   if (error) {
     return NextResponse.json(
@@ -127,3 +177,4 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ data }, { status: 201 });
 }
+

@@ -14,7 +14,9 @@ import { JobOpeningFormDialog } from "./job-opening-form-dialog";
 import { JobOpeningsBoard } from "./job-openings-board";
 import { JobOpeningsFilters } from "./job-openings-filters";
 import { JobOpeningsStats } from "./job-openings-stats";
+import { JobOpeningsAgilityStats } from "./job-openings-agility-stats";
 import { JobOpeningsAnalytics } from "./job-openings-analytics";
+import { JobOpeningsSourceChart } from "./job-openings-source-chart";
 import { JobOpeningsExportModal } from "./job-openings-export-modal";
 
 interface JobOpeningsClientProps {
@@ -63,7 +65,8 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
         filters.search,
         filters.status,
         filters.dateStart,
-        filters.dateEnd
+        filters.dateEnd,
+        filters.canal
       ),
     [items, filters]
   );
@@ -311,11 +314,23 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
           isPurpleTheme={isPurpleTheme}
         />
 
+        {/* MÉTRICAS DE AGILIDADE DE RH (TIME TO FILL & TIME TO HIRE) */}
+        <JobOpeningsAgilityStats
+          items={items}
+          isPurpleTheme={isPurpleTheme}
+        />
+
         <JobOpeningsAnalytics
           isPurpleTheme={isPurpleTheme}
           openCount={stats.open}
           totalCount={stats.total}
           items={items}
+        />
+
+        {/* ORIGEM DAS CONTRATAÇÕES (SOURCE OF HIRE - DONUT 3D & ROI DE ORÇAMENTO) */}
+        <JobOpeningsSourceChart
+          items={items}
+          isPurpleTheme={isPurpleTheme}
         />
 
         <JobOpeningsFilters

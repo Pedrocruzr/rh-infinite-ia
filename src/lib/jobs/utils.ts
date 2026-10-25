@@ -38,7 +38,8 @@ export function filterJobOpenings(
   search: string,
   status: "todos" | JobStatus,
   dateStart: string,
-  dateEnd: string
+  dateEnd: string,
+  canal?: "todos" | string
 ) {
   const normalizedSearch = search.trim().toLowerCase();
 
@@ -49,6 +50,11 @@ export function filterJobOpenings(
 
     const matchesStatus = status === "todos" ? true : item.status === status;
 
+    const matchesCanal =
+      !canal || canal === "todos"
+        ? true
+        : (item.canal_origem || "LinkedIn") === canal;
+
     const itemStartDate = item.data_abertura ? parseDate(item.data_abertura) : null;
 
     const matchesDateStart =
@@ -57,26 +63,47 @@ export function filterJobOpenings(
     const matchesDateEnd =
       dateEnd && itemStartDate ? itemStartDate <= parseDate(dateEnd) : true;
 
-    return matchesSearch && matchesStatus && matchesDateStart && matchesDateEnd;
+    return matchesSearch && matchesStatus && matchesCanal && matchesDateStart && matchesDateEnd;
   });
 }
 
 export function exportJobOpeningsToCsv(items: JobOpening[]) {
   const headers = [
     "Nome da vaga",
+    "Canal de Origem",
     "Data de abertura",
+    "Data do 1º contato",
     "Data de fechamento",
     "Status",
     "Dias em aberto",
+    "Time to Fill (dias)",
+    "Time to Hire (dias)",
   ];
 
-  const rows = items.map((item) => [
-    escapeCsv(item.nome_vaga),
-    item.data_abertura ?? "",
-    item.data_fechamento ?? "",
-    JOB_STATUS_LABELS[item.status],
-    String(item.dias_em_aberto ?? 0),
-  ]);
+  const rows = items.map((item) => {
+    const timeToFill = item.dias_em_aberto ?? 0;
+    let timeToHireStr = "—";
+    if (item.data_primeiro_contato) {
+      const d1 = new Date(`${item.data_primeiro_contato}T00:00:00`);
+      const d2 = item.data_fechamento
+        ? new Date(`${item.data_fechamento}T00:00:00`)
+        : new Date();
+      const diff = Math.max(0, Math.floor((d2.getTime() - d1.getTime()) / 86400000));
+      timeToHireStr = String(diff);
+    }
+
+    return [
+      escapeCsv(item.nome_vaga),
+      escapeCsv(item.canal_origem || "LinkedIn"),
+      item.data_abertura ?? "",
+      item.data_primeiro_contato ?? "",
+      item.data_fechamento ?? "",
+      JOB_STATUS_LABELS[item.status],
+      String(item.dias_em_aberto ?? 0),
+      String(timeToFill),
+      timeToHireStr,
+    ];
+  });
 
   const csvContent = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

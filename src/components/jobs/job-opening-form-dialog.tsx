@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { JOB_STATUS_OPTIONS } from "@/lib/jobs/constants";
+import { JOB_ORIGIN_CHANNELS, JOB_STATUS_OPTIONS } from "@/lib/jobs/constants";
 import type { JobOpening, JobOpeningPayload, JobStatus } from "@/lib/jobs/types";
 import {
   JOB_DEPARTMENTS,
@@ -24,6 +24,8 @@ const EMPTY_FORM: JobOpeningPayload = {
   data_abertura: new Date().toISOString().slice(0, 10),
   data_fechamento: null,
   status: "em_aberto",
+  canal_origem: "LinkedIn",
+  data_primeiro_contato: null,
 };
 
 export function JobOpeningFormDialog({
@@ -55,6 +57,8 @@ export function JobOpeningFormDialog({
           data_abertura: item.data_abertura,
           data_fechamento: item.data_fechamento,
           status: item.status,
+          canal_origem: item.canal_origem ?? "LinkedIn",
+          data_primeiro_contato: item.data_primeiro_contato ?? null,
         });
       } else {
         setCleanTitle("");
@@ -196,6 +200,43 @@ export function JobOpeningFormDialog({
                   </option>
                 ))}
               </select>
+            </label>
+          </div>
+
+          {/* Novos Campos: Canal de Origem e Data do 1º Contato (Time to Hire) */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm">
+              <span className="font-medium text-slate-800 dark:text-slate-100">
+                Canal de Origem / Captação
+              </span>
+              <select
+                value={form.canal_origem ?? "LinkedIn"}
+                onChange={(event) => updateField("canal_origem", event.target.value)}
+                className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
+              >
+                {JOB_ORIGIN_CHANNELS.map((ch) => (
+                  <option key={ch} value={ch}>
+                    {ch}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-slate-800 dark:text-slate-100">
+                  Data do 1º Contato
+                </span>
+                <span className="text-[10px] text-slate-400">Opcional (Time to Hire)</span>
+              </div>
+              <input
+                type="date"
+                value={form.data_primeiro_contato ?? ""}
+                onChange={(event) =>
+                  updateField("data_primeiro_contato", event.target.value || null)
+                }
+                className="h-12 rounded-2xl border border-slate-200 bg-white/90 px-4 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-sky-400/40 dark:focus:ring-sky-400/10"
+              />
             </label>
           </div>
 

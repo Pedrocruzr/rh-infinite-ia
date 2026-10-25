@@ -65,6 +65,20 @@ export async function PATCH(
       ? explicitClosingDate || new Date().toISOString().slice(0, 10)
       : null;
 
+  const data_primeiro_contato =
+    body?.data_primeiro_contato !== undefined
+      ? body.data_primeiro_contato
+        ? String(body.data_primeiro_contato).trim()
+        : null
+      : existing.data_primeiro_contato ?? null;
+
+  const canal_origem =
+    body?.canal_origem !== undefined
+      ? body.canal_origem
+        ? String(body.canal_origem).trim()
+        : "LinkedIn"
+      : existing.canal_origem ?? "LinkedIn";
+
   const updatePayload = {
     nome_vaga: String(nome_vaga).trim(),
     data_abertura: String(data_abertura).trim(),
@@ -74,15 +88,59 @@ export async function PATCH(
       String(data_abertura).trim(),
       data_fechamento
     ),
+    data_primeiro_contato,
+    canal_origem,
   };
 
-  const { data, error } = await access.db
+  let { data, error } = await access.db
     .from("job_openings")
     .update(updatePayload)
     .eq("id", id)
     .eq("user_id", access.userId)
     .select("*")
     .single();
+
+  // Fallback de segurança: caso as novas colunas ainda não tenham sido migradas no Supabase
+  if (
+    error &&
+    (error.message?.includes("data_primeiro_contato") ||
+      error.message?.includes("canal_origem") ||
+      error.code === "PGRST204" ||
+      error.code === "42703")
+  ) {
+    const legacyPayload = {
+      nome_vaga: String(nome_vaga).trim(),
+      data_abertura: String(data_abertura).trim(),
+      status,
+      data_fechamento,
+      dias_em_aberto: computeOpenDays(
+        String(data_abertura).trim(),
+        data_fechamento
+      ),
+    };
+
+    const retry = await access.db
+      .from("job_openings")
+      .update(legacyPayload)
+      .eq("id", id)
+      .eq("user_id", access.userId)
+      .select("*")
+      .single();
+
+    if (retry.error) {
+      return NextResponse.json(
+        { error: "Erro ao atualizar vaga.", details: retry.error.message },
+        { status: 500 }
+      );
+    }
+
+    data = {
+      ...retry.data,
+      data_primeiro_contato,
+      canal_origem,
+    };
+    error = null;
+  }
 
   if (error) {
     return NextResponse.json(
