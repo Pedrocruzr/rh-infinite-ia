@@ -10,6 +10,8 @@ import type {
   JobStatus,
 } from "@/lib/jobs/types";
 import { exportJobOpeningsToCsv, filterJobOpenings } from "@/lib/jobs/utils";
+import { createClient } from "@/lib/supabase/client";
+import { isUserAdminOrOwner } from "@/lib/auth/access-control";
 import { JobOpeningFormDialog } from "./job-opening-form-dialog";
 import { JobOpeningsBoard } from "./job-openings-board";
 import { JobOpeningsFilters } from "./job-openings-filters";
@@ -39,16 +41,57 @@ export function JobOpeningsClient({ initialItems }: JobOpeningsClientProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
+  const [planCode, setPlanCode] = useState<string>("start");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isPurpleTheme, setIsPurpleTheme] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   useEffect(() => {
-    const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
-    if (savedPlan) {
-      setPlanCode(savedPlan);
-    }
+    const supabase = createClient();
+    supabase.auth.getUser().then((res: any) => {
+      const user = res.data?.user;
+      if (!user) return;
+
+      const cleanEmail = String(user.email || "").trim().toLowerCase();
+      if (cleanEmail === "pedrocruzr@gmail.com" || cleanEmail === "suporte@stackercompany.com.br") {
+        setPlanCode("start");
+        sessionStorage.removeItem("simulated_plan_code");
+        return;
+      }
+
+      supabase
+        .from("profiles")
+        .select("app_role")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then((profRes: any) => {
+          if (profRes.data?.app_role === "owner" || profRes.data?.app_role === "admin") {
+            setPlanCode("start");
+            sessionStorage.removeItem("simulated_plan_code");
+            return;
+          }
+
+          const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
+          if (savedPlan) {
+            setPlanCode(savedPlan);
+            return;
+          }
+
+          supabase
+            .from("subscriptions")
+            .select("plan_id, plans(code)")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then((subRes: any) => {
+              const code = (subRes.data as any)?.plans?.code;
+              if (code) {
+                setPlanCode(code);
+              }
+            });
+        });
+    });
   }, []);
 
   const handleTogglePlan = (newPlan: string) => {

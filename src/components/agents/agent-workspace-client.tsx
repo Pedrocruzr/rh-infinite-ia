@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Lock, Sparkles, ArrowRight } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { isUserAdminOrOwner } from "@/lib/auth/access-control";
 
 interface Props {
   agent: {
@@ -23,13 +25,57 @@ export function AgentWorkspaceClient({ agent }: Props) {
   const [runId, setRunId] = useState("");
   const [creditsUsed, setCreditsUsed] = useState<number | null>(null);
 
-  const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
+  const [planCode, setPlanCode] = useState<string>("start");
+  const [isOwner, setIsOwner] = useState<boolean>(false);
 
   useEffect(() => {
-    const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
-    if (savedPlan) {
-      setPlanCode(savedPlan);
-    }
+    const supabase = createClient();
+    supabase.auth.getUser().then((res: any) => {
+      const user = res.data?.user;
+      if (!user) return;
+
+      const cleanEmail = String(user.email || "").trim().toLowerCase();
+      if (cleanEmail === "pedrocruzr@gmail.com" || cleanEmail === "suporte@stackercompany.com.br") {
+        setIsOwner(true);
+        setPlanCode("start");
+        sessionStorage.removeItem("simulated_plan_code");
+        return;
+      }
+
+      supabase
+        .from("profiles")
+        .select("app_role")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then((profRes: any) => {
+          if (profRes.data?.app_role === "owner" || profRes.data?.app_role === "admin") {
+            setIsOwner(true);
+            setPlanCode("start");
+            sessionStorage.removeItem("simulated_plan_code");
+            return;
+          }
+
+          const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
+          if (savedPlan) {
+            setPlanCode(savedPlan);
+            return;
+          }
+
+          supabase
+            .from("subscriptions")
+            .select("plan_id, plans(code)")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then((subRes: any) => {
+              const code = (subRes.data as any)?.plans?.code;
+              if (code) {
+                setPlanCode(code);
+              }
+            });
+        });
+    });
   }, []);
 
   const handleTogglePlan = (newPlan: string) => {
@@ -75,7 +121,10 @@ export function AgentWorkspaceClient({ agent }: Props) {
     }
   }
 
-  const isAgentBlocked = (planCode === "perfil_comportamental" || planCode.startsWith("perfil_")) && agent.slug !== "teste-perfil-comportamental";
+  const isAgentBlocked =
+    !isOwner &&
+    (planCode === "perfil_comportamental" || planCode.startsWith("perfil_")) &&
+    agent.slug !== "teste-perfil-comportamental";
 
   if (isAgentBlocked) {
     return (

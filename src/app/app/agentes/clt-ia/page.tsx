@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import UserMessageActions from "@/components/agents/user-message-actions";
 import { ArrowLeft, Search, Send, Lock, Sparkles, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { resolvePlanType, isFeatureAllowed } from "@/lib/auth/access-control";
+import { resolvePlanType, isFeatureAllowed, isUserAdminOrOwner } from "@/lib/auth/access-control";
 
 type Message = {
   id: string;
@@ -14,42 +14,52 @@ type Message = {
 };
 
 export default function CltIaPage() {
-  const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
+  const [planCode, setPlanCode] = useState<string>("start");
 
   useEffect(() => {
-    const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
-    if (savedPlan) {
-      setPlanCode(savedPlan);
-      return;
-    }
-
-    // Buscar plano real do usuário no banco de dados
     const supabase = createClient();
     supabase.auth.getUser().then((res: any) => {
       const user = res.data?.user;
       if (!user) return;
+
+      const cleanEmail = String(user.email || "").trim().toLowerCase();
+      if (cleanEmail === "pedrocruzr@gmail.com" || cleanEmail === "suporte@stackercompany.com.br") {
+        setPlanCode("start");
+        sessionStorage.removeItem("simulated_plan_code");
+        return;
+      }
+
       supabase
-        .from("subscriptions")
-        .select("plan_id")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
+        .from("profiles")
+        .select("app_role")
+        .eq("id", user.id)
         .maybeSingle()
-        .then((subRes: any) => {
-          const subscription = subRes.data;
-          if (subscription?.plan_id) {
-            supabase
-              .from("plans")
-              .select("code")
-              .eq("id", subscription.plan_id)
-              .maybeSingle()
-              .then((planRes: any) => {
-                const plan = planRes.data;
-                if (plan?.code) {
-                  setPlanCode(plan.code);
-                }
-              });
+        .then((profRes: any) => {
+          if (profRes.data?.app_role === "owner" || profRes.data?.app_role === "admin") {
+            setPlanCode("start");
+            sessionStorage.removeItem("simulated_plan_code");
+            return;
           }
+
+          const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
+          if (savedPlan) {
+            setPlanCode(savedPlan);
+            return;
+          }
+
+          supabase
+            .from("subscriptions")
+            .select("plan_id, plans(code)")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then((subRes: any) => {
+              const code = (subRes.data as any)?.plans?.code;
+              if (code) {
+                setPlanCode(code);
+              }
+            });
         });
     });
   }, []);

@@ -139,11 +139,11 @@ export async function getUserPlanType(
   // Administrador / Dono sempre tem plano completo liberado
   const { data: profile } = await supabase
     .from("profiles")
-    .select("app_role")
+    .select("app_role, email")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (isUserAdminOrOwner(user.email, profile?.app_role)) {
+  if (isUserAdminOrOwner(user.email || profile?.email, profile?.app_role)) {
     return "completo";
   }
 
