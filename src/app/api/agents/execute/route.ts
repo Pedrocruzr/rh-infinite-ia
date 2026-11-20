@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { executeAgentRuntime } from "@/lib/agents/runtime";
 import { agents } from "@/lib/agents";
-import { resolvePlanType, isAgentAllowed } from "@/lib/auth/access-control";
+import { resolvePlanType, isAgentAllowed, getUserPlanType, isUserAdminOrOwner } from "@/lib/auth/access-control";
 
 export async function POST(request: Request) {
   try {
@@ -50,7 +50,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate subscription status
+    // Validate subscription and plan
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("app_role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const isOwnerOrAdmin = isUserAdminOrOwner(user.email, profile?.app_role);
+
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("status, current_period_end, plan_id")
@@ -59,20 +67,7 @@ export async function POST(request: Request) {
       .limit(1)
       .maybeSingle();
 
-    let actualPlanCode = simulatedPlan;
-    if (!actualPlanCode && subscription?.plan_id) {
-      const { data: plan } = await supabase
-        .from("plans")
-        .select("code")
-        .eq("id", subscription.plan_id)
-        .maybeSingle();
-      actualPlanCode = plan?.code;
-    }
-    if (!actualPlanCode) {
-      actualPlanCode = user.user_metadata?.signup_plan;
-    }
-
-    const planType = resolvePlanType(actualPlanCode);
+    const planType = await getUserPlanType(supabase, user, isOwnerOrAdmin ? null : simulatedPlan);
     const isRecrutamentoPlan = planType === "recrutamento";
 
     if (!isAgentAllowed(planType, body?.slug || "")) {
@@ -104,7 +99,9 @@ export async function POST(request: Request) {
       subscription?.current_period_end &&
       new Date(subscription.current_period_end) > new Date();
 
-    const isBypassUser = user.email?.toLowerCase() === "rnsantos27@gmail.com";
+    const isBypassUser =
+      isOwnerOrAdmin ||
+      user.email?.toLowerCase() === "rnsantos27@gmail.com";
 
     if (!isMainActive && !isTrialingAndNotExpired && !isCanceledButNotExpired && !isBypassUser) {
       return NextResponse.json(

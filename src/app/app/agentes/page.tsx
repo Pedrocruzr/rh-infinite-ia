@@ -7,7 +7,7 @@ import { ArrowRight, Sparkles, Lock, X } from "lucide-react";
 import { agents } from "@/lib/agents";
 import { agentsCatalog } from "@/lib/catalog/agents";
 import { createClient } from "@/lib/supabase/client";
-import { resolvePlanType, isAgentAllowed } from "@/lib/auth/access-control";
+import { resolvePlanType, isAgentAllowed, isUserAdminOrOwner } from "@/lib/auth/access-control";
 
 const SECTION_CONFIG = [
   {
@@ -173,43 +173,59 @@ function getCategoryStyle(category: string) {
 
 export default function AgentesPage() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [planCode, setPlanCode] = useState<string>("perfil_comportamental");
+  const [planCode, setPlanCode] = useState<string>("start");
 
   useEffect(() => {
-    // Restaurar plano simulado se houver
-    const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
-    if (savedPlan) {
-      setPlanCode(savedPlan);
-      return;
-    }
-
-    // Buscar plano real do usuário no banco de dados
     const supabase = createClient();
     supabase.auth.getUser().then((res: any) => {
       const user = res.data?.user;
       if (!user) return;
+
       supabase
-        .from("subscriptions")
-        .select("plan_id")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
+        .from("profiles")
+        .select("app_role")
+        .eq("id", user.id)
         .maybeSingle()
-        .then((subRes: any) => {
-          const subscription = subRes.data;
-          if (subscription?.plan_id) {
-            supabase
-              .from("plans")
-              .select("code")
-              .eq("id", subscription.plan_id)
-              .maybeSingle()
-              .then((planRes: any) => {
-                const plan = planRes.data;
-                if (plan?.code === "start" || plan?.code?.startsWith("perfil_") || plan?.code === "recrutamento_selecao") {
-                  setPlanCode(plan.code);
-                }
-              });
+        .then((profRes: any) => {
+          const isOwner = isUserAdminOrOwner(user.email, profRes.data?.app_role);
+
+          if (isOwner) {
+            sessionStorage.removeItem("simulated_plan_code");
+            document.cookie = "simulated_plan_code=; path=/; max-age=0";
+            setPlanCode("start");
+            return;
           }
+
+          // Restaurar plano simulado se houver (para não-admins testando)
+          const savedPlan = sessionStorage.getItem("simulated_plan_code") as string;
+          if (savedPlan) {
+            setPlanCode(savedPlan);
+            return;
+          }
+
+          supabase
+            .from("subscriptions")
+            .select("plan_id")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+            .then((subRes: any) => {
+              const subscription = subRes.data;
+              if (subscription?.plan_id) {
+                supabase
+                  .from("plans")
+                  .select("code")
+                  .eq("id", subscription.plan_id)
+                  .maybeSingle()
+                  .then((planRes: any) => {
+                    const plan = planRes.data;
+                    if (plan?.code) {
+                      setPlanCode(plan.code);
+                    }
+                  });
+              }
+            });
         });
     });
   }, []);

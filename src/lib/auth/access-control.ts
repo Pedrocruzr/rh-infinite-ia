@@ -1,5 +1,19 @@
 export type PlanType = "completo" | "recrutamento" | "perfil" | "vagas" | "turnover";
 
+export function isUserAdminOrOwner(email?: string | null, appRole?: string | null): boolean {
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  if (
+    cleanEmail === "pedrocruzr@gmail.com" ||
+    cleanEmail === "suporte@stackercompany.com.br"
+  ) {
+    return true;
+  }
+  if (appRole === "owner" || appRole === "admin") {
+    return true;
+  }
+  return false;
+}
+
 export const RECRUTAMENTO_AGENTS = new Set([
   "taxa-aderencia-vaga",
   "teste-perfil-comportamental",
@@ -120,10 +134,22 @@ export async function getUserPlanType(
   user: any,
   simulatedPlan?: string | null
 ): Promise<PlanType> {
+  if (!user) return "completo";
+
+  // Administrador / Dono sempre tem plano completo liberado
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("app_role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (isUserAdminOrOwner(user.email, profile?.app_role)) {
+    return "completo";
+  }
+
   if (simulatedPlan) {
     return resolvePlanType(simulatedPlan);
   }
-  if (!user) return "completo";
 
   const { data: subscription } = await supabase
     .from("subscriptions")

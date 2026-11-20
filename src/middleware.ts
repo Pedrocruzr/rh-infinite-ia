@@ -15,6 +15,8 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  let authenticatedUserEmail: string | undefined = undefined;
+
   const isAppRoute = pathname.startsWith("/app");
   const isBypassedRoute =
     pathname.startsWith("/app/configuracoes") ||
@@ -54,6 +56,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
+    authenticatedUserEmail = user.email?.toLowerCase();
+
     if (!user.email_confirmed_at) {
       return NextResponse.redirect(
         new URL(`/verificar-email?email=${encodeURIComponent(user.email ?? "")}`, request.url)
@@ -82,11 +86,17 @@ export async function middleware(request: NextRequest) {
       subscription?.current_period_end &&
       new Date(subscription.current_period_end) > new Date();
 
+    const userEmail = user.email?.toLowerCase();
+    const isAdminEmail =
+      userEmail === "pedrocruzr@gmail.com" ||
+      userEmail === "suporte@stackercompany.com.br" ||
+      userEmail === "rnsantos27@gmail.com";
+
     const isSubscriptionActive =
+      isAdminEmail ||
       isMainActive ||
       isTrialingAndNotExpired ||
-      isCanceledButNotExpired ||
-      user.email?.toLowerCase() === "rnsantos27@gmail.com";
+      isCanceledButNotExpired;
 
     if (!isSubscriptionActive) {
       return NextResponse.redirect(
@@ -97,7 +107,11 @@ export async function middleware(request: NextRequest) {
 
   // Local/Simulation check for perfil_comportamental plan
   const simulatedPlan = request.cookies.get("simulated_plan_code")?.value;
-  if (simulatedPlan === "perfil_comportamental") {
+  const isCurrentAdmin =
+    authenticatedUserEmail === "pedrocruzr@gmail.com" ||
+    authenticatedUserEmail === "suporte@stackercompany.com.br";
+
+  if (simulatedPlan === "perfil_comportamental" && !isCurrentAdmin) {
     const isAgenteRoute = pathname.startsWith("/app/agentes");
     const isAgenteApiRoute = pathname.startsWith("/api/agents");
 
